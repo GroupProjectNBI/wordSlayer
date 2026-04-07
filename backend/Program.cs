@@ -1,6 +1,18 @@
+
+
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
-app.MapGet("/", () => "Hello World!");
+if (string.IsNullOrWhiteSpace(builder.Configuration["urls"]))
+{
+    builder.WebHost.UseUrls("http://*:80", "https://*:443");
+}
+
+
+// 1) Servera klienten från wwwroot på /
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
+// app.MapGet("/", () => "Hello World!");
 
 app.Run();
