@@ -9,7 +9,7 @@ const { Given, When, Then } = createBdd();
 
 
 //
-// NAVIGATION
+// NAVIGATION (Going from one place to another)
 //
 Given('I am on the homepage', async ({ page }) => {
   await page.goto('/');
@@ -20,14 +20,14 @@ Then('I am on {string}', async ({ page }, url) => {
 });
 
 //
-// ACTIONS
+// ACTIONS (When somethin happens etc pressing a button)
 //
 When('I press button {string}', async ({ page }, text) => {
   await page.getByRole('button', { name: text }).click();
 });
 
 //
-// ASSERTIONS
+// ASSERTIONS (for example i'm supposed to see a textfield)
 //
 Then('I see {string}', async ({ page }, text) => {
   const visible = await page.getByText(text).isVisible();
