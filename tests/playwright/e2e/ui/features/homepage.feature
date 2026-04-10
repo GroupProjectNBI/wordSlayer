@@ -14,6 +14,7 @@ Scenario: User goes from homepage to newgamepage
     And I see button "New Game"
     Then I click on button "New Game"
     When I will be redirected to "newgamepage"
+    
 Scenario: User clicks rules button
     Given I am on the homepage
     When I press button "Rules"
