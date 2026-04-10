@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import HomePage from './pages/HomePage'
 import NewGame from './pages/NewGame'
+import JoinGame from './pages/JoinGame'
 function App() {
   return (
     <Routes>
@@ -9,6 +10,8 @@ function App() {
 
       {/* Alfa-sidan (NewGame) */}
       <Route path="/newgame" element={<NewGame />} />
+      {/* JoinGame-sidan */}
+      <Route path="/join" element={<JoinGame />} />
     </Routes>
   )
 }

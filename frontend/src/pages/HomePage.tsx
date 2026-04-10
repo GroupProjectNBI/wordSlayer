@@ -15,9 +15,13 @@ export default function HomePage() {
             New game
           </button>
 
-          <button className="w-full rounded-xl bg-purple-600 py-4 text-lg font-semibold text-white transition hover:bg-purple-500">
-            Join Game
-          </button>
+<button 
+  id="btn-join-game"
+  onClick={() => navigate('/join')} 
+  className="w-full rounded-xl bg-purple-600 py-4 text-lg font-semibold text-white transition hover:bg-purple-500"
+>
+  Join Game
+</button>
 
           <button className="w-full rounded-xl bg-purple-600 py-4 text-lg font-semibold text-white transition hover:bg-purple-500">
             Rules
