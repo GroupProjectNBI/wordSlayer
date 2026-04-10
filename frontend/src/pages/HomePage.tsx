@@ -1,6 +1,6 @@
 // import routes from "../routes";
 // import { Navigate } from "react-router-dom";
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom';
 export default function HomePage() {
   const navigate = useNavigate();
   return (
@@ -19,7 +19,7 @@ export default function HomePage() {
             Join Game
           </button>
 
-          <button className="w-full rounded-xl bg-purple-600 py-4 text-lg font-semibold text-white transition hover:bg-purple-500">
+          <button onClick={() => navigate('/rules')} className="w-full rounded-xl bg-purple-600 py-4 text-lg font-semibold text-white transition hover:bg-purple-500">
             Rules
           </button>
         </div>
