@@ -11,15 +11,16 @@ public class GameManager
     private readonly Dictionary<Guid, GameSession> _activeGames = new Dictionary<Guid, GameSession>();
 
     // Exempel 1: Skapa en ny session och lägg till 1 startspelare
-    public Guid CreateGame(string player1Name)
+    public GameSession CreateGame(string player1Name)
     {
         GameSession newGame = new GameSession();
-
         newGame.Players.Add(new Player(player1Name));
 
         _activeGames.Add(newGame.SessionId, newGame);
 
-        return newGame.SessionId;
+        return newGame;
     }
 
+
+    // ny funktion joingame för att att hantera join new player
 }
