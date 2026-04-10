@@ -19,7 +19,7 @@ export default function NewGame() {
 }
 
 NewGame.route = {
-    path: "/alfa",
+    path: "/newgame",
     //menuLabel: "Om oss",
     index: 3
 };
