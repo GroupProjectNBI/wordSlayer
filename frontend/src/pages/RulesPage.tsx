@@ -5,37 +5,40 @@ export default function Rules() {
         <h1 className="mb-10 text-5xl font-extrabold uppercase tracking-widest">
           RULES
         </h1>
-        <p>
-          WordSlayer is a Player vs Player game.
+
+
+        <p className="text-center text-white mb-10">
+          WordSlayer is a fast-paced Player vs Player word battle.
+          Each round tests your vocabulary, speed and strategy.
         </p>
-        <p></p>
-        <p>
-          Each player got 100 HP at the start of new game.
-        </p>
-        <p>
-          Only one player can write at the moment, after one player has written one word, it's the next players turn.
-        </p>
-        <p>
-          Each player cannot use the same words on the same round.
-        </p>
-        <p>
-          There is not any missspelling correction, so you have to write the word correct otherwise the word is not gonna count.
-        </p>
-        <p>
-          The player that have wrote the longest word each battle wins and the total amount of charecters the word was is going to hit the other player HP with the same amount.
-        </p>
-        <p>
-          The player that reach 0 HP lose the round.
-        </p>
-        <p>
-          The player that wins, are getting those points player had left on HP-bar in a leaderboard.
-        </p>
-        <p>
-          Every word has to be in English
-        </p>
-        <p>
-          For each time is your turn you have an timer set to 30 Seconds, so you have to be fast. If you don't write any word you lose automatically that battle.
-        </p>
+        <ul className="space-y-4 text-lg leading-relaxed text-white">
+
+        </ul>
+        <li>• Each player starts with <strong>100 HP</strong>.</li>
+
+        <li>• Only one player writes at a time. After submitting a word, the turn switches.</li>
+
+        <li>• You cannot reuse words that have already been played in the same round.</li>
+
+        <li>• There is <strong>no spell‑checking</strong>. Misspelled words do not count.</li>
+
+        <li>
+          • The player who writes the <strong>longest valid word</strong> wins the battle.
+          The number of characters becomes the damage dealt to the opponent.
+        </li>
+
+        <li>• A player who reaches <strong>0 HP</strong> loses the round.</li>
+
+        <li>
+          • The winner earns points equal to their remaining HP, which are added to the leaderboard.
+        </li>
+
+        <li>• All words must be in <strong>English</strong>.</li>
+
+        <li>
+          • Each turn has a <strong>30‑second timer</strong>.
+          If you fail to submit a word in time, you automatically lose the battle.
+        </li>
 
 
       </section>
