@@ -12,8 +12,9 @@ Scenario: User goes from homepage to newgamepage
     Given I am on the homepage
     Then I see "Word Slayer"
     And I see button "New Game"
-    Then I click on button "New Game"
-    When I will be redirected to "newgamepage"
+    When I press button "New Game"
+    Then I am on "/newgame"
+    And I see "New Game"
     
 Scenario: User clicks rules button
     Given I am on the homepage
