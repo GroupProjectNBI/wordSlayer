@@ -17,6 +17,8 @@ if (string.IsNullOrWhiteSpace(builder.Configuration["urls"]))
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
+//API-routes ovanför denna
+app.MapFallbackToFile("index.html");
 
 // --- LÄGG TILL DIN ENDPOINT HÄR (Mellan StaticFiles och Run) ---
 app.MapGet("/api/newGame", (GameManager manager) =>
