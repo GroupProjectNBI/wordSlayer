@@ -1,10 +1,50 @@
 import { useState } from "react";
+import DamagePopup from "../components/DamagePopup";
 
 export default function PlayGame() {
   // Dessa kommer senare från backend
-  const [player1] = useState({ username: "PlayerOne", hp: 100 });
-  const [player2] = useState({ username: "PlayerTwo", hp: 100 });
+  const [player1, setPlayer1] = useState({ username: "PlayerOne", hp: 100 });
+  const [player2, setPlayer2] = useState({ username: "PlayerTwo", hp: 100 });
+
   const [word, setWord] = useState("");
+  const [timer, setTimer] = useState(30); // förberett för backend
+  const [turn, setTurn] = useState<"player1" | "player2">("player1");
+
+  // Damage popups
+  const [popups, setPopups] = useState<
+    { id: number; amount: number; position: "left" | "right"; }[]
+  >([]);
+
+  function dealDamage(amount: number, target: "left" | "right") {
+    const id = Date.now();
+
+    // Visa popup
+    setPopups((prev) => [...prev, { id, amount, position: target }]);
+
+    // Uppdatera HP
+    if (target === "left") {
+      setPlayer1((p) => ({ ...p, hp: Math.max(0, p.hp - amount) }));
+    } else {
+      setPlayer2((p) => ({ ...p, hp: Math.max(0, p.hp - amount) }));
+    }
+  }
+
+  function onSubmitWord() {
+    if (!word.trim()) return;
+
+    const damage = word.length;
+
+    // Exempel: player1 attackerar player2
+    if (turn === "player1") {
+      dealDamage(damage, "right");
+      setTurn("player2");
+    } else {
+      dealDamage(damage, "left");
+      setTurn("player1");
+    }
+
+    setWord("");
+  }
 
   return (
     <main className="min-h-screen bg-[#1a1a2e] text-white relative overflow-hidden">
@@ -48,7 +88,7 @@ export default function PlayGame() {
 
         {/* Timer */}
         <div className="mt-4 text-3xl font-bold text-yellow-400">
-          30s
+          {timer}s
         </div>
       </div>
 
@@ -59,9 +99,23 @@ export default function PlayGame() {
           value={word}
           onChange={(e) => setWord(e.target.value)}
           placeholder="Type your word..."
-          className="w-full px-4 py-3 rounded-xl text-white text-lg"
+          className="w-full px-4 py-3 rounded-xl text-black text-lg"
+          disabled={turn !== "player1"} // exempel: bara player1 kan skriva
+          onKeyDown={(e) => e.key === "Enter" && onSubmitWord()}
         />
       </div>
+
+      {/* DAMAGE POPUPS */}
+      {popups.map((p) => (
+        <DamagePopup
+          key={p.id}
+          amount={p.amount}
+          position={p.position}
+          onComplete={() =>
+            setPopups((prev) => prev.filter((x) => x.id !== p.id))
+          }
+        />
+      ))}
     </main>
   );
 }
