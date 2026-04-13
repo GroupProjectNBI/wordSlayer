@@ -1,4 +1,4 @@
-using backend; // Viktigt! Detta gör så att filen hittar din GameManager
+using backend;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +23,27 @@ app.MapGet("/api/newGame", (GameManager manager) =>
     return Results.Ok(createdGame);
 });
 
+// 2. Endpointen! Märk att {sessionId} ligger direkt i URL:en
+app.MapPost("/api/game/{sessionId}/join", (Guid sessionId, JoinGameRequest request, GameManager manager) =>
+{
+    // DÖRRVAKTEN: Om någon skickar in tomt namn, svara med 400 Bad Request direkt!
+    // (request? gör att programmet inte kraschar om hela body:n saknas)
+    if (string.IsNullOrWhiteSpace(request?.PlayerName))
+    {
+        return Results.BadRequest(new { message = "Spelarnamn får inte vara tomt!" });
+    }
+
+    // Nu vet vi att vi har ett namn! Vi försöker joina...
+    GameSession? updatedGame = manager.JoinGame(sessionId, request.PlayerName);
+
+    if (updatedGame == null)
+    {
+        return Results.NotFound(new { message = "Kunde inte hitta spelrummet. Kontrollera koden!" });
+    }
+
+    return Results.Ok(updatedGame);
+});
+
 // Servera klienten från wwwroot på /
 app.UseDefaultFiles();
 app.UseStaticFiles();
@@ -33,4 +54,20 @@ app.MapFallbackToFile("index.html");
 
 
 
+
+
+
+// MÅSTE LIGGA SIST AV ALL KÖRANDE KOD!
 app.Run();
+
+
+// ==========================================
+// ALLA EGNA KLASSER MÅSTE LIGGA HÄR NERE 
+// (Eller i en helt egen fil)
+// ==========================================
+
+// 1. En liten "brevlåda" för att ta emot namnet från React (JSON-body)
+public class JoinGameRequest
+{
+    public string PlayerName { get; set; } = string.Empty;
+}
