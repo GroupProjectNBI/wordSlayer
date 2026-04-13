@@ -3,6 +3,7 @@ import HPBar from "./HPBar";
 import Timer from "./Timer";
 import Username from "./Username";
 import WordHistory from "./WordHistory";
+import WordInput from "./WordInput";
 
 interface Player {
   username: string;
@@ -76,21 +77,14 @@ export default function GameBoard({
         </div>
       </div>
 
-      {/* Input field (center bottom) */}
+      {/* Word Input (center bottom) */}
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-full max-w-md px-4">
-        <input
-          type="text"
+        <WordInput
           value={word}
-          onChange={(e) => setWord(e.target.value)}
-          placeholder={
-            turn === "player1"
-              ? "Type your word..."
-              : "Waiting for opponent..."
-          }
-          className={`w-full px-4 py-3 rounded-xl text-black text-lg ${turn !== "player1" ? "opacity-50 cursor-not-allowed" : ""
-            }`}
+          onChange={setWord}
+          onSubmit={onSubmitWord}
           disabled={turn !== "player1"}
-          onKeyDown={(e) => e.key === "Enter" && onSubmitWord()}
+          isActive={turn === "player1"}
         />
       </div>
 
