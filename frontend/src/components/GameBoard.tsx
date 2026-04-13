@@ -2,11 +2,17 @@ import React from "react";
 import HPBar from "./HPBar";
 import Timer from "./Timer";
 import Username from "./Username";
-
+import WordHistory from "./WordHistory";
 
 interface Player {
   username: string;
   hp: number;
+}
+
+interface WordEntry {
+  word: string;
+  player: "player1" | "player2";
+  damage: number;
 }
 
 interface GameBoardProps {
@@ -17,6 +23,7 @@ interface GameBoardProps {
   word: string;
   setWord: (value: string) => void;
   onSubmitWord: () => void;
+  history: WordEntry[];
   children?: React.ReactNode; // DamagePopups
 }
 
@@ -28,6 +35,7 @@ export default function GameBoard({
   word,
   setWord,
   onSubmitWord,
+  history,
   children
 }: GameBoardProps) {
   return (
@@ -39,6 +47,9 @@ export default function GameBoard({
           Word Slayer
         </h1>
       </div>
+
+      {/* WORD HISTORY (left-center) */}
+      <WordHistory words={history} />
 
       {/* Player 1 (top-left) */}
       <div className="absolute top-20 left-4 text-left">
@@ -63,7 +74,6 @@ export default function GameBoard({
         <div className="mt-4">
           <Timer value={timer} />
         </div>
-
       </div>
 
       {/* Input field (center bottom) */}
