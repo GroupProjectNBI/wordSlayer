@@ -1,4 +1,7 @@
+import { useNavigate } from 'react-router-dom';
+
 export default function Rules() {
+  const navigate = useNavigate();
   return (
     <main className="min-h-screen flex items-center justify-center">
       <section className="w-full max-w-md px-4 text-center">
@@ -39,6 +42,10 @@ export default function Rules() {
           • Each turn has a <strong>30‑second timer</strong>.
           If you fail to submit a word in time, you automatically lose the battle.
         </li>
+        <div className="flex flex-col gap-4">
+          <button onClick={() => navigate('/')} className="w-full rounded-xl bg-purple-600 py-4 text-lg font-semibold text-white transition hover:bg-purple-500">
+            Home
+          </button> </div>
 
 
       </section>
