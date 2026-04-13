@@ -9,6 +9,20 @@ if (string.IsNullOrWhiteSpace(builder.Configuration["urls"]))
 }
 
 
+app.MapPost("/api/game/{sessionId}/playword", (Guid sessionId, HandeWordRequest request) =>
+{
+
+    if (string.IsNullOrWhiteSpace(request?.wordGuess))
+    {
+        return Results.BadRequest(new { message = "Där är inget ord som har spelats!" });
+    }
+
+
+
+    return Results.Ok(request.wordGuess);
+
+});
+
 // 1) Servera klienten från wwwroot på /
 app.UseDefaultFiles();
 app.UseStaticFiles();
@@ -17,3 +31,8 @@ app.UseStaticFiles();
 app.MapFallbackToFile("index.html");
 
 app.Run();
+
+public class HandeWordRequest
+{
+    public string wordGuess { get; set; } = string.Empty;
+}
