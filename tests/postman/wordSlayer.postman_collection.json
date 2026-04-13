@@ -155,11 +155,8 @@
           }
         }
       ],
-      "protocolProfileBehavior": {
-        "disableBodyPruning": true
-      },
       "request": {
-        "method": "GET",
+        "method": "POST",
         "header": [],
         "body": {
           "mode": "raw",
@@ -201,15 +198,12 @@
           }
         }
       ],
-      "protocolProfileBehavior": {
-        "disableBodyPruning": true
-      },
       "request": {
-        "method": "GET",
+        "method": "POST",
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"wordGuess\": \"asdfghjkl\" \r\n}",
+          "raw": "{\r\n    \"wordGuess\": \"falflapå\" \r\n}",
           "options": {
             "raw": {
               "language": "json"
