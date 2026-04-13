@@ -14,6 +14,10 @@ export default function PlayGame() {
     { id: number; amount: number; position: "left" | "right"; }[]
   >([]);
 
+  const [history, setHistory] = useState<
+    { word: string; player: "player1" | "player2"; damage: number; }[]
+  >([]);
+
   function dealDamage(amount: number, target: "left" | "right") {
     const id = Date.now();
 
@@ -33,6 +37,13 @@ export default function PlayGame() {
 
     const damage = word.length;
 
+    // Lägg till ord i historiken
+    setHistory((prev) => [
+      ...prev,
+      { word, player: turn, damage }
+    ]);
+
+    // Hantera damage + turbyte
     if (turn === "player1") {
       dealDamage(damage, "right");
       setTurn("player2");
@@ -53,6 +64,7 @@ export default function PlayGame() {
       word={word}
       setWord={setWord}
       onSubmitWord={onSubmitWord}
+      history={history}
     >
       {popups.map((p) => (
         <DamagePopup
