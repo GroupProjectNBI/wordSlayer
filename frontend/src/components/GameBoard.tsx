@@ -1,4 +1,5 @@
 import React from "react";
+import HPBar from "./HPBar";
 
 interface Player {
   username: string;
@@ -39,34 +40,23 @@ export default function GameBoard({
       {/* Player 1 (top-left) */}
       <div className="absolute top-20 left-4 text-left">
         <div className="text-lg font-bold">{player1.username}</div>
-        <div className="w-40 h-4 bg-gray-700 rounded-full mt-1">
-          <div
-            className="h-full bg-green-500 rounded-full transition-all"
-            style={{ width: `${player1.hp}%` }}
-          />
-        </div>
+        <HPBar hp={player1.hp} color="green" width={160} />
         <div className="text-sm mt-1">{player1.hp} HP</div>
       </div>
 
       {/* Player 2 (bottom-right) */}
       <div className="absolute bottom-20 right-4 text-right">
         <div className="text-lg font-bold">{player2.username}</div>
-        <div className="w-40 h-4 bg-gray-700 rounded-full mt-1">
-          <div
-            className="h-full bg-red-500 rounded-full transition-all"
-            style={{ width: `${player2.hp}%` }}
-          />
-        </div>
+        <HPBar hp={player2.hp} color="red" width={160} />
         <div className="text-sm mt-1">{player2.hp} HP</div>
       </div>
 
-      {/* Center VS */}
+      {/* Center VS + Timer */}
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
         <h1 className="text-7xl font-extrabold tracking-widest opacity-80">
           VS
         </h1>
 
-        {/* Timer */}
         <div className="mt-4 text-3xl font-bold text-yellow-400">
           {timer}s
         </div>
@@ -78,9 +68,14 @@ export default function GameBoard({
           type="text"
           value={word}
           onChange={(e) => setWord(e.target.value)}
-          placeholder="Type your word..."
-          className="w-full px-4 py-3 rounded-xl text-black text-lg"
-          disabled={turn !== "player1"} // exempel: bara player1 kan skriva
+          placeholder={
+            turn === "player1"
+              ? "Type your word..."
+              : "Waiting for opponent..."
+          }
+          className={`w-full px-4 py-3 rounded-xl text-black text-lg ${turn !== "player1" ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+          disabled={turn !== "player1"}
           onKeyDown={(e) => e.key === "Enter" && onSubmitWord()}
         />
       </div>

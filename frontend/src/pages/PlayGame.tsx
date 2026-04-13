@@ -16,8 +16,11 @@ export default function PlayGame() {
 
   function dealDamage(amount: number, target: "left" | "right") {
     const id = Date.now();
+
+    // Skapa popup
     setPopups((prev) => [...prev, { id, amount, position: target }]);
 
+    // Uppdatera HP
     if (target === "left") {
       setPlayer1((p) => ({ ...p, hp: Math.max(0, p.hp - amount) }));
     } else {
