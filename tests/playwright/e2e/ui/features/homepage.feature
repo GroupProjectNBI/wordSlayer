@@ -7,6 +7,15 @@ Scenario: User sees homepage
     And I see button "Join Game"
     And I see button "Rules"
 
+
+Scenario: User goes from homepage to newgamepage
+    Given I am on the homepage
+    Then I see "Word Slayer"
+    And I see button "New Game"
+    When I press button "New Game"
+    Then I am on "/newgame"
+    And I see "New Game"
+    
 Scenario: User clicks rules button
     Given I am on the homepage
     When I press button "Rules"
