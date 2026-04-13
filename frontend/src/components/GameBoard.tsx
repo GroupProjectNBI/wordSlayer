@@ -1,5 +1,7 @@
 import React from "react";
 import HPBar from "./HPBar";
+import Timer from "./Timer";
+
 
 interface Player {
   username: string;
@@ -57,9 +59,10 @@ export default function GameBoard({
           VS
         </h1>
 
-        <div className="mt-4 text-3xl font-bold text-yellow-400">
-          {timer}s
+        <div className="mt-4">
+          <Timer value={timer} />
         </div>
+
       </div>
 
       {/* Input field (center bottom) */}
