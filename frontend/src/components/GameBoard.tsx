@@ -1,6 +1,7 @@
 import React from "react";
 import HPBar from "./HPBar";
 import Timer from "./Timer";
+import Username from "./Username";
 
 
 interface Player {
@@ -41,14 +42,14 @@ export default function GameBoard({
 
       {/* Player 1 (top-left) */}
       <div className="absolute top-20 left-4 text-left">
-        <div className="text-lg font-bold">{player1.username}</div>
+        <Username name={player1.username} isActive={turn === "player1"} align="left" />
         <HPBar hp={player1.hp} color="green" width={160} />
         <div className="text-sm mt-1">{player1.hp} HP</div>
       </div>
 
       {/* Player 2 (bottom-right) */}
       <div className="absolute bottom-20 right-4 text-right">
-        <div className="text-lg font-bold">{player2.username}</div>
+        <Username name={player2.username} isActive={turn === "player2"} align="right" />
         <HPBar hp={player2.hp} color="red" width={160} />
         <div className="text-sm mt-1">{player2.hp} HP</div>
       </div>
