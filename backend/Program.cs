@@ -13,6 +13,7 @@ if (string.IsNullOrWhiteSpace(builder.Configuration["urls"]))
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
-// app.MapGet("/", () => "Hello World!");
+//API-routes ovanför denna
+app.MapFallbackToFile("index.html");
 
 app.Run();
