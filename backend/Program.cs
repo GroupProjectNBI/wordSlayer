@@ -13,13 +13,6 @@ if (string.IsNullOrWhiteSpace(builder.Configuration["urls"]))
     builder.WebHost.UseUrls("http://*:80", "https://*:443");
 }
 
-// Servera klienten från wwwroot på /
-app.UseDefaultFiles();
-app.UseStaticFiles();
-
-//API-routes ovanför denna
-app.MapFallbackToFile("index.html");
-
 // --- LÄGG TILL DIN ENDPOINT HÄR (Mellan StaticFiles och Run) ---
 app.MapGet("/api/newGame", (GameManager manager) =>
 {
@@ -29,6 +22,15 @@ app.MapGet("/api/newGame", (GameManager manager) =>
     // 2. Returnera hela GameSession-objektet som JSON
     return Results.Ok(createdGame);
 });
+
+// Servera klienten från wwwroot på /
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
+//API-routes ovanför denna
+app.MapFallbackToFile("index.html");
+
+
 
 
 app.Run();
