@@ -4,6 +4,7 @@ import NewGame from './pages/NewGame';
 import Rules from './pages/RulesPage';
 import PlayGame from './pages/PlayGame';
 
+import JoinGame from './pages/JoinGame'
 function App() {
   return (
     <Routes>
@@ -18,6 +19,8 @@ function App() {
 
       {/* playgame */}
       <Route path="/game" element={<PlayGame />} />
+      {/* JoinGame-sidan */}
+      <Route path="/join" element={<JoinGame />} />
     </Routes>
   );
 }

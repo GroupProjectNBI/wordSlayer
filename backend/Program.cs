@@ -13,13 +13,6 @@ if (string.IsNullOrWhiteSpace(builder.Configuration["urls"]))
     builder.WebHost.UseUrls("http://*:80", "https://*:443");
 }
 
-// Servera klienten från wwwroot på /
-app.UseDefaultFiles();
-app.UseStaticFiles();
-
-//API-routes ovanför denna
-app.MapFallbackToFile("index.html");
-
 // --- LÄGG TILL DIN ENDPOINT HÄR (Mellan StaticFiles och Run) ---
 app.MapGet("/api/newGame", (GameManager manager) =>
 {
@@ -50,6 +43,18 @@ app.MapPost("/api/game/{sessionId}/join", (Guid sessionId, JoinGameRequest reque
 
     return Results.Ok(updatedGame);
 });
+
+// Servera klienten från wwwroot på /
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
+//API-routes ovanför denna
+app.MapFallbackToFile("index.html");
+
+
+
+
+
 
 
 // MÅSTE LIGGA SIST AV ALL KÖRANDE KOD!
