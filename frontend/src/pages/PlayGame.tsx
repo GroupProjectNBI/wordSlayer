@@ -99,7 +99,7 @@ export default function PlayGame() {
           value={word}
           onChange={(e) => setWord(e.target.value)}
           placeholder="Type your word..."
-          className="w-full px-4 py-3 rounded-xl text-black text-lg"
+          className="w-full px-4 py-3 rounded-xl text-white text-lg"
           disabled={turn !== "player1"} // exempel: bara player1 kan skriva
           onKeyDown={(e) => e.key === "Enter" && onSubmitWord()}
         />
