@@ -1,4 +1,3 @@
-import React from "react";
 
 interface TimerProps {
   value: number; // antal sekunder kvar
