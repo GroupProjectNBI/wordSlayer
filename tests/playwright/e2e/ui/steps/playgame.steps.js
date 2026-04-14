@@ -70,3 +70,11 @@ Then("I see a damage popup with {int}", async ({ page }, amount) => {
   const popup = page.locator("div", { hasText: new RegExp(`^-${amount}$`) });
   await expect(popup).toBeVisible();
 });
+Then("player {int} HP bar is at {int} percent", async ({ page }, player, percent) => {
+  const selector = player === 1
+    ? "div[data-player='player1'] .hp-fill"
+    : "div[data-player='player2'] .hp-fill";
+
+  const bar = page.locator(selector);
+  await expect(bar).toHaveCSS("width", `${percent}%`);
+});
