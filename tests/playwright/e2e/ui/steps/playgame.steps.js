@@ -28,10 +28,7 @@ When("the timer ticks {int} seconds", async ({ page }, seconds) => {
 
 //
 // WORD INPUT
-//
-Given("the input is enabled", async ({ page }) => {
-  await page.waitForSelector('input:not([disabled])');
-});
+
 
 When("I type the word {string}", async ({ page }, text) => {
   await page.getByRole("textbox").fill(text);

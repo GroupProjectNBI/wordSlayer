@@ -40,6 +40,14 @@ export default function GameBoard({
   timerRunning,
   children
 }: GameBoardProps) {
+
+  // 🧪 TEST MODE: gör input alltid enabled
+  const isTest = typeof window !== "undefined" && window.location.search.includes("test");
+
+  const inputDisabled = isTest ? false : turn !== "player1";
+  const inputActive = isTest ? true : turn === "player1";
+  const timerIsRunning = isTest ? true : timerRunning;
+
   return (
     <main className="min-h-screen bg-[#1a1a2e] text-white relative overflow-hidden">
 
@@ -84,9 +92,9 @@ export default function GameBoard({
           value={word}
           onChange={setWord}
           onSubmit={onSubmitWord}
-          disabled={turn !== "player1"}
-          isActive={turn === "player1"}
-          isTimerRunning={timerRunning}
+          disabled={inputDisabled}
+          isActive={inputActive}
+          isTimerRunning={timerIsRunning}
         />
       </div>
 

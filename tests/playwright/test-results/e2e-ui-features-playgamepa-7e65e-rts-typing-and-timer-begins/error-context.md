@@ -7,7 +7,7 @@
 # Test info
 
 - Name: e2e\ui\features\playgamepage.feature.spec.js >> PlayGame Page >> Player 1 starts typing and timer begins
-- Location: .features-gen\e2e\ui\features\playgamepage.feature.spec.js:17:7
+- Location: .features-gen\e2e\ui\features\playgamepage.feature.spec.js:18:7
 
 # Error details
 
@@ -16,86 +16,95 @@ Test timeout of 30000ms exceeded.
 ```
 
 ```
-Error: locator.fill: Test timeout of 30000ms exceeded.
+Error: page.waitForSelector: Test timeout of 30000ms exceeded.
 Call log:
-  - waiting for getByRole('textbox')
+  - waiting for locator('input:not([disabled])') to be visible
 
 ```
 
 # Test source
 
 ```ts
-  1  | import { createBdd } from "playwright-bdd";
-  2  | import { expect } from "@playwright/test";
+  1  | import { createBdd } from 'playwright-bdd';
+  2  | import { expect } from '@playwright/test';
   3  | 
   4  | const { Given, When, Then } = createBdd();
   5  | 
-  6  | //
-  7  | // TIMER MOCKING
-  8  | //
-  9  | Given("the timer is mocked", async ({ page }) => {
-  10 |   await page.addInitScript(() => {
-  11 |     // @ts-ignore
-  12 |     window.originalSetInterval = window.setInterval;
-  13 |     // @ts-ignore
-  14 |     window.originalSetTimeout = window.setTimeout;
+  6  | //Jag har delat upp testerna i kategorier,
+  7  | //eftersom scenariot beskriver vad den gör så använder den bara det den behöver från steps
+  8  | //Alltså är detta allt som behövs för att testa alla på homepage
+  9  | // Vilket innebär att Edvin och Zhantea behöver bara skriva sina scenarion i feature
+  10 | 
+  11 | 
+  12 | //
+  13 | // NAVIGATION (Going from one place to another)
+  14 | //
   15 | 
-  16 |     window.setInterval = () => 0;
-  17 |     window.setTimeout = () => 0;
-  18 |   });
-  19 | });
+  16 | Then('I am on {string}', async ({ page }, url) => {
+  17 |   await page.waitForURL(url);
+  18 | });
+  19 | 
   20 | 
-  21 | When("the timer ticks {int} seconds", async ({ page }, seconds) => {
-  22 |   for (let i = 0; i < seconds; i++) {
-  23 |     await page.evaluate(() => {
-  24 |       window.dispatchEvent(new Event("manual-timer-tick"));
-  25 |     });
-  26 |   }
-  27 | });
-  28 | 
+  21 | // Navigation – ny, unik text för att undvika krockar
+  22 | Given('I go to {string}', async ({ page }, url) => {
+  23 |   await page.goto(url);
+  24 |   await page.waitForURL(url);
+  25 | });
+  26 | 
+  27 | //
+  28 | // ACTIONS (When somethin happens etc pressing a button)
   29 | //
-  30 | // WORD INPUT
-  31 | //
-  32 | When("I type the word {string}", async ({ page }, text) => {
-> 33 |   await page.getByRole("textbox").fill(text);
-     |                                   ^ Error: locator.fill: Test timeout of 30000ms exceeded.
-  34 | });
-  35 | 
-  36 | When("I submit the word", async ({ page }) => {
-  37 |   await page.getByRole("textbox").press("Enter");
-  38 | });
-  39 | 
-  40 | //
-  41 | // ASSERTIONS
-  42 | //
-  43 | Then("the timer should show {int}", async ({ page }, value) => {
-  44 |   // Timer.tsx visar exakt: 30s
-  45 |   const timer = page.getByText(new RegExp(`^${value}s$`));
-  46 |   await expect(timer).toBeVisible();
-  47 | });
-  48 | 
-  49 | Then("player 1 has {int} HP", async ({ page }, hp) => {
-  50 |   await expect(page.getByText(`${hp} HP`)).toBeVisible();
-  51 | });
-  52 | 
-  53 | Then("player 2 has {int} HP", async ({ page }, hp) => {
-  54 |   await expect(page.getByText(`${hp} HP`)).toBeVisible();
-  55 | });
-  56 | 
-  57 | Then("it is player 1 turn", async ({ page }) => {
-  58 |   await expect(page.getByText("PlayerOne")).toBeVisible();
-  59 | });
-  60 | 
-  61 | Then("it is player 2 turn", async ({ page }) => {
-  62 |   await expect(page.getByText("PlayerTwo")).toBeVisible();
-  63 | });
-  64 | 
-  65 | Then("the word history contains {string}", async ({ page }, word) => {
-  66 |   await expect(page.getByText(word)).toBeVisible();
-  67 | });
-  68 | 
-  69 | Then("I see a damage popup with {int}", async ({ page }, amount) => {
-  70 |   await expect(page.getByText(`-${amount}`)).toBeVisible();
-  71 | });
-  72 | 
+  30 | When('I press button {string}', async ({ page }, text) => {
+  31 |   await page.getByRole('button', { name: text }).click();
+  32 | });
+  33 | 
+  34 | //
+  35 | // ASSERTIONS (for example i'm supposed to see a textfield)
+  36 | //
+  37 | Then('I see {string}', async ({ page }, text) => {
+  38 |   const visible = await page.getByText(text).isVisible();
+  39 |   if (!visible) {
+  40 |     throw new Error(`Expected to see "${text}"`);
+  41 |   }
+  42 | });
+  43 | 
+  44 | Then('I see button {string}', async ({ page }, text) => {
+  45 |   const visible = await page.getByRole('button', { name: text }).isVisible();
+  46 |   if (!visible) {
+  47 |     throw new Error(`Expected to see button "${text}"`);
+  48 |   }
+  49 | });
+  50 | 
+  51 | Then('I see input value {string}', async ({ page }, value) => {
+  52 |   await expect(page.locator('input')).toHaveValue(value);
+  53 | });
+  54 | Given("the input is enabled", async ({ page }) => {
+> 55 |   await page.waitForSelector('input:not([disabled])');
+     |              ^ Error: page.waitForSelector: Test timeout of 30000ms exceeded.
+  56 | });
+  57 | 
+  58 | 
+  59 | //
+  60 | // JOIN GAME SUPPORT STEPS
+  61 | //
+  62 | //
+  63 | // JOIN GAME SUPPORT STEPS
+  64 | //
+  65 | 
+  66 | When('I click the {string} button', async ({ page }, text) => {
+  67 |   await page.getByRole('button', { name: text }).click();
+  68 | });
+  69 | 
+  70 | Then('I should be redirected to {string}', async ({ page }, url) => {
+  71 |   await page.waitForURL(url);
+  72 | });
+  73 | 
+  74 | 
+  75 | 
+  76 | 
+  77 | 
+  78 | 
+  79 | 
+  80 | 
+  81 | 
 ```
