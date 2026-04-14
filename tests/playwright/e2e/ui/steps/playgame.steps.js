@@ -67,6 +67,6 @@ Then("the word history contains {string}", async ({ page }, word) => {
 });
 
 Then("I see a damage popup with {int}", async ({ page }, amount) => {
-  await expect(page.getByText(new RegExp(`^-${amount}$`))).toBeVisible();
-
+  const popup = page.locator("div", { hasText: new RegExp(`^-${amount}$`) });
+  await expect(popup).toBeVisible();
 });
