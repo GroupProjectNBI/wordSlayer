@@ -2,7 +2,7 @@ Feature: PlayGame Page
 
   Scenario: User sees the PlayGame page
     Given the timer is mocked
-    And I go to "/play?test"
+    And I go to "/game?test"
     And the input is enabled
     Then I see "Word Slayer"
     And I see "PlayerOne"
@@ -13,14 +13,14 @@ Feature: PlayGame Page
 
   Scenario: Player 1 starts typing and timer begins
     Given the timer is mocked
-    And I go to "/play?test"
+    And I go to "/game?test"
     And the input is enabled
     When I type the word "dragon"
     Then the timer should show 30
 
   Scenario: Player 1 submits a word and deals damage
     Given the timer is mocked
-    And I go to "/play?test"
+    And I go to "/game?test"
     And the input is enabled
     When I type the word "dragon"
     And I submit the word
@@ -32,7 +32,7 @@ Feature: PlayGame Page
 
   Scenario: Timer runs out and turn switches
     Given the timer is mocked
-    And I go to "/play?test"
+    And I go to "/game?test"
     And the input is enabled
     Then the timer should show 30
     When the timer ticks 30 seconds
