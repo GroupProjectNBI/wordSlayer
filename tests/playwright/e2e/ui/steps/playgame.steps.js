@@ -4,49 +4,51 @@ import { expect } from '@playwright/test';
 const { Given, When, Then } = createBdd();
 
 //
-// NAVIGATION
+// PLAYGAME-SPECIFIC ACTIONS
 //
-Given('I am on {string}', async ({ page }, url) => {
-  await page.goto(url);
-  await page.waitForURL(url);
+
+When('I type the word {string}', async ({ page }, text) => {
+  await page.locator('input').fill(text);
 });
 
-Then('I am on {string}', async ({ page }, url) => {
-  await page.waitForURL(url);
-});
-
-//
-// ACTIONS
-//
-When('I press button {string}', async ({ page }, text) => {
-  await page.getByRole('button', { name: text }).click();
+When('I submit the word', async ({ page }) => {
+  await page.locator('input').press('Enter');
 });
 
 //
-// ASSERTIONS
+// PLAYGAME-SPECIFIC ASSERTIONS
 //
-Then('I see {string}', async ({ page }, text) => {
-  const visible = await page.getByText(text).isVisible();
-  if (!visible) {
-    throw new Error(`Expected to see "${text}"`);
-  }
+
+Then('I see timer showing {int}', async ({ page }, value) => {
+  const timer = page.getByText(new RegExp(`^${value}s$`));
+  await expect(timer).toBeVisible();
 });
 
-Then('I see button {string}', async ({ page }, text) => {
-  const visible = await page.getByRole('button', { name: text }).isVisible();
-  if (!visible) {
-    throw new Error(`Expected to see button "${text}"`);
-  }
+Then('player 1 has {int} HP', async ({ page }, hp) => {
+  const hpText = page.getByText(`${hp} HP`);
+  await expect(hpText).toBeVisible();
 });
 
-Then('I see input {string}', async ({ page }, placeholder) => {
-  const input = page.getByPlaceholder(placeholder);
-  const visible = await input.isVisible();
-  if (!visible) {
-    throw new Error(`Expected to see input with placeholder "${placeholder}"`);
-  }
+Then('player 2 has {int} HP', async ({ page }, hp) => {
+  const hpText = page.getByText(`${hp} HP`);
+  await expect(hpText).toBeVisible();
 });
 
-Then('I see input value {string}', async ({ page }, value) => {
-  await expect(page.locator('input')).toHaveValue(value);
+Then('it is player 1 turn', async ({ page }) => {
+  const active = page.getByText('PlayerOne');
+  await expect(active).toHaveClass(/text-yellow|ring-yellow/);
+});
+
+Then('it is player 2 turn', async ({ page }) => {
+  const active = page.getByText('PlayerTwo');
+  await expect(active).toHaveClass(/text-yellow|ring-yellow/);
+});
+
+Then('the word history contains {string}', async ({ page }, word) => {
+  await expect(page.getByText(word)).toBeVisible();
+});
+
+Then('I see a damage popup with {int}', async ({ page }, amount) => {
+  const popup = page.getByText(`-${amount}`);
+  await expect(popup).toBeVisible();
 });

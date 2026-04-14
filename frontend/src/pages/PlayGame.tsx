@@ -103,6 +103,7 @@ export default function PlayGame() {
       setWord={handleWordChange}
       onSubmitWord={onSubmitWord}
       history={history}
+      timerRunning={timerRunning}
     >
       {popups.map((p) => (
         <DamagePopup
