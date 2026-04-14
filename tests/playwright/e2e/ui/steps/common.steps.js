@@ -44,3 +44,8 @@ Then('I see button {string}', async ({ page }, text) => {
 Then('I see input value {string}', async ({ page }, value) => {
   await expect(page.locator('input')).toHaveValue(value);
 });
+
+Given('I am on {string}', async ({ page }, url) => {
+  await page.goto(url);
+  await page.waitForURL(url);
+});

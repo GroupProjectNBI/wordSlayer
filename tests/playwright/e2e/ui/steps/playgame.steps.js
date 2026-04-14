@@ -19,10 +19,11 @@ When('I submit the word', async ({ page }) => {
 // PLAYGAME-SPECIFIC ASSERTIONS
 //
 
-Then('I see timer showing {int}', async ({ page }, value) => {
+Then('timer shows {int}', async ({ page }, value) => {
   const timer = page.getByText(new RegExp(`^${value}s$`));
   await expect(timer).toBeVisible();
 });
+
 
 Then('player 1 has {int} HP', async ({ page }, hp) => {
   const hpText = page.getByText(`${hp} HP`);
