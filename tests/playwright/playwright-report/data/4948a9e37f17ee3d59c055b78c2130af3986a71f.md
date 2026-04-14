@@ -18,7 +18,7 @@ Test timeout of 30000ms exceeded.
 ```
 Error: page.waitForURL: Test timeout of 30000ms exceeded.
 =========================== logs ===========================
-waiting for navigation to "Join Game" until "load"
+waiting for navigation to "/joingame" until "load"
 ============================================================
 ```
 
@@ -93,17 +93,25 @@ waiting for navigation to "Join Game" until "load"
   55 | //
   56 | // JOIN GAME SUPPORT STEPS
   57 | //
-  58 | 
-  59 | When('I click the {string} button', async ({ page }, text) => {
-  60 |   await page.getByRole('button', { name: text }).click();
-  61 | });
-  62 | 
-  63 | Then('I should be redirected to the {string} page', async ({ page }, url) => {
-> 64 |   await page.waitForURL(url);
+  58 | //
+  59 | // JOIN GAME SUPPORT STEPS
+  60 | //
+  61 | 
+  62 | When('I click the {string} button', async ({ page }, text) => {
+  63 |   await page.getByRole('button', { name: text }).click();
+  64 | });
+  65 | 
+  66 | Then('I should be redirected to {string}', async ({ page }, url) => {
+> 67 |   await page.waitForURL(url);
      |              ^ Error: page.waitForURL: Test timeout of 30000ms exceeded.
-  65 | });
-  66 | 
-  67 | 
-  68 | 
+  68 | });
   69 | 
+  70 | 
+  71 | 
+  72 | 
+  73 | 
+  74 | 
+  75 | 
+  76 | 
+  77 | 
 ```

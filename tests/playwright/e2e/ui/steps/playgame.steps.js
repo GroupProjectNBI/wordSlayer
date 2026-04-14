@@ -30,17 +30,18 @@ When("the timer ticks {int} seconds", async ({ page }, seconds) => {
 // WORD INPUT
 //
 When("I type the word {string}", async ({ page }, text) => {
-  await page.locator("input").fill(text);
+  await page.getByRole("textbox").fill(text);
 });
 
 When("I submit the word", async ({ page }) => {
-  await page.locator("input").press("Enter");
+  await page.getByRole("textbox").press("Enter");
 });
 
 //
 // ASSERTIONS
 //
 Then("the timer should show {int}", async ({ page }, value) => {
+  // Timer.tsx visar exakt: 30s
   const timer = page.getByText(new RegExp(`^${value}s$`));
   await expect(timer).toBeVisible();
 });

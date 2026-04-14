@@ -12,7 +12,7 @@
 # Error details
 
 ```
-Error: Expected to see "Word Slayer"
+Error: Expected to see "WORD SLAYER"
 ```
 
 # Test source
@@ -58,7 +58,7 @@ Error: Expected to see "Word Slayer"
   38 |   const visible = await page.getByText(text).isVisible();
   39 |   if (!visible) {
 > 40 |     throw new Error(`Expected to see "${text}"`);
-     |           ^ Error: Expected to see "Word Slayer"
+     |           ^ Error: Expected to see "WORD SLAYER"
   41 |   }
   42 | });
   43 | 
@@ -76,16 +76,24 @@ Error: Expected to see "Word Slayer"
   55 | //
   56 | // JOIN GAME SUPPORT STEPS
   57 | //
-  58 | 
-  59 | When('I click the {string} button', async ({ page }, text) => {
-  60 |   await page.getByRole('button', { name: text }).click();
-  61 | });
-  62 | 
-  63 | Then('I should be redirected to the {string} page', async ({ page }, url) => {
-  64 |   await page.waitForURL(url);
-  65 | });
-  66 | 
-  67 | 
-  68 | 
+  58 | //
+  59 | // JOIN GAME SUPPORT STEPS
+  60 | //
+  61 | 
+  62 | When('I click the {string} button', async ({ page }, text) => {
+  63 |   await page.getByRole('button', { name: text }).click();
+  64 | });
+  65 | 
+  66 | Then('I should be redirected to {string}', async ({ page }, url) => {
+  67 |   await page.waitForURL(url);
+  68 | });
   69 | 
+  70 | 
+  71 | 
+  72 | 
+  73 | 
+  74 | 
+  75 | 
+  76 | 
+  77 | 
 ```

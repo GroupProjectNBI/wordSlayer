@@ -55,14 +55,22 @@ Then('I see input value {string}', async ({ page }, value) => {
 //
 // JOIN GAME SUPPORT STEPS
 //
+//
+// JOIN GAME SUPPORT STEPS
+//
 
 When('I click the {string} button', async ({ page }, text) => {
   await page.getByRole('button', { name: text }).click();
 });
 
-Then('I should be redirected to the {string} page', async ({ page }, url) => {
+Then('I should be redirected to {string}', async ({ page }, url) => {
   await page.waitForURL(url);
 });
+
+
+
+
+
 
 
 
