@@ -5,8 +5,8 @@ Feature: PlayGame Page
     And I go to "/game?test"
     And the input is enabled
     Then I see "Word Slayer"
-    And I see "PlayerOne"
-    And I see "PlayerTwo"
+    And I see the player 1 username
+    And I see the player 2 username
     And I see "VS"
     And the timer should show 30
 

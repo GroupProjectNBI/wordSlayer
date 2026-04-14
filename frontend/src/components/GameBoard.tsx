@@ -41,7 +41,7 @@ export default function GameBoard({
   children
 }: GameBoardProps) {
 
-  // 🧪 TEST MODE: gör input alltid enabled
+  //  TEST MODE: gör input alltid enabled
   const isTest = typeof window !== "undefined" && window.location.search.includes("test");
 
   const inputDisabled = isTest ? false : turn !== "player1";
@@ -61,17 +61,18 @@ export default function GameBoard({
       {/* WORD HISTORY (left-center) */}
       <WordHistory words={history} />
 
-      {/* Player 1 (top-left) */}
-      <div data-player="player1">
+      <div data-player="player1" data-active={turn === "player1"}>
+        <Username name={player1.username} isActive={turn === "player1"} align="left" />
         <HPBar hp={player1.hp} color="green" width={160} />
         <div className="text-sm mt-1">{player1.hp} HP</div>
       </div>
 
-      {/* Player 2 (bottom-right) */}
-      <div data-player="player2">
+      <div data-player="player2" data-active={turn === "player2"}>
+        <Username name={player2.username} isActive={turn === "player2"} align="right" />
         <HPBar hp={player2.hp} color="red" width={160} />
         <div className="text-sm mt-1">{player2.hp} HP</div>
       </div>
+
 
       {/* Center VS + Timer */}
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
