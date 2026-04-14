@@ -7,22 +7,22 @@
 # Test info
 
 - Name: e2e\ui\features\playgamepage.feature.spec.js >> PlayGame Page >> Player 1 submits a word and deals damage
-- Location: .features-gen\e2e\ui\features\playgamepage.feature.spec.js:26:7
+- Location: .features-gen\e2e\ui\features\playgamepage.feature.spec.js:25:7
 
 # Error details
 
 ```
 Error: expect(locator).toBeVisible() failed
 
-Locator: getByText('-6')
+Locator: getByText(/^-6$/)
 Expected: visible
-Error: strict mode violation: getByText('-6') resolved to 2 elements:
+Error: strict mode violation: getByText(/^-6$/) resolved to 2 elements:
     1) <span class="text-sm opacity-80">-6</span> aka locator('span').filter({ hasText: '-' })
     2) <div class="↵        pointer-events-none↵        absolute ↵        text-4xl font-extrabold ↵        transition-all duration-300 ↵        opacity-100 -translate-y-2↵        right-10 bottom-32 text-red-400↵      ">-6</div> aka locator('div').filter({ hasText: /^-6$/ })
 
 Call log:
   - Expect "toBeVisible" with timeout 10000ms
-  - waiting for getByText('-6')
+  - waiting for getByText(/^-6$/)
 
 ```
 
@@ -122,8 +122,9 @@ Call log:
   67 | });
   68 | 
   69 | Then("I see a damage popup with {int}", async ({ page }, amount) => {
-> 70 |   await expect(page.getByText(`-${amount}`)).toBeVisible();
-     |                                              ^ Error: expect(locator).toBeVisible() failed
-  71 | });
-  72 | 
+> 70 |   await expect(page.getByText(new RegExp(`^-${amount}$`))).toBeVisible();
+     |                                                            ^ Error: expect(locator).toBeVisible() failed
+  71 | 
+  72 | });
+  73 | 
 ```

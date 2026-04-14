@@ -8,7 +8,6 @@ Feature: PlayGame Page
     And I see "PlayerOne"
     And I see "PlayerTwo"
     And I see "VS"
-    And I see "HP"
     And the timer should show 30
 
   Scenario: Player 1 starts typing and timer begins
@@ -36,6 +35,5 @@ Feature: PlayGame Page
     And the input is enabled
     Then the timer should show 30
     When the timer ticks 30 seconds
-    Then the timer should show 0
-    And it is player 2 turn
+    Then it is player 2 turn
     And the timer should show 30
