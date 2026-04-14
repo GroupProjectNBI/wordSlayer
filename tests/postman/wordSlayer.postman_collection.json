@@ -160,7 +160,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"wordGuess\": \"hello\" \r\n}",
+          "raw": "{\r\n    \"wordGuess\": \"hello\" ,\r\n  \"playerId\": \"{{player1}}\"\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -203,7 +203,59 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"wordGuess\": \"falflapå\" \r\n}",
+          "raw": "\r\n{\r\n   \"wordGuess\": \"falflapå\" ,\r\n    \"playerId\": \"{{player1}}\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url_api}}/game/{{sessionId}}/playword",
+          "host": [
+            "{{base_url_api}}"
+          ],
+          "path": [
+            "game",
+            "{{sessionId}}",
+            "playword"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "verifiera att man inte kan skicka in samma ord igen,",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Vi förväntar oss att det SKA skita sig andra gången\r",
+              "pm.test(\"Ska returnera 400 när ordet är en dubblett\", function () {\r",
+              "    pm.response.to.have.status(400);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Ska ge rätt felmeddelande\", function () {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.message).to.eql(\"Du har redan använt detta ordet!\");\r",
+              "});\r",
+              "\r",
+              "\r",
+              "pm.environment.set(\"sessionId\", null);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"wordGuess\": \"hello\" ,\r\n  \"playerId\": \"{{player1}}\"\r\n}",
           "options": {
             "raw": {
               "language": "json"
