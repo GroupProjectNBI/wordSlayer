@@ -29,6 +29,10 @@ When("the timer ticks {int} seconds", async ({ page }, seconds) => {
 //
 // WORD INPUT
 //
+Given("the input is enabled", async ({ page }) => {
+  await page.waitForSelector('input:not([disabled])');
+});
+
 When("I type the word {string}", async ({ page }, text) => {
   await page.getByRole("textbox").fill(text);
 });
@@ -41,8 +45,7 @@ When("I submit the word", async ({ page }) => {
 // ASSERTIONS
 //
 Then("the timer should show {int}", async ({ page }, value) => {
-  // Timer.tsx visar exakt: 30s
-  const timer = page.getByText(new RegExp(`^${value}s$`));
+  const timer = page.getByText(new RegExp(`^\\s*${value}s\\s*$`));
   await expect(timer).toBeVisible();
 });
 

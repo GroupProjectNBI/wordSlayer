@@ -51,6 +51,10 @@ Then('I see button {string}', async ({ page }, text) => {
 Then('I see input value {string}', async ({ page }, value) => {
   await expect(page.locator('input')).toHaveValue(value);
 });
+Given("the input is enabled", async ({ page }) => {
+  await page.waitForSelector('input:not([disabled])');
+});
+
 
 //
 // JOIN GAME SUPPORT STEPS

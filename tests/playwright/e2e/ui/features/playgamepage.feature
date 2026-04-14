@@ -1,14 +1,16 @@
 Feature: PlayGame Page
 
   Scenario: User sees the PlayGame page
-    Given the timer is mocked
-    And I go to "/play"
-    Then I see "Word Slayer"
-    And I see "PlayerOne"
-    And I see "PlayerTwo"
-    And I see "VS"
-    And I see "HP"
-    And the timer should show 30
+  Given the timer is mocked
+  And I go to "/play"
+  And the input is enabled
+  Then I see "Word Slayer"
+  And I see "PlayerOne"
+  And I see "PlayerTwo"
+  And I see "VS"
+  And I see "HP"
+  And the timer should show 30
+
 
   Scenario: Player 1 starts typing and timer begins
     Given the timer is mocked
