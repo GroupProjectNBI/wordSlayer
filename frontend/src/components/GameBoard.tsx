@@ -1,4 +1,3 @@
-import React from "react";
 import HPBar from "./HPBar";
 import Timer from "./Timer";
 import Username from "./Username";
@@ -25,6 +24,7 @@ interface GameBoardProps {
   setWord: (value: string) => void;
   onSubmitWord: () => void;
   history: WordEntry[];
+  timerRunning: boolean;
   children?: React.ReactNode; // DamagePopups
 }
 
@@ -37,6 +37,7 @@ export default function GameBoard({
   setWord,
   onSubmitWord,
   history,
+  timerRunning,
   children
 }: GameBoardProps) {
   return (
@@ -85,6 +86,7 @@ export default function GameBoard({
           onSubmit={onSubmitWord}
           disabled={turn !== "player1"}
           isActive={turn === "player1"}
+          isTimerRunning={timerRunning}
         />
       </div>
 
