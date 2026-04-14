@@ -1,5 +1,3 @@
-
-
 interface HPBarProps {
   hp: number;               // 0–100
   color?: "green" | "red";  // färgtema
@@ -13,9 +11,12 @@ export default function HPBar({ hp, color = "green", width = 160 }: HPBarProps) 
       : "bg-red-500";
 
   return (
-    <div style={{ width }} className="h-4 bg-gray-700 rounded-full overflow-hidden">
+    <div
+      className="hp-bar h-4 bg-gray-700 rounded-full overflow-hidden"
+      style={{ width }}
+    >
       <div
-        className={`h-full ${barColor} rounded-full transition-all duration-300`}
+        className={`hp-fill h-full ${barColor} rounded-full transition-all duration-300`}
         style={{ width: `${hp}%` }}
       />
     </div>

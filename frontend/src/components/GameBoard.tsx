@@ -62,15 +62,13 @@ export default function GameBoard({
       <WordHistory words={history} />
 
       {/* Player 1 (top-left) */}
-      <div className="absolute top-20 left-4 text-left">
-        <Username name={player1.username} isActive={turn === "player1"} align="left" />
+      <div data-player="player1">
         <HPBar hp={player1.hp} color="green" width={160} />
         <div className="text-sm mt-1">{player1.hp} HP</div>
       </div>
 
       {/* Player 2 (bottom-right) */}
-      <div className="absolute bottom-20 right-4 text-right">
-        <Username name={player2.username} isActive={turn === "player2"} align="right" />
+      <div data-player="player2">
         <HPBar hp={player2.hp} color="red" width={160} />
         <div className="text-sm mt-1">{player2.hp} HP</div>
       </div>
