@@ -21,7 +21,7 @@ export default function PlayGame() {
   >([]);
 
   //
-  // TIMER LOGIC
+  // NORMAL TIMER LOGIC (LIVE MODE)
   //
   useEffect(() => {
     if (!timerRunning) return;
@@ -31,7 +31,7 @@ export default function PlayGame() {
         if (t <= 1) {
           // Timer ran out → switch turn + reset
           setTurn((prev) => (prev === "player1" ? "player2" : "player1"));
-          setTimerRunning(false); // stop until next player types
+          setTimerRunning(false);
           return 30;
         }
         return t - 1;
@@ -40,6 +40,25 @@ export default function PlayGame() {
 
     return () => clearInterval(interval);
   }, [timerRunning, turn]);
+
+  //
+  // MANUAL TIMER TICK (TEST MODE)
+  //
+  useEffect(() => {
+    function manualTick() {
+      setTimer((t) => {
+        if (t <= 1) {
+          setTurn((prev) => (prev === "player1" ? "player2" : "player1"));
+          setTimerRunning(false);
+          return 30;
+        }
+        return t - 1;
+      });
+    }
+
+    window.addEventListener("manual-timer-tick", manualTick);
+    return () => window.removeEventListener("manual-timer-tick", manualTick);
+  }, []);
 
   //
   // DAMAGE + TURN LOGIC

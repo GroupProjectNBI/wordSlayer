@@ -13,9 +13,10 @@ const { Given, When, Then } = createBdd();
 // NAVIGATION (Going from one place to another)
 //
 
-Then('I am on {string}', async ({ page }, url) => {
+Then('the URL should be {string}', async ({ page }, url) => {
   await page.waitForURL(url);
 });
+
 
 //
 // ACTIONS (When somethin happens etc pressing a button)
