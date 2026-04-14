@@ -6,6 +6,24 @@ const { Given, When, Then } = createBdd();
 //
 // PLAYGAME-SPECIFIC ACTIONS
 //
+Given("the timer is mocked", async ({ page }) => {
+  await page.addInitScript(() => {
+    // Freeze all timers
+    window.originalSetInterval = window.setInterval;
+    window.originalSetTimeout = window.setTimeout;
+
+    window.setInterval = () => 0;
+    window.setTimeout = () => 0;
+  });
+});
+When("the timer ticks {int} seconds", async ({ page }, seconds) => {
+  for (let i = 0; i < seconds; i++) {
+    await page.evaluate(() => {
+      window.dispatchEvent(new Event("manual-timer-tick"));
+    });
+  }
+});
+
 
 When('I type the word {string}', async ({ page }, text) => {
   await page.locator('input').fill(text);
