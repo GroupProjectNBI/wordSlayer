@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import GameBoard from "../components/GameBoard";
 import DamagePopup from "../components/DamagePopup";
 
@@ -10,6 +10,8 @@ export default function PlayGame() {
   const [timer, setTimer] = useState(30);
   const [turn, setTurn] = useState<"player1" | "player2">("player1");
 
+  const [timerRunning, setTimerRunning] = useState(false);
+
   const [popups, setPopups] = useState<
     { id: number; amount: number; position: "left" | "right"; }[]
   >([]);
@@ -18,13 +20,35 @@ export default function PlayGame() {
     { word: string; player: "player1" | "player2"; damage: number; }[]
   >([]);
 
+  //
+  // TIMER LOGIC
+  //
+  useEffect(() => {
+    if (!timerRunning) return;
+
+    const interval = setInterval(() => {
+      setTimer((t) => {
+        if (t <= 1) {
+          // Timer ran out → switch turn + reset
+          setTurn((prev) => (prev === "player1" ? "player2" : "player1"));
+          setTimerRunning(false); // stop until next player types
+          return 30;
+        }
+        return t - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [timerRunning, turn]);
+
+  //
+  // DAMAGE + TURN LOGIC
+  //
   function dealDamage(amount: number, target: "left" | "right") {
     const id = Date.now();
 
-    // Skapa popup
     setPopups((prev) => [...prev, { id, amount, position: target }]);
 
-    // Uppdatera HP
     if (target === "left") {
       setPlayer1((p) => ({ ...p, hp: Math.max(0, p.hp - amount) }));
     } else {
@@ -32,18 +56,28 @@ export default function PlayGame() {
     }
   }
 
+  //
+  // WORD INPUT CHANGE
+  //
+  function handleWordChange(value: string) {
+    setWord(value);
+
+    // Start timer when player begins typing
+    if (!timerRunning && value.trim().length > 0) {
+      setTimerRunning(true);
+    }
+  }
+
+  //
+  // WORD SUBMISSION
+  //
   function onSubmitWord() {
     if (!word.trim()) return;
 
     const damage = word.length;
 
-    // Lägg till ord i historiken
-    setHistory((prev) => [
-      ...prev,
-      { word, player: turn, damage }
-    ]);
+    setHistory((prev) => [...prev, { word, player: turn, damage }]);
 
-    // Hantera damage + turbyte
     if (turn === "player1") {
       dealDamage(damage, "right");
       setTurn("player2");
@@ -51,6 +85,10 @@ export default function PlayGame() {
       dealDamage(damage, "left");
       setTurn("player1");
     }
+
+    // Reset timer and stop until next player types
+    setTimer(30);
+    setTimerRunning(false);
 
     setWord("");
   }
@@ -62,7 +100,7 @@ export default function PlayGame() {
       timer={timer}
       turn={turn}
       word={word}
-      setWord={setWord}
+      setWord={handleWordChange}
       onSubmitWord={onSubmitWord}
       history={history}
     >
