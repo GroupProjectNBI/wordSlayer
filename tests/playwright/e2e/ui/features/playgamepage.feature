@@ -3,7 +3,7 @@ Feature: PlayGame Page
   Scenario: User sees the PlayGame page
     Given the timer is mocked
     And I go to "/play"
-    Then I see "WORD SLAYER"
+    Then I see "Word Slayer"
     And I see "PlayerOne"
     And I see "PlayerTwo"
     And I see "VS"
