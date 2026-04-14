@@ -1,7 +1,14 @@
-import { useNavigate } from 'react-router-dom';
-
 export default function NewGame() {
-    const navigate = useNavigate();
+    const handleStartGame = async () => {
+        try {
+            const response = await fetch('http://localhost:5002/api/newGame');
+            const data = await response.json();
+
+            console.log("Game created:", data);
+        } catch (error) {
+            console.error("Error:", error);
+        }
+    };
 
     return (
         <main className="min-h-screen flex items-center justify-center">
@@ -20,7 +27,7 @@ export default function NewGame() {
 
                 <div className="flex flex-col gap-4">
                     <button
-                        onClick={() => navigate('/game')}
+                        onClick={handleStartGame}
                         className="w-full rounded-xl bg-purple-600 py-4 text-lg font-semibold text-white transition hover:bg-purple-500"
                     >
                         Start Game
