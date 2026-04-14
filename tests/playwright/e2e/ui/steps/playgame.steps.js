@@ -8,7 +8,9 @@ const { Given, When, Then } = createBdd();
 //
 Given("the timer is mocked", async ({ page }) => {
   await page.addInitScript(() => {
+    // @ts-ignore
     window.originalSetInterval = window.setInterval;
+    // @ts-ignore
     window.originalSetTimeout = window.setTimeout;
 
     window.setInterval = () => 0;
@@ -38,7 +40,7 @@ When("I submit the word", async ({ page }) => {
 //
 // ASSERTIONS
 //
-Then("I see timer showing {int}", async ({ page }, value) => {
+Then("the timer should show {int}", async ({ page }, value) => {
   const timer = page.getByText(new RegExp(`^${value}s$`));
   await expect(timer).toBeVisible();
 });

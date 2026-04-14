@@ -13,10 +13,16 @@ const { Given, When, Then } = createBdd();
 // NAVIGATION (Going from one place to another)
 //
 
-Then('the URL should be {string}', async ({ page }, url) => {
+Then('I am on {string}', async ({ page }, url) => {
   await page.waitForURL(url);
 });
 
+
+// Navigation – ny, unik text för att undvika krockar
+Given('I go to {string}', async ({ page }, url) => {
+  await page.goto(url);
+  await page.waitForURL(url);
+});
 
 //
 // ACTIONS (When somethin happens etc pressing a button)
@@ -46,7 +52,17 @@ Then('I see input value {string}', async ({ page }, value) => {
   await expect(page.locator('input')).toHaveValue(value);
 });
 
-Given('I am on {string}', async ({ page }, url) => {
-  await page.goto(url);
+//
+// JOIN GAME SUPPORT STEPS
+//
+
+When('I click the {string} button', async ({ page }, text) => {
+  await page.getByRole('button', { name: text }).click();
+});
+
+Then('I should be redirected to the {string} page', async ({ page }, url) => {
   await page.waitForURL(url);
 });
+
+
+
