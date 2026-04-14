@@ -12,7 +12,7 @@
 # Error details
 
 ```
-Error: Expected to see "WORD SLAYER"
+Error: Expected to see "Word Slayer"
 ```
 
 # Test source
@@ -58,7 +58,7 @@ Error: Expected to see "WORD SLAYER"
   38 |   const visible = await page.getByText(text).isVisible();
   39 |   if (!visible) {
 > 40 |     throw new Error(`Expected to see "${text}"`);
-     |           ^ Error: Expected to see "WORD SLAYER"
+     |           ^ Error: Expected to see "Word Slayer"
   41 |   }
   42 | });
   43 | 
