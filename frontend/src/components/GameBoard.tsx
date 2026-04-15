@@ -1,4 +1,3 @@
-import React from "react";
 import HPBar from "./HPBar";
 // import Timer from "./Timer";
 import Username from "./Username";
