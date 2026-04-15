@@ -1,5 +1,5 @@
 import HPBar from "./HPBar";
-// import Timer from "./Timer";
+import Timer from "./Timer";
 import Username from "./Username";
 import WordHistory from "./WordHistory";
 import WordInput from "./WordInput";
@@ -18,7 +18,7 @@ interface WordEntry {
 interface GameBoardProps {
   player1: Player;
   player2: Player;
-  // timer: number;
+  timer: number;
   turn: "player1" | "player2";
   word: string;
   setWord: (value: string) => void;
@@ -31,7 +31,7 @@ interface GameBoardProps {
 export default function GameBoard({
   player1,
   player2,
-  // timer,
+  timer,
   turn,
   word,
   setWord,
@@ -82,7 +82,7 @@ export default function GameBoard({
         </h1>
 
         <div className="mt-4">
-          {/* <Timer value={timer} /> */}
+          <Timer value={timer} />
         </div>
       </div>
 

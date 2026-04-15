@@ -12,7 +12,7 @@ export default function PlayGame() {
   const localPlayer: "player1" | "player2" = "player1";
   const [connectedPlayers, setConnectedPlayers] = useState(1);
   const [turn, setTurn] = useState<"player1" | "player2">("player1");
-
+  const [timer, setTimer] = useState(30);
   const [timerRunning, setTimerRunning] = useState(false);
 
 
@@ -118,6 +118,10 @@ export default function PlayGame() {
           dealDamage(damage, "left");
           setTurn("player1");
         }
+        // Reset timer and stop until next player types
+        setTimer(30);
+        setTimerRunning(false);
+
         setWord("");
       } else {
         const errorData = await response.json();
@@ -144,9 +148,11 @@ export default function PlayGame() {
       <GameBoard
         player1={player1}
         player2={player2}
+        timer={timer}
         turn={turn}
         word={word}
-        setWord={setWord}
+        setWord={handleWordChange}
+        timerRunning={timerRunning}
         onSubmitWord={onSubmitWord}
         history={history}
       >
