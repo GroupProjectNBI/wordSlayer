@@ -29,7 +29,6 @@ export default function PlayGame() {
     const interval = setInterval(() => {
       setTimer((t) => {
         if (t <= 1) {
-          // Timer ran out → switch turn + reset
           setTurn((prev) => (prev === "player1" ? "player2" : "player1"));
           setTimerRunning(false);
           return 30;
@@ -81,7 +80,6 @@ export default function PlayGame() {
   function handleWordChange(value: string) {
     setWord(value);
 
-    // Start timer when player begins typing
     if (!timerRunning && value.trim().length > 0) {
       setTimerRunning(true);
     }
@@ -91,11 +89,12 @@ export default function PlayGame() {
   // WORD SUBMISSION
   //
   function onSubmitWord() {
-    if (!word.trim()) return;
+    const cleanWord = word.trim();
+    if (!cleanWord) return;
 
-    const damage = word.length;
+    const damage = cleanWord.length;
 
-    setHistory((prev) => [...prev, { word, player: turn, damage }]);
+    setHistory((prev) => [...prev, { word: cleanWord, player: turn, damage }]);
 
     if (turn === "player1") {
       dealDamage(damage, "right");
@@ -105,10 +104,8 @@ export default function PlayGame() {
       setTurn("player1");
     }
 
-    // Reset timer and stop until next player types
     setTimer(30);
     setTimerRunning(false);
-
     setWord("");
   }
 

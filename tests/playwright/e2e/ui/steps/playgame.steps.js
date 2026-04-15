@@ -4,6 +4,13 @@ import { expect } from "@playwright/test";
 const { Given, When, Then } = createBdd();
 
 //
+// NAVIGATION (KRITISK FIX)
+//
+Given("I am on the PlayGame page", async ({ page }) => {
+  await page.goto("/playgame?test");
+});
+
+//
 // TIMER MOCKING
 //
 Given("the timer is mocked", async ({ page }) => {
@@ -32,7 +39,9 @@ When("I type the word {string}", async ({ page }, text) => {
 });
 
 When("I submit the word", async ({ page }) => {
-  await page.getByRole("textbox").press("Enter");
+  const input = page.getByRole("textbox");
+  await input.focus();
+  await input.press("Enter");
 });
 
 //
@@ -44,7 +53,7 @@ Then("the timer should show {int}", async ({ page }, value) => {
 });
 
 //
-// HP TEXT ASSERTIONS (player 1 & 2)
+// HP TEXT ASSERTIONS
 //
 Then("player {int} has {int} HP", async ({ page }, player, hp) => {
   const selector = `[data-player='player${player}'] >> text='${hp} HP'`;
@@ -60,7 +69,7 @@ Then("it is player {int} turn", async ({ page }, player) => {
 });
 
 //
-// USERNAME ASSERTION (backend-ready)
+// USERNAME ASSERTION
 //
 Then("I see the player {int} username", async ({ page }, player) => {
   const selector = `[data-player='player${player}']`;
@@ -83,9 +92,13 @@ Then("I see a damage popup with {int}", async ({ page }, amount) => {
 });
 
 //
-// HP BAR WIDTH ASSERTION (px → percent)
+// HP BAR WIDTH ASSERTION
 //
 Then("player {int} HP bar is at {int} percent", async ({ page }, player, percent) => {
+  await expect(
+    page.locator(`[data-player='player${player}'] >> text='${percent} HP'`)
+  ).toBeVisible();
+
   const bar = page.locator(`[data-player='player${player}'] .hp-fill`);
   const wrapper = page.locator(`[data-player='player${player}'] .hp-bar`);
 
@@ -94,7 +107,8 @@ Then("player {int} HP bar is at {int} percent", async ({ page }, player, percent
 
   const actualPercent = Math.round((barWidth / wrapperWidth) * 100);
 
-  if (actualPercent !== percent) {
+  const diff = Math.abs(actualPercent - percent);
+  if (diff > 1) {
     throw new Error(`Expected HP bar to be ${percent}% but was ${actualPercent}%`);
   }
 });

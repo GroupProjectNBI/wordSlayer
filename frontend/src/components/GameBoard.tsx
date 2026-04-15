@@ -25,7 +25,7 @@ interface GameBoardProps {
   onSubmitWord: () => void;
   history: WordEntry[];
   timerRunning: boolean;
-  children?: React.ReactNode; // DamagePopups
+  children?: React.ReactNode;
 }
 
 export default function GameBoard({
@@ -41,7 +41,6 @@ export default function GameBoard({
   children
 }: GameBoardProps) {
 
-  // TEST MODE: gör input alltid enabled
   const isTest = typeof window !== "undefined" && window.location.search.includes("test");
 
   const inputDisabled = isTest ? false : turn !== "player1";
@@ -51,7 +50,7 @@ export default function GameBoard({
   return (
     <main className="min-h-screen bg-[#1a1a2e] text-white relative overflow-hidden">
 
-      {/* TOP-CENTER TITLE */}
+      {/* TITLE */}
       <div className="absolute top-4 left-1/2 -translate-x-1/2 text-center">
         <h1 className="text-4xl font-extrabold tracking-widest uppercase">
           Word Slayer
@@ -73,7 +72,8 @@ export default function GameBoard({
           align="left"
         />
 
-        <div className="hp-bar">
+        {/* FIX: HPBar i container med exakt width */}
+        <div style={{ width: 160 }}>
           <HPBar hp={player1.hp} color="green" width={160} />
         </div>
 
@@ -92,7 +92,8 @@ export default function GameBoard({
           align="right"
         />
 
-        <div className="hp-bar">
+        {/* FIX: HPBar i container med exakt width */}
+        <div style={{ width: 160 }}>
           <HPBar hp={player2.hp} color="red" width={160} />
         </div>
 
@@ -122,7 +123,6 @@ export default function GameBoard({
         />
       </div>
 
-      {/* DAMAGE POPUPS */}
       {children}
     </main>
   );
