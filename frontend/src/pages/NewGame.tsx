@@ -1,7 +1,8 @@
+
 export default function NewGame() {
     const handleStartGame = async () => {
         try {
-            const response = await fetch('http://localhost:5002/api/newGame');
+            const response = await fetch('api/newGame');
             const data = await response.json();
 
             console.log("Game created:", data);
