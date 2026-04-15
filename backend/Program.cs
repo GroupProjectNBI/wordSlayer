@@ -61,21 +61,34 @@ app.MapPost("/api/game/{sessionId}/join", (Guid sessionId, JoinGameRequest reque
     return Results.Ok(updatedGame);
 });
 
-app.MapPost("/api/game/{sessionId}/playword", (Guid sessionId, HandeWordRequest? request, WordService wordService) =>
+app.MapPost("/api/game/{sessionId}/playword", (Guid sessionId, HandeWordRequest request, WordService wordService, GameManager gameManager) =>
 {
-    if (string.IsNullOrWhiteSpace(request?.wordGuess))
+    // 1. Hämta spelet
+    var game = gameManager.GetGameById(sessionId);
+    if (game == null) return Results.NotFound(new { message = "Spelet hittades inte!" });
+
+    // 2. Hitta spelaren som skickade ordet
+    var player = game.Players.FirstOrDefault(p => p.Name == request.PlayerId);
+    if (player == null) return Results.BadRequest(new { message = "Spelaren hittades inte i detta spel!" });
+
+    // 3. Kontrollera om ordet redan har använts av DENNA spelare
+    // (Vi använder din metod från Player-klassen!)
+    if (player.WordUsedAlready(request.wordGuess))
     {
-        return Results.BadRequest(new { message = "Där är inget ord som har spelats!" });
+        return Results.BadRequest(new { message = "Du har redan använt detta ordet!" });
     }
 
-    // Kolla om det är ett giltigt engelskt ord
+    // 4. Validera ordet mot ordlistan (WordService)
     if (!wordService.IsValidWord(request.wordGuess))
     {
-        return Results.BadRequest(new { message = "Ordet finns inte i den engelska ordlistan!" });
+        return Results.BadRequest(new { message = "Ordet finns inte i ordlistan!" });
     }
 
-    // TODO: Skicka ordet till GameManager för att hantera spelregler (poäng/HP)
-    return Results.Ok(request.wordGuess);
+    // 5. Allt är OK! Spara ordet i spelarens egen lista
+    player.Guesses.Add(request.wordGuess.Trim().ToLower());
+
+    // Vi skickar tillbaka hela 'game' så React får den uppdaterade listan automatiskt
+    return Results.Ok(game);
 });
 
 // 6. Fallback & Start (Fallback sköter React-routing)
@@ -91,6 +104,8 @@ app.Run();
 public class HandeWordRequest
 {
     public string wordGuess { get; set; } = string.Empty;
+    // NYTT: Vem är det som skickar ordet?
+    public string PlayerId { get; set; } = string.Empty;
 }
 
 public class JoinGameRequest

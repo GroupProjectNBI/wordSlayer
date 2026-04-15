@@ -34,4 +34,9 @@ public class Player
     {
         Name = name;
     }
+
+    public bool WordUsedAlready(string word)
+    {
+        return Guesses.Contains(word.Trim());
+    }
 }
