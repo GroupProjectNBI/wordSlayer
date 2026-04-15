@@ -1,5 +1,4 @@
 
-
 interface HPBarProps {
   hp: number;               // 0–100
   color?: "green" | "red";  // färgtema

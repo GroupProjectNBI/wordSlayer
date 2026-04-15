@@ -1,5 +1,4 @@
 
-
 interface TimerProps {
   value: number; // antal sekunder kvar
 }
