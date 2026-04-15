@@ -1,52 +1,72 @@
-import { createBdd } from 'playwright-bdd';
-import { expect } from '@playwright/test';
+import { createBdd } from "playwright-bdd";
+import { expect } from "@playwright/test";
 
 const { Given, When, Then } = createBdd();
 
 //
-// NAVIGATION
+// TIMER MOCKING
 //
-Given('I am on {string}', async ({ page }, url) => {
-  await page.goto(url);
-  await page.waitForURL(url);
+Given("the timer is mocked", async ({ page }) => {
+  await page.addInitScript(() => {
+    // @ts-ignore
+    window.originalSetInterval = window.setInterval;
+    // @ts-ignore
+    window.originalSetTimeout = window.setTimeout;
+
+    window.setInterval = () => 0;
+    window.setTimeout = () => 0;
+  });
 });
 
-Then('I am on {string}', async ({ page }, url) => {
-  await page.waitForURL(url);
+When("the timer ticks {int} seconds", async ({ page }, seconds) => {
+  for (let i = 0; i < seconds; i++) {
+    await page.evaluate(() => {
+      window.dispatchEvent(new Event("manual-timer-tick"));
+    });
+  }
 });
 
 //
-// ACTIONS
-//
-When('I press button {string}', async ({ page }, text) => {
-  await page.getByRole('button', { name: text }).click();
+// WORD INPUT
+
+
+When("I type the word {string}", async ({ page }, text) => {
+  await page.getByRole("textbox").fill(text);
+});
+
+When("I submit the word", async ({ page }) => {
+  await page.getByRole("textbox").press("Enter");
 });
 
 //
 // ASSERTIONS
 //
-Then('I see {string}', async ({ page }, text) => {
-  const visible = await page.getByText(text).isVisible();
-  if (!visible) {
-    throw new Error(`Expected to see "${text}"`);
-  }
+Then("the timer should show {int}", async ({ page }, value) => {
+  const timer = page.getByText(new RegExp(`^\\s*${value}s\\s*$`));
+  await expect(timer).toBeVisible();
 });
 
-Then('I see button {string}', async ({ page }, text) => {
-  const visible = await page.getByRole('button', { name: text }).isVisible();
-  if (!visible) {
-    throw new Error(`Expected to see button "${text}"`);
-  }
+Then("player 1 has {int} HP", async ({ page }, hp) => {
+  await expect(page.getByText(`${hp} HP`)).toBeVisible();
 });
 
-Then('I see input {string}', async ({ page }, placeholder) => {
-  const input = page.getByPlaceholder(placeholder);
-  const visible = await input.isVisible();
-  if (!visible) {
-    throw new Error(`Expected to see input with placeholder "${placeholder}"`);
-  }
+Then("player 2 has {int} HP", async ({ page }, hp) => {
+  await expect(page.getByText(`${hp} HP`)).toBeVisible();
 });
 
-Then('I see input value {string}', async ({ page }, value) => {
-  await expect(page.locator('input')).toHaveValue(value);
+Then("it is player 1 turn", async ({ page }) => {
+  await expect(page.getByText("PlayerOne")).toBeVisible();
+});
+
+Then("it is player 2 turn", async ({ page }) => {
+  await expect(page.getByText("PlayerTwo")).toBeVisible();
+});
+
+Then("the word history contains {string}", async ({ page }, word) => {
+  await expect(page.getByText(word)).toBeVisible();
+});
+
+Then("I see a damage popup with {int}", async ({ page }, amount) => {
+  const popup = page.locator("div", { hasText: new RegExp(`^-${amount}$`) });
+  await expect(popup).toBeVisible();
 });

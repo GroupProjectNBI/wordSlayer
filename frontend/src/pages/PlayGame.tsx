@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import GameBoard from "../components/GameBoard";
 import DamagePopup from "../components/DamagePopup";
 
@@ -12,14 +12,61 @@ export default function PlayGame() {
   const localPlayer: "player1" | "player2" = "player1";
   const [connectedPlayers, setConnectedPlayers] = useState(1);
   const [turn, setTurn] = useState<"player1" | "player2">("player1");
+  const [timer, setTimer] = useState(30);
+  const [timerRunning, setTimerRunning] = useState(false);
+
 
   // Typer från dev-branschen
   const [popups, setPopups] = useState<{ id: number; amount: number; position: "left" | "right"; }[]>([]);
   const [history, setHistory] = useState<{ word: string; player: "player1" | "player2"; damage: number; }[]>([]);
 
+  //
+  // NORMAL TIMER LOGIC (LIVE MODE)
+  //
+  useEffect(() => {
+    if (!timerRunning) return;
+
+    const interval = setInterval(() => {
+      setTimer((t) => {
+        if (t <= 1) {
+          // Timer ran out → switch turn + reset
+          setTurn((prev) => (prev === "player1" ? "player2" : "player1"));
+          setTimerRunning(false);
+          return 30;
+        }
+        return t - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [timerRunning, turn]);
+
+  //
+  // MANUAL TIMER TICK (TEST MODE)
+  //
+  useEffect(() => {
+    function manualTick() {
+      setTimer((t) => {
+        if (t <= 1) {
+          setTurn((prev) => (prev === "player1" ? "player2" : "player1"));
+          setTimerRunning(false);
+          return 30;
+        }
+        return t - 1;
+      });
+    }
+
+    window.addEventListener("manual-timer-tick", manualTick);
+    return () => window.removeEventListener("manual-timer-tick", manualTick);
+  }, []);
+
+  //
+  // DAMAGE + TURN LOGIC
+  //
   // --- 2. HJÄLPFUNKTIONER ---
   function dealDamage(amount: number, target: "left" | "right") {
     const id = Date.now();
+
     setPopups((prev) => [...prev, { id, amount, position: target }]);
 
     if (target === "left") {
@@ -29,6 +76,21 @@ export default function PlayGame() {
     }
   }
 
+  //
+  // WORD INPUT CHANGE
+  //
+  function handleWordChange(value: string) {
+    setWord(value);
+
+    // Start timer when player begins typing
+    if (!timerRunning && value.trim().length > 0) {
+      setTimerRunning(true);
+    }
+  }
+
+  //
+  // WORD SUBMISSION
+  //
   // --- 3. LOGIK FÖR ATT SKICKA TILL BACKEND ---
   async function onSubmitWord() {
     if (!word.trim()) return;
@@ -56,6 +118,10 @@ export default function PlayGame() {
           dealDamage(damage, "left");
           setTurn("player1");
         }
+        // Reset timer and stop until next player types
+        setTimer(30);
+        setTimerRunning(false);
+
         setWord("");
       } else {
         const errorData = await response.json();
@@ -82,9 +148,11 @@ export default function PlayGame() {
       <GameBoard
         player1={player1}
         player2={player2}
+        timer={timer}
         turn={turn}
         word={word}
-        setWord={setWord}
+        setWord={handleWordChange}
+        timerRunning={timerRunning}
         onSubmitWord={onSubmitWord}
         history={history}
       >
