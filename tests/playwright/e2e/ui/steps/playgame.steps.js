@@ -117,3 +117,50 @@ Then("player {int} HP bar is at {int} percent", async ({ page }, player, percent
     throw new Error(`Expected HP bar to be ${percent}% but was ${actualPercent}%`);
   }
 });
+//
+// WORD HISTORY ASSERTIONS
+//
+Then("the word history should be empty", async ({ page }) => {
+  const items = page.locator("[data-word-history] [data-word-entry]");
+  await expect(items).toHaveCount(0);
+});
+
+Then("the word history contains {string}", async ({ page }, word) => {
+  await expect(
+    page.locator("[data-word-history]").getByText(word)
+  ).toBeVisible();
+});
+
+Then("the word history should show:", async ({ page }, table) => {
+  const expected = table.rows().flat();
+  const items = page.locator("[data-word-history] [data-word-entry]");
+
+  await expect(items).toHaveCount(expected.length);
+
+  for (let i = 0; i < expected.length; i++) {
+    const text = await items.nth(i).innerText();
+    expect(text).toContain(expected[i]);
+  }
+});
+
+Then(
+  "the word history entry {string} belongs to player {int}",
+  async ({ page }, word, player) => {
+    const entry = page
+      .locator("[data-word-history] [data-word-entry]")
+      .filter({ hasText: word });
+
+    await expect(entry).toHaveAttribute("data-player", `player${player}`);
+  }
+);
+
+Then(
+  "the word history shows damage {int} for {string}",
+  async ({ page }, damage, word) => {
+    const entry = page
+      .locator("[data-word-history] [data-word-entry]")
+      .filter({ hasText: word });
+
+    await expect(entry).toHaveAttribute("data-damage", `${damage}`);
+  }
+);
