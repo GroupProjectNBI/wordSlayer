@@ -77,13 +77,6 @@ Then("I see the player {int} username", async ({ page }, player) => {
 });
 
 //
-// WORD HISTORY
-//
-Then("the word history contains {string}", async ({ page }, word) => {
-  await expect(page.getByText(word)).toBeVisible();
-});
-
-//
 // DAMAGE POPUP
 //
 Then("I see a damage popup with {int}", async ({ page }, amount) => {
@@ -117,6 +110,7 @@ Then("player {int} HP bar is at {int} percent", async ({ page }, player, percent
     throw new Error(`Expected HP bar to be ${percent}% but was ${actualPercent}%`);
   }
 });
+
 //
 // WORD HISTORY ASSERTIONS
 //
