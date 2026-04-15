@@ -4,10 +4,10 @@ import { expect } from "@playwright/test";
 const { Given, When, Then } = createBdd();
 
 //
-// NAVIGATION (KRITISK FIX)
+// NAVIGATION (used only where referenced in features)
 //
 Given("I am on the PlayGame page", async ({ page }) => {
-  await page.goto("/playgame?test");
+  await page.goto("/game?test");
 });
 
 //
@@ -92,13 +92,18 @@ Then("I see a damage popup with {int}", async ({ page }, amount) => {
 });
 
 //
-// HP BAR WIDTH ASSERTION
+// HP BAR WIDTH ASSERTION (wait for animation, then measure)
 //
 Then("player {int} HP bar is at {int} percent", async ({ page }, player, percent) => {
+  // 1. Wait for HP text to show the expected value
   await expect(
     page.locator(`[data-player='player${player}'] >> text='${percent} HP'`)
   ).toBeVisible();
 
+  // 2. Give the 300ms transition time to settle
+  await page.waitForTimeout(400);
+
+  // 3. Measure bar and wrapper
   const bar = page.locator(`[data-player='player${player}'] .hp-fill`);
   const wrapper = page.locator(`[data-player='player${player}'] .hp-bar`);
 
