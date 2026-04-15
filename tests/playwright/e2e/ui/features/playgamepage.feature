@@ -64,3 +64,44 @@ Scenario: Player 1 HP bar decreases after taking damage
   Then player 1 has 95 HP
   And player 1 HP bar is at 95 percent
 
+  Scenario: Word history starts empty
+  Given the timer is mocked
+  And I go to "/game?test"
+  Then the word history should be empty
+
+Scenario: Word history shows a submitted word
+  Given the timer is mocked
+  And I go to "/game?test"
+  When I type the word "dragon"
+  And I submit the word
+  Then the word history contains "dragon"
+
+Scenario: Word history shows multiple words in order
+  Given the timer is mocked
+  And I go to "/game?test"
+  When I type the word "dragon"
+  And I submit the word
+  And I type the word "hello"
+  And I submit the word
+  Then the word history should show:
+    | dragon |
+    | hello  |
+
+Scenario: Word history shows which player submitted each word
+  Given the timer is mocked
+  And I go to "/game?test"
+  When I type the word "dragon"
+  And I submit the word
+  And I type the word "hello"
+  And I submit the word
+  Then the word history entry "dragon" belongs to player 1
+  And the word history entry "hello" belongs to player 2
+
+Scenario: Word history shows correct damage values
+  Given the timer is mocked
+  And I go to "/game?test"
+  When I type the word "dragon"
+  And I submit the word
+  Then the word history shows damage 6 for "dragon"
+
+
