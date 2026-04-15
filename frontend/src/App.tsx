@@ -19,6 +19,7 @@ function App() {
 
       {/* playgame */}
       <Route path="/game" element={<PlayGame />} />
+
       {/* JoinGame-sidan */}
       <Route path="/join" element={<JoinGame />} />
     </Routes>

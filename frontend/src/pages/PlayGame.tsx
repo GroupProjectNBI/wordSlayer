@@ -3,33 +3,25 @@ import GameBoard from "../components/GameBoard";
 import DamagePopup from "../components/DamagePopup";
 
 export default function PlayGame() {
+  // --- 1. STATE (REAKTS MINNE) ---
   const [player1, setPlayer1] = useState({ username: "PlayerOne", hp: 100 });
   const [player2, setPlayer2] = useState({ username: "PlayerTwo", hp: 100 });
-
   const [word, setWord] = useState("");
-  // const [timer, setTimer] = useState(30);
-  // Vi låtsas att vi alltid är Player 1 just nu
-  const localPlayer = "player1";
+
+  // Identitets-logik från din HEAD
+  const localPlayer: "player1" | "player2" = "player1";
+  const [connectedPlayers, setConnectedPlayers] = useState(1);
   const [turn, setTurn] = useState<"player1" | "player2">("player1");
 
-  // NYTT: State för att låtsas om vi är 1 eller 2 spelare (Sätt till 1 för att testa vänteläget!)
-  const [connectedPlayers, setConnectedPlayers] = useState(1);
+  // Typer från dev-branschen
+  const [popups, setPopups] = useState<{ id: number; amount: number; position: "left" | "right"; }[]>([]);
+  const [history, setHistory] = useState<{ word: string; player: "player1" | "player2"; damage: number; }[]>([]);
 
-  const [popups, setPopups] = useState<
-    { id: number; amount: number; position: "left" | "right"; }[]
-  >([]);
-
-  const [history, setHistory] = useState<
-    { word: string; player: "player1" | "player2"; damage: number; }[]
-  >([]);
-
+  // --- 2. HJÄLPFUNKTIONER ---
   function dealDamage(amount: number, target: "left" | "right") {
     const id = Date.now();
-
-    // Skapa popup
     setPopups((prev) => [...prev, { id, amount, position: target }]);
 
-    // Uppdatera HP
     if (target === "left") {
       setPlayer1((p) => ({ ...p, hp: Math.max(0, p.hp - amount) }));
     } else {
@@ -37,51 +29,59 @@ export default function PlayGame() {
     }
   }
 
-  function onSubmitWord() {
+  // --- 3. LOGIK FÖR ATT SKICKA TILL BACKEND ---
+  async function onSubmitWord() {
     if (!word.trim()) return;
 
-    const damage = word.length;
+    const sessionId = "cd748152-6f11-40e9-8cdb-e52ec2b17f2a";
 
-    // Lägg till ord i historiken
-    setHistory((prev) => [
-      ...prev,
-      { word, player: turn, damage }
-    ]);
+    try {
+      const response = await fetch(`/api/game/${sessionId}/playword`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          wordGuess: word,
+          playerId: localPlayer // Viktigt: Vi skickar med vem vi är!
+        }),
+      });
 
-    // Hantera damage + turbyte
-    if (turn === "player1") {
-      dealDamage(damage, "right");
-      setTurn("player2");
-    } else {
-      dealDamage(damage, "left");
-      setTurn("player1");
+      if (response.ok) {
+        const damage = word.length;
+        setHistory((prev) => [...prev, { word, player: turn, damage }]);
+
+        if (turn === "player1") {
+          dealDamage(damage, "right");
+          setTurn("player2");
+        } else {
+          dealDamage(damage, "left");
+          setTurn("player1");
+        }
+        setWord("");
+      } else {
+        const errorData = await response.json();
+        alert(errorData.message);
+      }
+    } catch (error) {
+      console.error("❌ Nätverksfel:", error);
     }
-
-    setWord("");
   }
 
-  // -- LOGIK FÖR OVERLAY -- 
-
+  // --- 4. LOGIK FÖR OVERLAY (Från din HEAD) --- 
   let overlayMessage = null;
 
   if (connectedPlayers < 2) {
     overlayMessage = "Väntar på att en motståndare ska ansluta... ⏳";
-  }
-  else if (turn != localPlayer) {
+  } else if (turn !== localPlayer) {
     overlayMessage = "Motståndaren tänker... 🧠";
   }
 
+  // --- 5. RENDERING ---
   return (
-
-    // 1. en container som håller allt på plats 
-    // (position: relative är superviktigt här!)
-
     <div style={{ position: "relative", width: "100%", height: "100vh" }}>
-      {/* 2. Själva spelet ritas alltid ut i bakgrunden */}
+
       <GameBoard
         player1={player1}
         player2={player2}
-        // timer={timer}
         turn={turn}
         word={word}
         setWord={setWord}
@@ -93,41 +93,35 @@ export default function PlayGame() {
             key={p.id}
             amount={p.amount}
             position={p.position}
-            onComplete={() =>
-              setPopups((prev) => prev.filter((x) => x.id !== p.id))
-            }
+            onComplete={() => setPopups((prev) => prev.filter((x) => x.id !== p.id))}
           />
         ))}
       </GameBoard>
-      {/* 3. OVERLAYEN (Ritas bara ut om overlayMessage har en text) */}
-      {/* 3. OVERLAYEN (Ritas bara ut om overlayMessage har en text) */}
-      {overlayMessage && (
-        <div
-          style={{
-            position: "absolute",
-            top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.7)", // Mörk bakgrund
-            backdropFilter: "blur(4px)",           // Suddar ut spelet bakom lite grann (supersnyggt!)
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 100,                           // Lägger den längst fram
-            color: "white",
-            fontSize: "2rem",
-            fontWeight: "bold"
-          }}
-        >
-          {/* Ett litet fultest: Klickar man på overlayen här byter vi tur/spelare för att testa logiken */}
-          <div style={{ textAlign: "center" }}>
-            <p>{overlayMessage}</p>
 
-            {/* Dessa knappar är BARA för att du ska kunna testa designen innan backend kopplas in */}
+      {/* OVERLAYEN */}
+      {overlayMessage && (
+        <div style={{
+          position: "absolute",
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(0, 0, 0, 0.7)",
+          backdropFilter: "blur(4px)",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          zIndex: 100,
+          color: "white",
+          fontSize: "2rem",
+          fontWeight: "bold",
+          textAlign: "center"
+        }}>
+          <div>
+            <p>{overlayMessage}</p>
             <div style={{ marginTop: "20px", display: "flex", gap: "10px", justifyContent: "center" }}>
               {connectedPlayers < 2 && (
                 <button onClick={() => setConnectedPlayers(2)}>Test: Motståndare anslöt</button>
               )}
               {turn !== localPlayer && connectedPlayers === 2 && (
-                <button onClick={() => setTurn("player1")}>Test: Motståndare spelade klart</button>
+                <button onClick={() => setTurn(localPlayer)}>Test: Min tur nu</button>
               )}
             </div>
           </div>
