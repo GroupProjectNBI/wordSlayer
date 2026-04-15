@@ -106,7 +106,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"playerName\": \"Spelare 2\"\r\n}",
+          "raw": "{\r\n    \"playerName\": \"{{player2}}\"\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -160,7 +160,61 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"wordGuess\": \"hello\" \r\n}",
+          "raw": "{\r\n    \"wordGuess\": \"hello\" ,\r\n  \"playerId\": \"{{player1}}\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url_api}}/game/{{sessionId}}/playword",
+          "host": [
+            "{{base_url_api}}"
+          ],
+          "path": [
+            "game",
+            "{{sessionId}}",
+            "playword"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "skicka in och verifiera ord - motståndaren",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// TEST 1: The Happy Path - Gick anropet igenom?\r",
+              "pm.test(\"Statuskoden ska vara 200 OK\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "// TEST 2: Fick vi tillbaka ordet vi gissade på?\r",
+              "pm.test(\"Ska returnera ordet som vi spelade\", function () {\r",
+              "    // Eftersom din C#-kod just nu returnerar Results.Ok(request.wordGuess) \r",
+              "    // som en ren sträng (inte ett JSON-objekt), kollar vi svaret så här:\r",
+              "    const responseBody = pm.response.text();\r",
+              "    pm.expect(responseBody).to.include(\"hello\");\r",
+              "});\r",
+              "\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"wordGuess\": \"Goodbye\" ,\r\n  \"playerId\": \"{{player2}}\"\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -203,7 +257,194 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"wordGuess\": \"falflapå\" \r\n}",
+          "raw": "\r\n{\r\n   \"wordGuess\": \"falflapå\" ,\r\n    \"playerId\": \"{{player1}}\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url_api}}/game/{{sessionId}}/playword",
+          "host": [
+            "{{base_url_api}}"
+          ],
+          "path": [
+            "game",
+            "{{sessionId}}",
+            "playword"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "verifiera att man inte kan skicka in samma ord igen - P1",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Vi förväntar oss att det SKA skita sig andra gången\r",
+              "pm.test(\"Ska returnera 400 när ordet är en dubblett\", function () {\r",
+              "    pm.response.to.have.status(400);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Ska ge rätt felmeddelande\", function () {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.message).to.eql(\"Du har redan använt detta ordet!\");\r",
+              "});\r",
+              "\r",
+              "\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"wordGuess\": \"hello\" ,\r\n  \"playerId\": \"{{player1}}\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url_api}}/game/{{sessionId}}/playword",
+          "host": [
+            "{{base_url_api}}"
+          ],
+          "path": [
+            "game",
+            "{{sessionId}}",
+            "playword"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "verifiera att man inte kan skicka in samma ord igen P2",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Vi förväntar oss att det SKA skita sig andra gången\r",
+              "pm.test(\"Ska returnera 400 när ordet är en dubblett\", function () {\r",
+              "    pm.response.to.have.status(400);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Ska ge rätt felmeddelande\", function () {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.message).to.eql(\"Du har redan använt detta ordet!\");\r",
+              "});\r",
+              "\r",
+              "\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"wordGuess\": \"Goodby\" ,\r\n  \"playerId\": \"{{player2}}\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url_api}}/game/{{sessionId}}/playword",
+          "host": [
+            "{{base_url_api}}"
+          ],
+          "path": [
+            "game",
+            "{{sessionId}}",
+            "playword"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Skada motståndaren genom att skicka in ett ord",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// 1. Kolla att anropet gick igenom\r",
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Motståndarens hälsa har minskat korrekt\", function () {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    \r",
+              "    // Vi hämtar \"Player 1\" från din miljövariabel 'player1'\r",
+              "    const currentPlayerName = pm.environment.get(\"player1\").trim().toLowerCase(); \r",
+              "    \r",
+              "    // Hitta motståndaren genom att jämföra namnen i små bokstäver\r",
+              "    const opponent = jsonData.players.find(p => p.name.trim().toLowerCase() !== currentPlayerName);\r",
+              "    \r",
+              "    // Logga ut för att se i konsolen (Ctrl+Alt+C) vem den hittade\r",
+              "    console.log(\"Attackerare: \" + currentPlayerName);\r",
+              "    console.log(\"Hittad motståndare: \" + opponent.name + \" med HP: \" + opponent.health);\r",
+              "\r",
+              "    // Verifiera att hälsan är under 100\r",
+              "    pm.expect(opponent.health).to.be.below(100);\r",
+              "    \r",
+              "    // Bonus: Kolla att skadan stämmer exakt (valfritt)\r",
+              "    // 85 är vad vi förväntar oss efter \"hello\" och \"structural\"\r",
+              "    pm.expect(opponent.health).to.equal(85);\r",
+              "});\r",
+              "\r",
+              "// 2. Kolla att motståndarens hälsa faktiskt har minskat\r",
+              "pm.test(\"Opponent health was reduced\", function () {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    \r",
+              "    // Vi hämtar player1-namnet från din miljö\r",
+              "    const currentPlayer = pm.environment.get(\"Player 1\"); \r",
+              "    \r",
+              "    // Hitta spelaren som INTE är den som nyss körde\r",
+              "    const opponent = jsonData.players.find(p => p.name !== currentPlayer);\r",
+              "    \r",
+              "    // Vi förväntar oss att hälsan är mindre än 100\r",
+              "    pm.expect(opponent.health).to.be.below(100);\r",
+              "    console.log(\"Motståndarens hälsa är nu: \" + opponent.health);\r",
+              "});\r",
+              "\r",
+              "// DONT FORGET TO MOVE THIS WHEN NEW REQUEST  IS COMMING\r",
+              "pm.environment.set(\"sessionId\", null);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"wordGuess\": \"structural\" ,\r\n    \"playerId\": \"{{player1}}\"\r\n}",
           "options": {
             "raw": {
               "language": "json"

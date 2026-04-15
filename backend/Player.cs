@@ -34,4 +34,10 @@ public class Player
     {
         Name = name;
     }
+
+    public bool WordUsedAlready(string word)
+    {
+        // Vi gör om sökordet till små bokstäver innan vi kollar listan
+        return Guesses.Contains(word.Trim().ToLower());
+    }
 }
