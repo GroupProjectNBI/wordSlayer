@@ -1,4 +1,3 @@
-import React from "react";
 
 interface HPBarProps {
   hp: number;               // 0–100

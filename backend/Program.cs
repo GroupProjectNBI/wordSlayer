@@ -19,7 +19,21 @@ app.Services.GetRequiredService<WordService>();
 
 // 4. Middleware (Statisk filservering)
 app.UseDefaultFiles();
-app.UseStaticFiles();
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        // Om filen webbläsaren frågar efter råkar vara index.html...
+        if (ctx.File.Name.Equals("index.html", StringComparison.OrdinalIgnoreCase))
+        {
+            // ...säg åt webbläsaren att ALDRIG cacha den!
+            ctx.Context.Response.Headers.Append("Cache-Control", "no-cache, no-store, must-revalidate");
+            ctx.Context.Response.Headers.Append("Pragma", "no-cache");
+            ctx.Context.Response.Headers.Append("Expires", "0");
+        }
+    }
+});
 
 // 5. API-Endpoints
 app.MapGet("/api/newGame", (GameManager manager) =>
