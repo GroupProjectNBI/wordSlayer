@@ -41,6 +41,15 @@ public class GameManager
     /// </summary>
     public GameSession? JoinGame(Guid sessionId)
     {
+        return JoinGame(sessionId, "Player 2");
+    }
+
+    /// <summary>
+    /// Låter en ny spelare ansluta till ett REDAN EXISTERANDE spel.
+    /// Spelaren som ansluter får automatiskt namnet Player 2 om inget namn anges.
+    /// </summary>
+    public GameSession? JoinGame(Guid sessionId, string playerName)
+    {
         // 1. Leta i vår Dictionary: Finns det ett rum med detta ID?
         if (_activeGames.TryGetValue(sessionId, out GameSession? gameToJoin))
         {
@@ -50,8 +59,8 @@ public class GameManager
                 return null;
             }
 
-            // 2. Lägg till den andra spelaren automatiskt som Player 2.
-            gameToJoin.Players.Add(new Player("Player 2"));
+            // 2. Lägg till spelaren med angivet namn.
+            gameToJoin.Players.Add(new Player(playerName));
 
             // 3. Returnera det uppdaterade spelet (som nu har två spelare)
             return gameToJoin;

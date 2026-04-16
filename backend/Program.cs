@@ -43,20 +43,34 @@ app.MapGet("/api/newGame", (GameManager manager) =>
     return Results.Ok(createdGame);
 });
 
-app.MapPost("/api/game/{sessionId}/join", (Guid sessionId, GameManager manager) =>
+app.MapPost("/api/game/{sessionId}/join", (Guid sessionId, JoinGameRequest? request, GameManager manager) =>
 {
-    // Merged: Kept dev's game existence check, but removed player name validation to auto-assign Player 2 for secure flow.
     var game = manager.GetGameById(sessionId);
     if (game == null) return Results.NotFound(new { message = "Spelet hittades inte!" });
 
-    GameSession? updatedGame = manager.JoinGame(sessionId);
+    // DÖRRVAKTEN: Validera spelarnamn om det skickas med.
+    if (request != null && !string.IsNullOrWhiteSpace(request.PlayerName))
+    {
+        var user = game.Players.FirstOrDefault(p => p.Name == request.PlayerName);
+        if (user != null) return Results.Conflict(new { message = "Spelare finns redan!" });
 
-    if (updatedGame == null)
+        GameSession? updatedGame = manager.JoinGame(sessionId, request.PlayerName);
+        if (updatedGame == null)
+        {
+            return Results.NotFound(new { message = "Kunde inte hitta spelrummet. Kontrollera koden!" });
+        }
+
+        return Results.Ok(updatedGame);
+    }
+
+    // Om inget namn anges, använd säkrare auto-assign-flöde.
+    GameSession? joinedGame = manager.JoinGame(sessionId);
+    if (joinedGame == null)
     {
         return Results.NotFound(new { message = "Kunde inte hitta spelrummet. Kontrollera koden!" });
     }
 
-    return Results.Ok(updatedGame);
+    return Results.Ok(joinedGame);
 });
 
 app.MapPost("/api/game/{sessionId}/playword", (Guid sessionId, HandeWordRequest request, WordService wordService, GameManager gameManager) =>
@@ -109,6 +123,11 @@ app.Run();
 // ==========================================
 // DATA-KLASSER (DTOs)
 // ==========================================
+
+public class JoinGameRequest
+{
+    public string PlayerName { get; set; } = string.Empty;
+}
 
 public class HandeWordRequest
 {
