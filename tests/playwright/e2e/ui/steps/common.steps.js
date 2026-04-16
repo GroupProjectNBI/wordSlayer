@@ -70,3 +70,13 @@ Then('I see input {string}', async ({ page }, placeholder) => {
     throw new Error(`Expected to see input with placeholder "${placeholder}"`);
   }
 });
+
+Then('I see the overlay', async ({ page }) => {
+  const overlay = page.locator('[data-testid="overlay"]');
+  await expect(overlay).toBeVisible();
+});
+
+Then('I do not see the overlay', async ({ page }) => {
+  const overlay = page.locator('[data-testid="overlay"]');
+  await expect(overlay).toHaveCount(0);
+});

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useWebsocket } from "../hooks/useWebsocket";
 import { useParams, useLocation } from "react-router-dom";
 import GameBoard from "../components/GameBoard";
 import DamagePopup from "../components/DamagePopup";
@@ -27,7 +28,12 @@ export default function PlayGame() {
   const [timerRunning, setTimerRunning] = useState(false);
 
   const localPlayer: "player1" | "player2" = "player1";
-  const [connectedPlayers, setConnectedPlayers] = useState(1);
+  const [connectedPlayers, setConnectedPlayers] = useState(0);
+
+  // Real-time update: listen for PlayerJoined events
+  useWebsocket(sessionId, () => {
+    setConnectedPlayers((prev) => Math.min(prev + 1, 2));
+  });
 
   const [popups, setPopups] = useState<
     { id: number; amount: number; position: "left" | "right"; }[]
@@ -44,17 +50,12 @@ export default function PlayGame() {
   // LOAD GAME FROM BACKEND (för live mode, från HEAD men med sessionId från params)
   //
   useEffect(() => {
-    if (isTest) return; // Skip loading in test mode
-
     async function loadGame() {
-      // If the URL does not include a session ID, we cannot load the game.
       if (!sessionId) {
         setError("Ingen session hittades i URL:en.");
         setLoading(false);
         return;
       }
-
-      // Load the current game state from the backend for this session.
       setLoading(true);
       try {
         const response = await fetch(`/api/game/${sessionId}`, {
@@ -62,21 +63,16 @@ export default function PlayGame() {
           credentials: 'same-origin',
           cache: 'no-store'
         });
-
         if (!response.ok) {
           const body = await response.json().catch(() => null);
           setError(body?.message ?? 'Kunde inte hämta speldata.');
           return;
         }
-
-        // Build the local player state from the backend response.
         const game = (await response.json()) as BackendGameSession;
         setConnectedPlayers(game.players.length);
-
         if (game.players.length > 0) {
           setPlayer1({ username: game.players[0].name, hp: game.players[0].health });
         }
-
         if (game.players.length > 1) {
           setPlayer2({ username: game.players[1].name, hp: game.players[1].health });
         }
@@ -87,9 +83,8 @@ export default function PlayGame() {
         setLoading(false);
       }
     }
-
     loadGame();
-  }, [sessionId, isTest]);
+  }, [sessionId]);
 
   //
   // TIMER (LIVE MODE) från dev
@@ -229,16 +224,13 @@ export default function PlayGame() {
   }
 
   //
-  // OVERLAY LOGIC (AV I TESTLÄGE) från dev
-  //
-  let overlayMessage: string | null = null;
 
-  if (!isTest) {
-    if (connectedPlayers < 2) {
-      overlayMessage = "Väntar på att en motståndare ska ansluta... ⏳";
-    } else if (turn !== localPlayer) {
-      overlayMessage = "Motståndaren tänker... 🧠";
-    }
+  // OVERLAY LOGIC: Always show overlay if less than 2 players, in both test and live mode
+  let overlayMessage: string | null = null;
+  if (connectedPlayers < 2) {
+    overlayMessage = "Väntar på att en motståndare ska ansluta... ⏳";
+  } else if (!isTest && turn !== localPlayer) {
+    overlayMessage = "Motståndaren tänker... 🧠";
   }
 
   //
@@ -248,7 +240,8 @@ export default function PlayGame() {
     <div style={{ position: "relative", width: "100%", height: "100vh" }}>
       <GameBoard
         player1={player1}
-        player2={player2}
+        // Only pass player2 if there are at least 2 players
+        {...(connectedPlayers > 1 ? { player2 } : {})}
         timer={timer}
         turn={turn}
         word={word}
@@ -271,6 +264,7 @@ export default function PlayGame() {
 
       {overlayMessage && (
         <div
+          data-testid="overlay"
           style={{
             position: "absolute",
             inset: 0,

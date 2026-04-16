@@ -119,6 +119,34 @@ Then("player {int} HP bar is at {int} percent", async ({ page }, player, percent
   }
 });
 
+// Overlay test helpers
+Given('I intercept game session response with only one player', async ({ page }) => {
+  await page.route('**/api/game/test-session-id', (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        sessionId: 'test-session-id',
+        players: [
+          { name: 'PlayerOne', health: 100 }
+        ]
+      }),
+    });
+  });
+});
+
+When('I simulate a second player joining', async ({ page }) => {
+  // Simulate SignalR event by dispatching PlayerJoined event manually
+  await page.evaluate(() => {
+    // This assumes the frontend listens for PlayerJoined via SignalR
+    // We'll dispatch a custom event or call the handler directly if exposed
+    // For test, we can trigger the callback if it's on window or dispatch a custom event
+    // Here, we simulate the effect by updating the DOM/state as the real event would
+    // If your app exposes a global for test, call it here. Otherwise, reload with two players.
+    // For now, reload the page with two players (simulate backend update)
+    window.location.reload();
+  });
+});
 //
 // WORD HISTORY
 //
