@@ -12,6 +12,10 @@ if (string.IsNullOrWhiteSpace(builder.Configuration["urls"]))
 builder.Services.AddSingleton<WordService>();
 builder.Services.AddSingleton<GameManager>();
 
+
+// Add SignalR
+builder.Services.AddSignalR();
+
 var app = builder.Build();
 
 // 3. Initiera tjänster (Tvingar WordService att ladda ordlistan direkt)
@@ -43,10 +47,12 @@ app.MapGet("/api/newGame", (GameManager manager) =>
     return Results.Ok(createdGame);
 });
 
-app.MapPost("/api/game/{sessionId}/join", (Guid sessionId, JoinGameRequest? request, GameManager manager) =>
+app.MapPost("/api/game/{sessionId}/join", async (Guid sessionId, JoinGameRequest? request, GameManager manager, Microsoft.AspNetCore.SignalR.IHubContext<backend.GameHub> hubContext) =>
 {
     var game = manager.GetGameById(sessionId);
     if (game == null) return Results.NotFound(new { message = "Spelet hittades inte!" });
+
+    string? playerName = null;
 
     // DÖRRVAKTEN: Validera spelarnamn om det skickas med.
     if (request != null && !string.IsNullOrWhiteSpace(request.PlayerName))
@@ -59,7 +65,9 @@ app.MapPost("/api/game/{sessionId}/join", (Guid sessionId, JoinGameRequest? requ
         {
             return Results.NotFound(new { message = "Kunde inte hitta spelrummet. Kontrollera koden!" });
         }
-
+        playerName = request.PlayerName;
+        // Notify all clients in the session that a player joined
+        await hubContext.Clients.Group(sessionId.ToString()).SendAsync("PlayerJoined", playerName);
         return Results.Ok(updatedGame);
     }
 
@@ -69,7 +77,11 @@ app.MapPost("/api/game/{sessionId}/join", (Guid sessionId, JoinGameRequest? requ
     {
         return Results.NotFound(new { message = "Kunde inte hitta spelrummet. Kontrollera koden!" });
     }
-
+    playerName = joinedGame.Players.LastOrDefault()?.Name;
+    if (!string.IsNullOrEmpty(playerName))
+    {
+        await hubContext.Clients.Group(sessionId.ToString()).SendAsync("PlayerJoined", playerName);
+    }
     return Results.Ok(joinedGame);
 });
 
@@ -114,7 +126,11 @@ app.MapPost("/api/game/{sessionId}/playword", (Guid sessionId, HandeWordRequest 
     return Results.Ok(game);
 });
 
-// 6. Fallback & Start (Fallback sköter React-routing)
+
+// 6. SignalR endpoint
+app.MapHub<backend.GameHub>("/gamehub");
+
+// 7. Fallback & Start (Fallback sköter React-routing)
 app.MapFallbackToFile("index.html");
 
 app.Run();
