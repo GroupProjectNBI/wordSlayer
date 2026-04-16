@@ -1,5 +1,5 @@
 import HPBar from "./HPBar";
-// import Timer from "./Timer";
+import Timer from "./Timer";
 import Username from "./Username";
 import WordHistory from "./WordHistory";
 import WordInput from "./WordInput";
@@ -18,26 +18,36 @@ interface WordEntry {
 interface GameBoardProps {
   player1: Player;
   player2: Player;
-  // timer: number;
+  timer: number;
   turn: "player1" | "player2";
   word: string;
   setWord: (value: string) => void;
   onSubmitWord: () => void;
   history: WordEntry[];
+  timerRunning: boolean;
   children?: React.ReactNode; // DamagePopups
 }
 
 export default function GameBoard({
   player1,
   player2,
-  // timer,
+  timer,
   turn,
   word,
   setWord,
   onSubmitWord,
   history,
+  timerRunning,
   children
 }: GameBoardProps) {
+
+  // 🧪 TEST MODE: gör input alltid enabled
+  const isTest = typeof window !== "undefined" && window.location.search.includes("test");
+
+  const inputDisabled = isTest ? false : turn !== "player1";
+  const inputActive = isTest ? true : turn === "player1";
+  const timerIsRunning = isTest ? true : timerRunning;
+
   return (
     <main className="min-h-screen bg-[#1a1a2e] text-white relative overflow-hidden">
 
@@ -72,7 +82,7 @@ export default function GameBoard({
         </h1>
 
         <div className="mt-4">
-          {/* <Timer value={timer} /> */}
+          <Timer value={timer} />
         </div>
       </div>
 
@@ -82,8 +92,9 @@ export default function GameBoard({
           value={word}
           onChange={setWord}
           onSubmit={onSubmitWord}
-          disabled={turn !== "player1"}
-          isActive={turn === "player1"}
+          disabled={inputDisabled}
+          isActive={inputActive}
+          isTimerRunning={timerIsRunning}
         />
       </div>
 

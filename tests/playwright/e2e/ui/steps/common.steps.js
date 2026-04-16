@@ -54,6 +54,14 @@ Then('I see input value {string}', async ({ page }, value) => {
   await expect(page.locator('input')).toHaveValue(value);
 });
 
+Given("the input is enabled", async ({ page }) => {
+  await page.waitForSelector('input:not([disabled])');
+});
+
+Then('I should be redirected to {string}', async ({ page }, url) => {
+  await page.waitForURL(url);
+});
+
 Then('I see input {string}', async ({ page }, placeholder) => {
   const input = page.getByPlaceholder(placeholder);
   const visible = await input.isVisible();
