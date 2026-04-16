@@ -212,7 +212,7 @@ export default function PlayGame() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           wordGuess: cleanWord,
-          playerId: localPlayer,
+          playerId: localPlayer == 'player1' ? 'Player 1' : 'Player 2',
         }),
       });
 
