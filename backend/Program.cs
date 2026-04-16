@@ -83,6 +83,22 @@ app.MapPost("/api/game/{sessionId}/join", async (Guid sessionId, JoinGameRequest
     return Results.Ok(joinedGame);
 });
 
+// Denna endpoint används för att hämta spelets nuvarande status (F5 eller nyladdning)
+app.MapGet("/api/game/{sessionId}", (Guid sessionId, GameManager manager) =>
+{
+    var game = manager.GetGameById(sessionId);
+
+    if (game == null)
+    {
+        return Results.NotFound(new { message = "Spelet hittades inte!" });
+    }
+
+    // Vi returnerar hela objektet. .NET kommer automatiskt göra om 
+    // PascalCase (Health) till camelCase (health) för React.
+    return Results.Ok(game);
+});
+
+
 app.MapPost("/api/game/{sessionId}/playword", (Guid sessionId, HandeWordRequest request, WordService wordService, GameManager gameManager) =>
 {
     // 1. Hämta spelet

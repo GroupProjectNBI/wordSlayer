@@ -7,7 +7,7 @@ const { Given, When, Then } = createBdd();
 // NAVIGATION (used only where referenced in features)
 //
 Given("I am on the PlayGame page", async ({ page }) => {
-  await page.goto("/game/test-session-id?test");
+  await page.goto("/game?test");
 });
 
 //
@@ -78,58 +78,33 @@ Then("the timer should show {int}", async ({ page }, value) => {
   await expect(timer).toBeVisible();
 });
 
-//
-// HP TEXT ASSERTIONS
-//
 Then("player {int} has {int} HP", async ({ page }, player, hp) => {
   const selector = `[data-player='player${player}'] >> text='${hp} HP'`;
   await expect(page.locator(selector)).toBeVisible();
 });
 
-//
-// TURN ASSERTIONS
-//
 Then("it is player {int} turn", async ({ page }, player) => {
   const selector = `[data-player='player${player}'][data-active='true']`;
   await expect(page.locator(selector)).toBeVisible();
 });
 
-//
-// USERNAME ASSERTION
-//
 Then("I see the player {int} username", async ({ page }, player) => {
   const selector = `[data-player='player${player}']`;
   await expect(page.locator(selector)).toBeVisible();
 });
 
-//
-// WORD HISTORY
-//
-Then("the word history contains {string}", async ({ page }, word) => {
-  await expect(page.getByText(word)).toBeVisible();
-});
-
-//
-// DAMAGE POPUP
-//
 Then("I see a damage popup with {int}", async ({ page }, amount) => {
   const popup = page.locator("div", { hasText: new RegExp(`^-${amount}$`) });
   await expect(popup).toBeVisible();
 });
 
-//
-// HP BAR WIDTH ASSERTION (wait for animation, then measure)
-//
 Then("player {int} HP bar is at {int} percent", async ({ page }, player, percent) => {
-  // 1. Wait for HP text to show the expected value
   await expect(
     page.locator(`[data-player='player${player}'] >> text='${percent} HP'`)
   ).toBeVisible();
 
-  // 2. Give the 300ms transition time to settle
   await page.waitForTimeout(400);
 
-  // 3. Measure bar and wrapper
   const bar = page.locator(`[data-player='player${player}'] .hp-fill`);
   const wrapper = page.locator(`[data-player='player${player}'] .hp-bar`);
 
@@ -172,3 +147,58 @@ When('I simulate a second player joining', async ({ page }) => {
     window.location.reload();
   });
 });
+//
+// WORD HISTORY
+//
+Then("the word history should be empty", async ({ page }) => {
+  const items = page.locator("[data-word-history] [data-word-entry]");
+  await expect(items).toHaveCount(0);
+});
+
+Then("the word history contains {string}", async ({ page }, word) => {
+  await expect(
+    page.locator("[data-word-history]").getByText(word)
+  ).toBeVisible();
+});
+
+Then("the word history should show:", async ({ page }, table) => {
+  const expected = table.rows().flat();
+  const items = page.locator("[data-word-history] [data-word-entry]");
+
+  const count = await items.count();
+  if (count < expected.length) {
+    throw new Error(
+      `Expected at least ${expected.length} word history entries, but found ${count}`
+    );
+  }
+
+  // Jämför de sista N entries med expected (suffix-match)
+  const offset = count - expected.length;
+
+  for (let i = 0; i < expected.length; i++) {
+    const text = await items.nth(offset + i).innerText();
+    expect(text).toContain(expected[i]);
+  }
+});
+
+Then(
+  "the word history entry {string} belongs to player {int}",
+  async ({ page }, word, player) => {
+    const entry = page
+      .locator("[data-word-history] [data-word-entry]")
+      .filter({ hasText: word });
+
+    await expect(entry).toHaveAttribute("data-player", `player${player}`);
+  }
+);
+
+Then(
+  "the word history shows damage {int} for {string}",
+  async ({ page }, damage, word) => {
+    const entry = page
+      .locator("[data-word-history] [data-word-entry]")
+      .filter({ hasText: word });
+
+    await expect(entry).toHaveAttribute("data-damage", `${damage}`);
+  }
+);

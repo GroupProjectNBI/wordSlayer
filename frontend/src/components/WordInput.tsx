@@ -23,13 +23,15 @@ export default function WordInput({
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key !== "Enter") return;
 
-    // In test mode: ALWAYS submit
+    // TEST MODE: prevent double submit
     if (isTest) {
+      e.preventDefault();
+      e.stopPropagation();
       onSubmit();
       return;
     }
 
-    // In live mode: only submit if allowed
+    // LIVE MODE
     if (!disabled && isActive && isTimerRunning) {
       onSubmit();
     }
@@ -50,9 +52,7 @@ export default function WordInput({
         transition-all duration-200
 
         ${disabled ? "opacity-50 cursor-not-allowed" : "opacity-100"}
-
         ${isActive ? "ring-2 ring-yellow-300" : ""}
-
         ${isTimerRunning ? "animate-pulse ring-2 ring-green-400" : ""}
       `}
       disabled={disabled}

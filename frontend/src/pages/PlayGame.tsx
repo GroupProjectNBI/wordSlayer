@@ -18,9 +18,7 @@ export default function PlayGame() {
   const location = useLocation();
   const isTest = location.search.includes("test");
 
-  //
-  // STATE
-  //
+
   const [player1, setPlayer1] = useState({ username: "PlayerOne", hp: 100 });
   const [player2, setPlayer2] = useState({ username: "PlayerTwo", hp: 100 });
 
@@ -103,7 +101,7 @@ export default function PlayGame() {
   // TIMER (LIVE MODE) från dev
   //
   useEffect(() => {
-    if (!timerRunning || isTest) return; // testläge använder manual ticks
+    if (!timerRunning || isTest) return;
 
     const interval = setInterval(() => {
       setTimer((t) => {
@@ -159,6 +157,9 @@ export default function PlayGame() {
   //
   function handleWordChange(value: string) {
     setWord(value);
+
+    // 🟩 FIX: I testläge ska timerRunning ALDRIG starta automatiskt
+    if (isTest) return;
 
     if (!timerRunning && value.trim().length > 0) {
       setTimerRunning(true);
@@ -218,7 +219,7 @@ export default function PlayGame() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           wordGuess: cleanWord,
-          playerId: localPlayer,
+          playerId: localPlayer == 'player1' ? 'Player 1' : 'Player 2',
         }),
       });
 
@@ -274,7 +275,6 @@ export default function PlayGame() {
         ))}
       </GameBoard>
 
-      {/* OVERLAY – visas bara i live-läge */}
       {overlayMessage && (
         <div
           style={{
