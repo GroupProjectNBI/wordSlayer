@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, useLocation } from "react-router-dom";
 import GameBoard from "../components/GameBoard";
 import DamagePopup from "../components/DamagePopup";
 
@@ -11,25 +11,43 @@ interface BackendGameSession {
 export default function PlayGame() {
   const { sessionId } = useParams<{ sessionId: string }>();
 
-  // --- 1. STATE (REAKTS MINNE) ---
+  //
+  // TEST DETECTION (detta är den kritiska fixen från dev)
+  //
+  const location = useLocation();
+  const isTest = location.search.includes("test");
+
+  //
+  // STATE
+  //
   const [player1, setPlayer1] = useState({ username: "PlayerOne", hp: 100 });
   const [player2, setPlayer2] = useState({ username: "PlayerTwo", hp: 100 });
+
   const [word, setWord] = useState("");
+  const [timer, setTimer] = useState(30);
+  const [turn, setTurn] = useState<"player1" | "player2">("player1");
+  const [timerRunning, setTimerRunning] = useState(false);
+
+  const localPlayer: "player1" | "player2" = "player1";
+  const [connectedPlayers, setConnectedPlayers] = useState(1);
+
+  const [popups, setPopups] = useState<
+    { id: number; amount: number; position: "left" | "right"; }[]
+  >([]);
+
+  const [history, setHistory] = useState<
+    { word: string; player: "player1" | "player2"; damage: number; }[]
+  >([]);
+
   const [, setLoading] = useState(true);
   const [, setError] = useState("");
 
-  // Identitets-logik från din HEAD
-  const localPlayer: "player1" | "player2" = "player1";
-  const [connectedPlayers, setConnectedPlayers] = useState(1);
-  const [turn, setTurn] = useState<"player1" | "player2">("player1");
-  const [timer] = useState(30);
-  const [timerRunning] = useState(true);
-
-  // Typer från dev-branschen
-  const [popups, setPopups] = useState<{ id: number; amount: number; position: "left" | "right"; }[]>([]);
-  const [history, setHistory] = useState<{ word: string; player: "player1" | "player2"; damage: number; }[]>([]);
-
+  //
+  // LOAD GAME FROM BACKEND (för live mode, från HEAD men med sessionId från params)
+  //
   useEffect(() => {
+    if (isTest) return; // Skip loading in test mode
+
     async function loadGame() {
       // If the URL does not include a session ID, we cannot load the game.
       if (!sessionId) {
@@ -73,9 +91,52 @@ export default function PlayGame() {
     }
 
     loadGame();
-  }, [sessionId]);
+  }, [sessionId, isTest]);
 
-  // --- 2. HJÄLPFUNKTIONER ---
+  //
+  // TIMER (LIVE MODE) från dev
+  //
+  useEffect(() => {
+    if (!timerRunning || isTest) return; // testläge använder manual ticks
+
+    const interval = setInterval(() => {
+      setTimer((t) => {
+        if (t <= 1) {
+          setTurn((prev) => (prev === "player1" ? "player2" : "player1"));
+          setTimerRunning(false);
+          return 30;
+        }
+        return t - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [timerRunning, turn, isTest]);
+
+  //
+  // MANUAL TIMER TICK (TEST MODE) från dev
+  //
+  useEffect(() => {
+    if (!isTest) return;
+
+    function manualTick() {
+      setTimer((t) => {
+        if (t <= 1) {
+          setTurn((prev) => (prev === "player1" ? "player2" : "player1"));
+          setTimerRunning(false);
+          return 30;
+        }
+        return t - 1;
+      });
+    }
+
+    window.addEventListener("manual-timer-tick", manualTick);
+    return () => window.removeEventListener("manual-timer-tick", manualTick);
+  }, [isTest]);
+
+  //
+  // DAMAGE LOGIC från dev
+  //
   function dealDamage(amount: number, target: "left" | "right") {
     const id = Date.now();
     setPopups((prev) => [...prev, { id, amount, position: target }]);
@@ -87,66 +148,110 @@ export default function PlayGame() {
     }
   }
 
-  // --- 3. LOGIK FÖR ATT SKICKA TILL BACKEND ---
+  //
+  // WORD INPUT CHANGE från dev
+  //
+  function handleWordChange(value: string) {
+    setWord(value);
+
+    if (!timerRunning && value.trim().length > 0) {
+      setTimerRunning(true);
+    }
+  }
+
+  //
+  // GEMENSAM DAMAGE-HANTERING (det som testerna förväntar sig) från dev
+  //
+  function applyWordDamage(cleanWord: string) {
+    const damage = cleanWord.length;
+
+    setHistory((prev) => [
+      ...prev,
+      { word: cleanWord, player: turn, damage },
+    ]);
+
+    if (turn === "player1") {
+      dealDamage(damage, "right");
+      setTurn("player2");
+    } else {
+      dealDamage(damage, "left");
+      setTurn("player1");
+    }
+
+    setTimer(30);
+    setTimerRunning(false);
+    setWord("");
+  }
+
+  //
+  // WORD SUBMISSION kombinerad
+  //
   async function onSubmitWord() {
-    if (!word.trim()) return;
+    const cleanWord = word.trim();
+    if (!cleanWord) return;
+
+    //
+    // 🧪 TEST MODE — exakt gamla fungerande logiken från dev
+    //
+    if (isTest) {
+      applyWordDamage(cleanWord);
+      return;
+    }
+
+    //
+    // 🌐 LIVE MODE — backend submission från HEAD, men med sessionId från params
+    //
     if (!sessionId) {
       console.error("No session ID found");
       return;
     }
 
-    // Send the played word to the backend for validation and damage calculation.
     try {
       const response = await fetch(`/api/game/${sessionId}/playword`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          wordGuess: word,
-          playerId: localPlayer // Viktigt: Vi skickar med vem vi är!
+          wordGuess: cleanWord,
+          playerId: localPlayer,
         }),
       });
 
       if (response.ok) {
-        const damage = word.length;
-        setHistory((prev) => [...prev, { word, player: turn, damage }]);
-
-        if (turn === "player1") {
-          dealDamage(damage, "right");
-          setTurn("player2");
-        } else {
-          dealDamage(damage, "left");
-          setTurn("player1");
-        }
-        setWord("");
+        applyWordDamage(cleanWord);
       } else {
-        const errorData = await response.json();
-        alert(errorData.message);
+        const errorData = await response.json().catch(() => null);
+        alert(errorData?.message ?? "Något gick fel.");
       }
-    } catch (error) {
-      console.error("❌ Nätverksfel:", error);
+    } catch (err) {
+      console.error("Network error:", err);
     }
   }
 
-  // --- 4. LOGIK FÖR OVERLAY (Från din HEAD) --- 
-  let overlayMessage = null;
+  //
+  // OVERLAY LOGIC (AV I TESTLÄGE) från dev
+  //
+  let overlayMessage: string | null = null;
 
-  if (connectedPlayers < 2) {
-    overlayMessage = "Väntar på att en motståndare ska ansluta... ⏳";
-  } else if (turn !== localPlayer) {
-    overlayMessage = "Motståndaren tänker... 🧠";
+  if (!isTest) {
+    if (connectedPlayers < 2) {
+      overlayMessage = "Väntar på att en motståndare ska ansluta... ⏳";
+    } else if (turn !== localPlayer) {
+      overlayMessage = "Motståndaren tänker... 🧠";
+    }
   }
 
-  // --- 5. RENDERING ---
+  //
+  // RENDER från dev
+  //
   return (
     <div style={{ position: "relative", width: "100%", height: "100vh" }}>
-
       <GameBoard
         player1={player1}
         player2={player2}
         timer={timer}
         turn={turn}
         word={word}
-        setWord={setWord}
+        setWord={handleWordChange}
         onSubmitWord={onSubmitWord}
         history={history}
         timerRunning={timerRunning}
@@ -156,35 +261,52 @@ export default function PlayGame() {
             key={p.id}
             amount={p.amount}
             position={p.position}
-            onComplete={() => setPopups((prev) => prev.filter((x) => x.id !== p.id))}
+            onComplete={() =>
+              setPopups((prev) => prev.filter((x) => x.id !== p.id))
+            }
           />
         ))}
       </GameBoard>
 
-      {/* OVERLAYEN */}
+      {/* OVERLAY – visas bara i live-läge */}
       {overlayMessage && (
-        <div style={{
-          position: "absolute",
-          top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: "rgba(0, 0, 0, 0.7)",
-          backdropFilter: "blur(4px)",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          zIndex: 100,
-          color: "white",
-          fontSize: "2rem",
-          fontWeight: "bold",
-          textAlign: "center"
-        }}>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundColor: "rgba(0,0,0,0.7)",
+            backdropFilter: "blur(4px)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 100,
+            color: "white",
+            fontSize: "2rem",
+            fontWeight: "bold",
+            textAlign: "center",
+          }}
+        >
           <div>
             <p>{overlayMessage}</p>
-            <div style={{ marginTop: "20px", display: "flex", gap: "10px", justifyContent: "center" }}>
+
+            <div
+              style={{
+                marginTop: 20,
+                display: "flex",
+                gap: 10,
+                justifyContent: "center",
+              }}
+            >
               {connectedPlayers < 2 && (
-                <button onClick={() => setConnectedPlayers(2)}>Test: Motståndare anslöt</button>
+                <button onClick={() => setConnectedPlayers(2)}>
+                  Test: Motståndare anslöt
+                </button>
               )}
+
               {turn !== localPlayer && connectedPlayers === 2 && (
-                <button onClick={() => setTurn(localPlayer)}>Test: Min tur nu</button>
+                <button onClick={() => setTurn(localPlayer)}>
+                  Test: Min tur nu
+                </button>
               )}
             </div>
           </div>
