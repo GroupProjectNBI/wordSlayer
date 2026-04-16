@@ -27,12 +27,17 @@ export default function PlayGame() {
   // TURN
   const [turn, setTurn] = useState<"player1" | "player2">("player1");
   const localPlayer: "player1" | "player2" = "player1";
+
+  // CONNECTED PLAYERS
   const [connectedPlayers, setConnectedPlayers] = useState(0);
 
-  // Real-time update: listen for PlayerJoined events
+  // WEBSOCKET: PlayerJoined
   useWebsocket(sessionId, () => {
     setConnectedPlayers((prev) => Math.min(prev + 1, 2));
   });
+
+  // COOLDOWN
+  const [cooldown, setCooldown] = useState(false);
 
   // POPUPS + HISTORY
   const [popups, setPopups] = useState<
@@ -49,7 +54,6 @@ export default function PlayGame() {
 
   // TURN MANAGER
   const { timer, dispatch } = useTurnManager(isTest, () => {
-    // TIMEOUT → switch turn
     setTurn((prev) => (prev === "player1" ? "player2" : "player1"));
     startCooldown();
   });
@@ -72,7 +76,7 @@ export default function PlayGame() {
   }
 
   //
-  // LOAD GAME FROM BACKEND (live mode)
+  // LOAD GAME FROM BACKEND
   //
   useEffect(() => {
     async function loadGame() {
@@ -81,6 +85,7 @@ export default function PlayGame() {
         setLoading(false);
         return;
       }
+
       setLoading(true);
       try {
         const response = await fetch(`/api/game/${sessionId}`, {
@@ -88,19 +93,24 @@ export default function PlayGame() {
           credentials: "same-origin",
           cache: "no-store",
         });
+
         if (!response.ok) {
           const body = await response.json().catch(() => null);
           setError(body?.message ?? "Kunde inte hämta speldata.");
           return;
         }
+
         const game = (await response.json()) as BackendGameSession;
+
         setConnectedPlayers(game.players.length);
+
         if (game.players.length > 0) {
           setPlayer1({
             username: game.players[0].name,
             hp: game.players[0].health,
           });
         }
+
         if (game.players.length > 1) {
           setPlayer2({
             username: game.players[1].name,
@@ -114,6 +124,7 @@ export default function PlayGame() {
         setLoading(false);
       }
     }
+
     loadGame();
   }, [sessionId]);
 
@@ -221,9 +232,10 @@ export default function PlayGame() {
   }
 
   //
-
-  // OVERLAY LOGIC: Always show overlay if less than 2 players, in both test and live mode
+  // OVERLAY
+  //
   let overlayMessage: string | null = null;
+
   if (connectedPlayers < 2) {
     overlayMessage = "Väntar på att en motståndare ska ansluta... ⏳";
   } else if (!isTest && turn !== localPlayer) {
@@ -237,9 +249,8 @@ export default function PlayGame() {
     <div style={{ position: "relative", width: "100%", height: "100vh" }}>
       <GameBoard
         player1={player1}
-        // Only pass player2 if there are at least 2 players
-        {...(connectedPlayers > 1 ? { player2 } : {})}
-        timer={timer}
+        player2={player2}   // alltid skickas
+        timer={timer.value} // FIX
         turn={turn}
         word={word}
         setWord={handleWordChange}
