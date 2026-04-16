@@ -43,22 +43,34 @@ app.MapGet("/api/newGame", (GameManager manager) =>
     return Results.Ok(createdGame);
 });
 
-app.MapPost("/api/game/{sessionId}/join", (Guid sessionId, JoinGameRequest request, GameManager manager) =>
+app.MapPost("/api/game/{sessionId}/join", (Guid sessionId, JoinGameRequest? request, GameManager manager) =>
 {
-    // DÖRRVAKTEN: Kontrollera spelarnamn
-    if (string.IsNullOrWhiteSpace(request?.PlayerName))
+    var game = manager.GetGameById(sessionId);
+    if (game == null) return Results.NotFound(new { message = "Spelet hittades inte!" });
+
+    // DÖRRVAKTEN: Validera spelarnamn om det skickas med.
+    if (request != null && !string.IsNullOrWhiteSpace(request.PlayerName))
     {
-        return Results.BadRequest(new { message = "Spelarnamn får inte vara tomt!" });
+        var user = game.Players.FirstOrDefault(p => p.Name == request.PlayerName);
+        if (user != null) return Results.Conflict(new { message = "Spelare finns redan!" });
+
+        GameSession? updatedGame = manager.JoinGame(sessionId, request.PlayerName);
+        if (updatedGame == null)
+        {
+            return Results.NotFound(new { message = "Kunde inte hitta spelrummet. Kontrollera koden!" });
+        }
+
+        return Results.Ok(updatedGame);
     }
 
-    GameSession? updatedGame = manager.JoinGame(sessionId, request.PlayerName);
-
-    if (updatedGame == null)
+    // Om inget namn anges, använd säkrare auto-assign-flöde.
+    GameSession? joinedGame = manager.JoinGame(sessionId);
+    if (joinedGame == null)
     {
         return Results.NotFound(new { message = "Kunde inte hitta spelrummet. Kontrollera koden!" });
     }
 
-    return Results.Ok(updatedGame);
+    return Results.Ok(joinedGame);
 });
 
 app.MapPost("/api/game/{sessionId}/playword", (Guid sessionId, HandeWordRequest request, WordService wordService, GameManager gameManager) =>
@@ -112,6 +124,11 @@ app.Run();
 // DATA-KLASSER (DTOs)
 // ==========================================
 
+public class JoinGameRequest
+{
+    public string PlayerName { get; set; } = string.Empty;
+}
+
 public class HandeWordRequest
 {
     public string wordGuess { get; set; } = string.Empty;
@@ -119,7 +136,3 @@ public class HandeWordRequest
     public string PlayerId { get; set; } = string.Empty;
 }
 
-public class JoinGameRequest
-{
-    public string PlayerName { get; set; } = string.Empty;
-}

@@ -1,9 +1,19 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import GameBoard from "../components/GameBoard";
 import DamagePopup from "../components/DamagePopup";
 
+interface BackendGameSession {
+  sessionId: string;
+  players: { name: string; health: number; }[];
+}
+
 export default function PlayGame() {
+  const { sessionId } = useParams<{ sessionId: string; }>();
+
+  //
+  // TEST DETECTION (detta är den kritiska fixen från dev)
+  //
   const location = useLocation();
   const isTest = location.search.includes("test");
 
@@ -26,8 +36,62 @@ export default function PlayGame() {
     { word: string; player: "player1" | "player2"; damage: number; }[]
   >([]);
 
+  const [, setLoading] = useState(true);
+  const [, setError] = useState("");
+
   //
-  // TIMER (LIVE MODE)
+  // LOAD GAME FROM BACKEND (för live mode, från HEAD men med sessionId från params)
+  //
+  useEffect(() => {
+    if (isTest) return; // Skip loading in test mode
+
+    async function loadGame() {
+      // If the URL does not include a session ID, we cannot load the game.
+      if (!sessionId) {
+        setError("Ingen session hittades i URL:en.");
+        setLoading(false);
+        return;
+      }
+
+      // Load the current game state from the backend for this session.
+      setLoading(true);
+      try {
+        const response = await fetch(`/api/game/${sessionId}`, {
+          method: 'GET',
+          credentials: 'same-origin',
+          cache: 'no-store'
+        });
+
+        if (!response.ok) {
+          const body = await response.json().catch(() => null);
+          setError(body?.message ?? 'Kunde inte hämta speldata.');
+          return;
+        }
+
+        // Build the local player state from the backend response.
+        const game = (await response.json()) as BackendGameSession;
+        setConnectedPlayers(game.players.length);
+
+        if (game.players.length > 0) {
+          setPlayer1({ username: game.players[0].name, hp: game.players[0].health });
+        }
+
+        if (game.players.length > 1) {
+          setPlayer2({ username: game.players[1].name, hp: game.players[1].health });
+        }
+      } catch (err) {
+        console.error(err);
+        setError('Kunde inte nå servern för att läsa spelet.');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadGame();
+  }, [sessionId, isTest]);
+
+  //
+  // TIMER (LIVE MODE) från dev
   //
   useEffect(() => {
     if (!timerRunning || isTest) return;
@@ -47,7 +111,7 @@ export default function PlayGame() {
   }, [timerRunning, turn, isTest]);
 
   //
-  // MANUAL TIMER TICK (TEST MODE)
+  // MANUAL TIMER TICK (TEST MODE) från dev
   //
   useEffect(() => {
     if (!isTest) return;
@@ -68,7 +132,7 @@ export default function PlayGame() {
   }, [isTest]);
 
   //
-  // DAMAGE LOGIC
+  // DAMAGE LOGIC från dev
   //
   function dealDamage(amount: number, target: "left" | "right") {
     const id = Date.now();
@@ -82,7 +146,7 @@ export default function PlayGame() {
   }
 
   //
-  // WORD INPUT CHANGE
+  // WORD INPUT CHANGE från dev
   //
   function handleWordChange(value: string) {
     setWord(value);
@@ -96,7 +160,7 @@ export default function PlayGame() {
   }
 
   //
-  // APPLY DAMAGE
+  // GEMENSAM DAMAGE-HANTERING (det som testerna förväntar sig) från dev
   //
   function applyWordDamage(cleanWord: string) {
     const damage = cleanWord.length;
@@ -120,18 +184,27 @@ export default function PlayGame() {
   }
 
   //
-  // WORD SUBMISSION
+  // WORD SUBMISSION kombinerad
   //
   async function onSubmitWord() {
     const cleanWord = word.trim();
     if (!cleanWord) return;
 
+    //
+    // 🧪 TEST MODE — exakt gamla fungerande logiken från dev
+    //
     if (isTest) {
       applyWordDamage(cleanWord);
       return;
     }
 
-    const sessionId = "cd748152-6f11-40e9-8cdb-e52ec2b17f2a";
+    //
+    // 🌐 LIVE MODE — backend submission från HEAD, men med sessionId från params
+    //
+    if (!sessionId) {
+      console.error("No session ID found");
+      return;
+    }
 
     try {
       const response = await fetch(`/api/game/${sessionId}/playword`, {
@@ -155,7 +228,7 @@ export default function PlayGame() {
   }
 
   //
-  // OVERLAY (disabled in test)
+  // OVERLAY LOGIC (AV I TESTLÄGE) från dev
   //
   let overlayMessage: string | null = null;
 
@@ -167,6 +240,9 @@ export default function PlayGame() {
     }
   }
 
+  //
+  // RENDER från dev
+  //
   return (
     <div style={{ position: "relative", width: "100%", height: "100vh" }}>
       <GameBoard
@@ -176,9 +252,9 @@ export default function PlayGame() {
         turn={turn}
         word={word}
         setWord={handleWordChange}
-        timerRunning={timerRunning}
         onSubmitWord={onSubmitWord}
         history={history}
+        timerRunning={timerRunning}
       >
         {popups.map((p) => (
           <DamagePopup

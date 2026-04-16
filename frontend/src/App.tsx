@@ -11,14 +11,14 @@ function App() {
       {/* Startsidan */}
       <Route path="/" element={<HomePage />} />
 
-      {/* newgame */}
-      <Route path="/newgame" element={<NewGame />} />
+      {/* newgame: receives the session ID from the homepage and displays it */}
+      <Route path="/newgame/:sessionId" element={<NewGame />} />
 
       {/* Rules page */}
       <Route path="/rules" element={<Rules />} />
 
-      {/* playgame */}
-      <Route path="/game" element={<PlayGame />} />
+      {/* playgame with session ID */}
+      <Route path="/game/:sessionId" element={<PlayGame />} />
 
       {/* JoinGame-sidan */}
       <Route path="/join" element={<JoinGame />} />
