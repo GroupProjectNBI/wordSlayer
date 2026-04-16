@@ -68,3 +68,15 @@ Scenario: Player 1 HP bar decreases after taking damage
   Then player 1 has 95 HP
   And player 1 HP bar is at 95 percent
 
+Scenario: Overlay is visible when only one player is present and disappears when two players are present
+  Given I intercept game session response with only one player
+  And I go to "/game/test-session-id"
+  Then I see the overlay
+  When I simulate a second player joining
+  Then I do not see the overlay
+
+
+Scenario: Overlay is not visible when two players are present from the beginning
+  Given I intercept game session response
+  And I go to "/game/test-session-id"
+  Then I do not see the overlay
