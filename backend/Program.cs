@@ -1,4 +1,5 @@
 using backend;
+using Microsoft.AspNetCore.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,9 +12,6 @@ if (string.IsNullOrWhiteSpace(builder.Configuration["urls"]))
 // 2. Registrera tjänster (Dependency Injection)
 builder.Services.AddSingleton<WordService>();
 builder.Services.AddSingleton<GameManager>();
-
-
-// Add SignalR
 builder.Services.AddSignalR();
 
 var app = builder.Build();
