@@ -15,7 +15,7 @@ export default function PlayGame() {
   // TEST DETECTION (detta är den kritiska fixen från dev)
   //
   const location = useLocation();
-  const isTest = window.location.href.includes("test");
+  const isTest = location.search.includes("test");
 
 
   const [player1, setPlayer1] = useState({ username: "PlayerOne", hp: 100 });
