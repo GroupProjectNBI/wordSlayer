@@ -27,6 +27,9 @@ export default function PlayGame() {
   const [turn, setTurn] = useState<"player1" | "player2">("player1");
   const localPlayer: "player1" | "player2" = "player1";
 
+  // COOLDOWN
+  const [cooldown, setCooldown] = useState(false);
+
   // POPUPS + HISTORY
   const [popups, setPopups] = useState<
     { id: number; amount: number; position: "left" | "right"; }[]
@@ -40,11 +43,29 @@ export default function PlayGame() {
   const [, setLoading] = useState(true);
   const [, setError] = useState("");
 
-  // TURN MANAGER (premium timer state machine)
+  // TURN MANAGER
   const { timer, dispatch } = useTurnManager(isTest, () => {
     // TIMEOUT → switch turn
     setTurn((prev) => (prev === "player1" ? "player2" : "player1"));
+    startCooldown();
   });
+
+  //
+  // COOLDOWN HANDLER
+  //
+  function startCooldown() {
+    if (isTest) {
+      dispatch({ type: "TURN_START" });
+      return;
+    }
+
+    setCooldown(true);
+
+    setTimeout(() => {
+      setCooldown(false);
+      dispatch({ type: "TURN_START" });
+    }, 800);
+  }
 
   //
   // LOAD GAME FROM BACKEND (live mode)
@@ -135,7 +156,6 @@ export default function PlayGame() {
 
     if (isTest) return;
 
-    // Start timer when player begins typing
     if (timer.state === TimerState.Idle && value.trim().length > 0) {
       dispatch({ type: "TURN_START" });
     }
@@ -160,8 +180,8 @@ export default function PlayGame() {
       setTurn("player1");
     }
 
-    // Reset timer
     dispatch({ type: "RESET" });
+    startCooldown();
     setWord("");
   }
 
@@ -229,6 +249,7 @@ export default function PlayGame() {
         onSubmitWord={onSubmitWord}
         history={history}
         timerRunning={timer.state === TimerState.Running}
+        inputDisabled={cooldown || timer.state !== TimerState.Running}
       >
         {popups.map((p) => (
           <DamagePopup

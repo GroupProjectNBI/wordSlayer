@@ -25,6 +25,7 @@ interface GameBoardProps {
   onSubmitWord: () => void;
   history: WordEntry[];
   timerRunning: boolean;
+  inputDisabled: boolean;
   children?: React.ReactNode;
 }
 
