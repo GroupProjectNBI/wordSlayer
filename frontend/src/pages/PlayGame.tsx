@@ -4,15 +4,9 @@ import GameBoard from "../components/GameBoard";
 import DamagePopup from "../components/DamagePopup";
 
 export default function PlayGame() {
-  //
-  // TEST DETECTION (detta är den kritiska fixen)
-  //
   const location = useLocation();
   const isTest = location.search.includes("test");
 
-  //
-  // STATE
-  //
   const [player1, setPlayer1] = useState({ username: "PlayerOne", hp: 100 });
   const [player2, setPlayer2] = useState({ username: "PlayerTwo", hp: 100 });
 
@@ -36,7 +30,7 @@ export default function PlayGame() {
   // TIMER (LIVE MODE)
   //
   useEffect(() => {
-    if (!timerRunning || isTest) return; // testläge använder manual ticks
+    if (!timerRunning || isTest) return;
 
     const interval = setInterval(() => {
       setTimer((t) => {
@@ -93,13 +87,16 @@ export default function PlayGame() {
   function handleWordChange(value: string) {
     setWord(value);
 
+    // 🟩 FIX: I testläge ska timerRunning ALDRIG starta automatiskt
+    if (isTest) return;
+
     if (!timerRunning && value.trim().length > 0) {
       setTimerRunning(true);
     }
   }
 
   //
-  // GEMENSAM DAMAGE-HANTERING (det som testerna förväntar sig)
+  // APPLY DAMAGE
   //
   function applyWordDamage(cleanWord: string) {
     const damage = cleanWord.length;
@@ -129,17 +126,11 @@ export default function PlayGame() {
     const cleanWord = word.trim();
     if (!cleanWord) return;
 
-    //
-    // 🧪 TEST MODE — exakt gamla fungerande logiken
-    //
     if (isTest) {
       applyWordDamage(cleanWord);
       return;
     }
 
-    //
-    // 🌐 LIVE MODE — backend + samma damage-logik
-    //
     const sessionId = "cd748152-6f11-40e9-8cdb-e52ec2b17f2a";
 
     try {
@@ -164,7 +155,7 @@ export default function PlayGame() {
   }
 
   //
-  // OVERLAY LOGIC (AV I TESTLÄGE)
+  // OVERLAY (disabled in test)
   //
   let overlayMessage: string | null = null;
 
@@ -176,9 +167,6 @@ export default function PlayGame() {
     }
   }
 
-  //
-  // RENDER
-  //
   return (
     <div style={{ position: "relative", width: "100%", height: "100vh" }}>
       <GameBoard
@@ -204,7 +192,6 @@ export default function PlayGame() {
         ))}
       </GameBoard>
 
-      {/* OVERLAY – visas bara i live-läge */}
       {overlayMessage && (
         <div
           style={{
