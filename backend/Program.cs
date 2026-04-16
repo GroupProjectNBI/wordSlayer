@@ -45,6 +45,15 @@ app.MapGet("/api/newGame", (GameManager manager) =>
 
 app.MapPost("/api/game/{sessionId}/join", (Guid sessionId, JoinGameRequest request, GameManager manager) =>
 {
+    var game = manager.GetGameById(sessionId);
+    if (game == null) return Results.NotFound(new { message = "Spelet hittades inte!" });
+    var user = game.Players.FirstOrDefault(p => p.Name == request.PlayerName);
+    if (user != null) return Results.Conflict(new { message = "Spelare finns redan!" });
+    if (string.IsNullOrWhiteSpace(request?.PlayerName))
+    {
+        return Results.BadRequest(new { message = "Spelarnamn får inte vara tomt!" });
+    }
+
     // DÖRRVAKTEN: Kontrollera spelarnamn
     if (string.IsNullOrWhiteSpace(request?.PlayerName))
     {
