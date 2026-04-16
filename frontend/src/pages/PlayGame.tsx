@@ -4,6 +4,8 @@ import { useParams, useLocation } from "react-router-dom";
 import GameBoard from "../components/GameBoard";
 import DamagePopup from "../components/DamagePopup";
 import { useTurnManager, TimerState } from "../components/TurnManager/TurnManager";
+import { useSound } from "../hooks/useSound";
+
 
 interface BackendGameSession {
   sessionId: string;
@@ -30,6 +32,8 @@ export default function PlayGame() {
 
   // CONNECTED PLAYERS
   const [connectedPlayers, setConnectedPlayers] = useState(0);
+  //SOUND
+  const playDangerBeep = useSound("/sounds/danger-beep.mp3");
 
   // WEBSOCKET: PlayerJoined
   useWebsocket(sessionId, () => {
@@ -230,6 +234,14 @@ export default function PlayGame() {
       console.error("Network error:", err);
     }
   }
+  useEffect(() => {
+    if (isTest) return; // aldrig ljud i test mode
+
+    if (timer.value <= 5 && timer.state === TimerState.Running) {
+      playDangerBeep();
+    }
+  }, [timer.value, timer.state, isTest]);
+
 
   //
   // OVERLAY
