@@ -25,7 +25,7 @@ interface GameBoardProps {
   onSubmitWord: () => void;
   history: WordEntry[];
   timerRunning: boolean;
-  children?: React.ReactNode; // DamagePopups
+  children?: React.ReactNode;
 }
 
 export default function GameBoard({
@@ -41,8 +41,9 @@ export default function GameBoard({
   children
 }: GameBoardProps) {
 
-  // 🧪 TEST MODE: gör input alltid enabled
-  const isTest = typeof window !== "undefined" && window.location.search.includes("test");
+  const isTest =
+    typeof window !== "undefined" &&
+    window.location.search.includes("test");
 
   const inputDisabled = isTest ? false : turn !== "player1";
   const inputActive = isTest ? true : turn === "player1";
@@ -51,31 +52,55 @@ export default function GameBoard({
   return (
     <main className="min-h-screen bg-[#1a1a2e] text-white relative overflow-hidden">
 
-      {/* TOP-CENTER TITLE */}
+      {/* TITLE */}
       <div className="absolute top-4 left-1/2 -translate-x-1/2 text-center">
         <h1 className="text-4xl font-extrabold tracking-widest uppercase">
           Word Slayer
         </h1>
       </div>
 
-      {/* WORD HISTORY (left-center) */}
+      {/* WORD HISTORY */}
       <WordHistory words={history} />
 
-      {/* Player 1 (top-left) */}
-      <div className="absolute top-20 left-4 text-left">
-        <Username name={player1.username} isActive={turn === "player1"} align="left" />
-        <HPBar hp={player1.hp} color="green" width={160} />
+      {/* PLAYER 1 */}
+      <div
+        data-player="player1"
+        data-active={turn === "player1"}
+        className="absolute top-20 left-4 text-left"
+      >
+        <Username
+          name={player1.username}
+          isActive={turn === "player1"}
+          align="left"
+        />
+
+        <div style={{ width: 160 }}>
+          <HPBar hp={player1.hp} color="green" width={160} />
+        </div>
+
         <div className="text-sm mt-1">{player1.hp} HP</div>
       </div>
 
-      {/* Player 2 (bottom-right) */}
-      <div className="absolute bottom-20 right-4 text-right">
-        <Username name={player2.username} isActive={turn === "player2"} align="right" />
-        <HPBar hp={player2.hp} color="red" width={160} />
+      {/* PLAYER 2 */}
+      <div
+        data-player="player2"
+        data-active={turn === "player2"}
+        className="absolute bottom-20 right-4 text-right"
+      >
+        <Username
+          name={player2.username}
+          isActive={turn === "player2"}
+          align="right"
+        />
+
+        <div style={{ width: 160 }}>
+          <HPBar hp={player2.hp} color="red" width={160} />
+        </div>
+
         <div className="text-sm mt-1">{player2.hp} HP</div>
       </div>
 
-      {/* Center VS + Timer */}
+      {/* CENTER VS + TIMER */}
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
         <h1 className="text-7xl font-extrabold tracking-widest opacity-80">
           VS
@@ -86,7 +111,7 @@ export default function GameBoard({
         </div>
       </div>
 
-      {/* Word Input (center bottom) */}
+      {/* WORD INPUT */}
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-full max-w-md px-4">
         <WordInput
           value={word}
