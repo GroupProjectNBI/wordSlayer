@@ -41,7 +41,9 @@ export default function GameBoard({
   children
 }: GameBoardProps) {
 
-  const isTest = typeof window !== "undefined" && window.location.search.includes("test");
+  const isTest =
+    typeof window !== "undefined" &&
+    window.location.search.includes("test");
 
   const inputDisabled = isTest ? false : turn !== "player1";
   const inputActive = isTest ? true : turn === "player1";
@@ -72,7 +74,6 @@ export default function GameBoard({
           align="left"
         />
 
-        {/* FIX: HPBar i container med exakt width */}
         <div style={{ width: 160 }}>
           <HPBar hp={player1.hp} color="green" width={160} />
         </div>
@@ -92,7 +93,6 @@ export default function GameBoard({
           align="right"
         />
 
-        {/* FIX: HPBar i container med exakt width */}
         <div style={{ width: 160 }}>
           <HPBar hp={player2.hp} color="red" width={160} />
         </div>
@@ -123,6 +123,7 @@ export default function GameBoard({
         />
       </div>
 
+      {/* DAMAGE POPUPS */}
       {children}
     </main>
   );
