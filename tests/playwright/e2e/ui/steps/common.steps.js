@@ -13,14 +13,12 @@ const { Given, When, Then } = createBdd();
 // NAVIGATION (Going from one place to another)
 //
 
-Then('I am on {string}', async ({ page }, url) => {
+Given('I go to {string}', async ({ page }, url) => {
+  await page.goto(url);
   await page.waitForURL(url);
 });
 
-
-// Navigation – ny, unik text för att undvika krockar
-Given('I go to {string}', async ({ page }, url) => {
-  await page.goto(url);
+Then('I am on {string}', async ({ page }, url) => {
   await page.waitForURL(url);
 });
 
@@ -28,6 +26,10 @@ Given('I go to {string}', async ({ page }, url) => {
 // ACTIONS (When somethin happens etc pressing a button)
 //
 When('I press button {string}', async ({ page }, text) => {
+  await page.getByRole('button', { name: text }).click();
+});
+
+When('I click the {string} button', async ({ page }, text) => {
   await page.getByRole('button', { name: text }).click();
 });
 
@@ -51,30 +53,20 @@ Then('I see button {string}', async ({ page }, text) => {
 Then('I see input value {string}', async ({ page }, value) => {
   await expect(page.locator('input')).toHaveValue(value);
 });
+
 Given("the input is enabled", async ({ page }) => {
   await page.waitForSelector('input:not([disabled])');
-});
-
-
-//
-// JOIN GAME SUPPORT STEPS
-//
-//
-// JOIN GAME SUPPORT STEPS
-//
-
-When('I click the {string} button', async ({ page }, text) => {
-  await page.getByRole('button', { name: text }).click();
+  await page.locator('input:not([disabled])').waitFor({ state: 'visible' });
 });
 
 Then('I should be redirected to {string}', async ({ page }, url) => {
   await page.waitForURL(url);
 });
 
-
-
-
-
-
-
-
+Then('I see input {string}', async ({ page }, placeholder) => {
+  const input = page.getByPlaceholder(placeholder);
+  const visible = await input.isVisible();
+  if (!visible) {
+    throw new Error(`Expected to see input with placeholder "${placeholder}"`);
+  }
+});

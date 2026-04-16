@@ -7,7 +7,7 @@ const { Given, When, Then } = createBdd();
 // NAVIGATION (used only where referenced in features)
 //
 Given("I am on the PlayGame page", async ({ page }) => {
-  await page.goto("/game?test");
+  await page.goto("/game/test-session-id?test");
 });
 
 //
@@ -20,6 +20,32 @@ Given("the timer is mocked", async ({ page }) => {
 
     window.setInterval = () => 0;
     window.setTimeout = () => 0;
+  });
+});
+
+Given('I intercept game session response', async ({ page }) => {
+  await page.route('**/api/game/test-session-id', (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        sessionId: 'test-session-id',
+        players: [
+          { name: 'PlayerOne', health: 100 },
+          { name: 'PlayerTwo', health: 100 }
+        ]
+      }),
+    });
+  });
+});
+
+Given('I intercept playword response', async ({ page }) => {
+  await page.route('**/api/game/test-session-id/playword', (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({}),
+    });
   });
 });
 

@@ -37,15 +37,29 @@ public class GameManager
     }
     // ny funktion joingame för att att hantera join new player
     /// Låter en ny spelare ansluta till ett REDAN EXISTERANDE spel.
-    /// Används när spelare 2 klickar på en länk eller knappar in en kod.
+    /// Spelaren som ansluter får automatiskt namnet Player 2.
+    /// </summary>
+    public GameSession? JoinGame(Guid sessionId)
+    {
+        return JoinGame(sessionId, "Player 2");
+    }
+
+    /// <summary>
+    /// Låter en ny spelare ansluta till ett REDAN EXISTERANDE spel.
+    /// Spelaren som ansluter får automatiskt namnet Player 2 om inget namn anges.
     /// </summary>
     public GameSession? JoinGame(Guid sessionId, string playerName)
     {
         // 1. Leta i vår Dictionary: Finns det ett rum med detta ID?
-        // TryGetValue är smart: Den kollar om rummet finns. Finns det, läggs det i variabeln "gameToJoin".
         if (_activeGames.TryGetValue(sessionId, out GameSession? gameToJoin))
         {
-            // 2. Rummet hittades! Skapa den nya spelaren och lägg till i listan.
+            // If the room already has two players, do not allow more joins.
+            if (gameToJoin.Players.Count >= 2)
+            {
+                return null;
+            }
+
+            // 2. Lägg till spelaren med angivet namn.
             gameToJoin.Players.Add(new Player(playerName));
 
             // 3. Returnera det uppdaterade spelet (som nu har två spelare)
