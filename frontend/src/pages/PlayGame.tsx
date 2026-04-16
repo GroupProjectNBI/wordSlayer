@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useWebsocket } from "../hooks/useWebsocket";
 import { useParams, useLocation } from "react-router-dom";
 import GameBoard from "../components/GameBoard";
 import DamagePopup from "../components/DamagePopup";
@@ -26,9 +27,12 @@ export default function PlayGame() {
   // TURN
   const [turn, setTurn] = useState<"player1" | "player2">("player1");
   const localPlayer: "player1" | "player2" = "player1";
+  const [connectedPlayers, setConnectedPlayers] = useState(0);
 
-  // COOLDOWN
-  const [cooldown, setCooldown] = useState(false);
+  // Real-time update: listen for PlayerJoined events
+  useWebsocket(sessionId, () => {
+    setConnectedPlayers((prev) => Math.min(prev + 1, 2));
+  });
 
   // POPUPS + HISTORY
   const [popups, setPopups] = useState<
@@ -71,15 +75,12 @@ export default function PlayGame() {
   // LOAD GAME FROM BACKEND (live mode)
   //
   useEffect(() => {
-    if (isTest) return;
-
     async function loadGame() {
       if (!sessionId) {
         setError("Ingen session hittades i URL:en.");
         setLoading(false);
         return;
       }
-
       setLoading(true);
       try {
         const response = await fetch(`/api/game/${sessionId}`, {
@@ -87,22 +88,19 @@ export default function PlayGame() {
           credentials: "same-origin",
           cache: "no-store",
         });
-
         if (!response.ok) {
           const body = await response.json().catch(() => null);
           setError(body?.message ?? "Kunde inte hämta speldata.");
           return;
         }
-
         const game = (await response.json()) as BackendGameSession;
-
+        setConnectedPlayers(game.players.length);
         if (game.players.length > 0) {
           setPlayer1({
             username: game.players[0].name,
             hp: game.players[0].health,
           });
         }
-
         if (game.players.length > 1) {
           setPlayer2({
             username: game.players[1].name,
@@ -116,9 +114,8 @@ export default function PlayGame() {
         setLoading(false);
       }
     }
-
     loadGame();
-  }, [sessionId, isTest]);
+  }, [sessionId]);
 
   //
   // TEST MODE: manual timer tick
@@ -224,14 +221,13 @@ export default function PlayGame() {
   }
 
   //
-  // OVERLAY (disabled in test mode)
-  //
-  let overlayMessage: string | null = null;
 
-  if (!isTest) {
-    if (turn !== localPlayer) {
-      overlayMessage = "Motståndaren tänker... 🧠";
-    }
+  // OVERLAY LOGIC: Always show overlay if less than 2 players, in both test and live mode
+  let overlayMessage: string | null = null;
+  if (connectedPlayers < 2) {
+    overlayMessage = "Väntar på att en motståndare ska ansluta... ⏳";
+  } else if (!isTest && turn !== localPlayer) {
+    overlayMessage = "Motståndaren tänker... 🧠";
   }
 
   //
@@ -241,8 +237,9 @@ export default function PlayGame() {
     <div style={{ position: "relative", width: "100%", height: "100vh" }}>
       <GameBoard
         player1={player1}
-        player2={player2}
-        timer={timer.value}
+        // Only pass player2 if there are at least 2 players
+        {...(connectedPlayers > 1 ? { player2 } : {})}
+        timer={timer}
         turn={turn}
         word={word}
         setWord={handleWordChange}
@@ -265,6 +262,7 @@ export default function PlayGame() {
 
       {overlayMessage && (
         <div
+          data-testid="overlay"
           style={{
             position: "absolute",
             inset: 0,

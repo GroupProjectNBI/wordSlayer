@@ -17,7 +17,7 @@ interface WordEntry {
 
 interface GameBoardProps {
   player1: Player;
-  player2: Player;
+  player2?: Player;
   timer: number;
   turn: "player1" | "player2";
   word: string;
@@ -52,17 +52,14 @@ export default function GameBoard({
 
   return (
     <main className="min-h-screen bg-[#1a1a2e] text-white relative overflow-hidden">
-
       {/* TITLE */}
       <div className="absolute top-4 left-1/2 -translate-x-1/2 text-center">
         <h1 className="text-4xl font-extrabold tracking-widest uppercase">
           Word Slayer
         </h1>
       </div>
-
       {/* WORD HISTORY */}
       <WordHistory words={history} />
-
       {/* PLAYER 1 */}
       <div
         data-player="player1"
@@ -74,44 +71,38 @@ export default function GameBoard({
           isActive={turn === "player1"}
           align="left"
         />
-
         <div style={{ width: 160 }}>
           <HPBar hp={player1.hp} color="green" width={160} />
         </div>
-
         <div className="text-sm mt-1">{player1.hp} HP</div>
       </div>
-
-      {/* PLAYER 2 */}
-      <div
-        data-player="player2"
-        data-active={turn === "player2"}
-        className="absolute bottom-20 right-4 text-right"
-      >
-        <Username
-          name={player2.username}
-          isActive={turn === "player2"}
-          align="right"
-        />
-
-        <div style={{ width: 160 }}>
-          <HPBar hp={player2.hp} color="red" width={160} />
+      {/* PLAYER 2 (conditionally render) */}
+      {player2 ? (
+        <div
+          data-player="player2"
+          data-active={turn === "player2"}
+          className="absolute bottom-20 right-4 text-right"
+        >
+          <Username
+            name={player2.username}
+            isActive={turn === "player2"}
+            align="right"
+          />
+          <div style={{ width: 160 }}>
+            <HPBar hp={player2.hp} color="red" width={160} />
+          </div>
+          <div className="text-sm mt-1">{player2.hp} HP</div>
         </div>
-
-        <div className="text-sm mt-1">{player2.hp} HP</div>
-      </div>
-
+      ) : null}
       {/* CENTER VS + TIMER */}
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
         <h1 className="text-7xl font-extrabold tracking-widest opacity-80">
           VS
         </h1>
-
         <div className="mt-4">
           <Timer value={timer} />
         </div>
       </div>
-
       {/* WORD INPUT */}
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-full max-w-md px-4">
         <WordInput
@@ -123,7 +114,6 @@ export default function GameBoard({
           isTimerRunning={timerIsRunning}
         />
       </div>
-
       {/* DAMAGE POPUPS */}
       {children}
     </main>
