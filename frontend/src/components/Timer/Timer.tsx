@@ -1,23 +1,25 @@
+import TimerBar from "./TimerBar";
+import TimerRing from "./TimerRing";
+import "./timer.css";
 
 interface TimerProps {
-  value: number; // antal sekunder kvar
+  value: number;
+  max?: number;
 }
 
-export default function Timer({ value }: TimerProps) {
-  // färg baserat på tid
-  const color =
-    value > 10
-      ? "text-yellow-400"
-      : value > 5
-        ? "text-orange-400"
-        : "text-red-500";
+export default function Timer({ value, max = 30 }: TimerProps) {
+  const ratio = value / max;
 
-  // blink-animation när tiden är kritiskt låg
-  const blink = value <= 5 ? "animate-pulse" : "";
+  const state =
+    value > 10 ? "normal"
+      : value > 5 ? "warning"
+        : "danger";
 
   return (
-    <div className={`text-3xl font-bold ${color} ${blink}`}>
-      {value}s
+    <div className={`timer-container timer-${state}`}>
+      <TimerRing ratio={ratio} state={state} />
+      <TimerBar ratio={ratio} state={state} />
+      <div className="timer-text">{value}s</div>
     </div>
   );
 }
