@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
+import { useWebsocket } from "../hooks/useWebsocket";
 import { useParams, useLocation } from "react-router-dom";
 import GameBoard from "../components/GameBoard";
 import DamagePopup from "../components/DamagePopup";
 
 interface BackendGameSession {
   sessionId: string;
-  players: { name: string; health: number }[];
+  players: { name: string; health: number; }[];
 }
 
 export default function PlayGame() {
-  const { sessionId } = useParams<{ sessionId: string }>();
+  const { sessionId } = useParams<{ sessionId: string; }>();
 
   //
   // TEST DETECTION (detta är den kritiska fixen från dev)
@@ -30,6 +31,11 @@ export default function PlayGame() {
 
   const localPlayer: "player1" | "player2" = "player1";
   const [connectedPlayers, setConnectedPlayers] = useState(1);
+
+  // Real-time update: listen for PlayerJoined events
+  useWebsocket(sessionId, () => {
+    setConnectedPlayers((prev) => Math.min(prev + 1, 2));
+  });
 
   const [popups, setPopups] = useState<
     { id: number; amount: number; position: "left" | "right"; }[]
