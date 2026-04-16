@@ -72,13 +72,11 @@ Then('I see input {string}', async ({ page }, placeholder) => {
 });
 
 Then('I see the overlay', async ({ page }) => {
-  // Looks for the overlay message or overlay container
-  const overlay = await page.locator('div', { hasText: 'Väntar på att en motståndare ska ansluta' });
+  const overlay = page.locator('[data-testid="overlay"]');
   await expect(overlay).toBeVisible();
 });
 
 Then('I do not see the overlay', async ({ page }) => {
-  // Overlay should not be visible
-  const overlay = page.locator('div', { hasText: 'Väntar på att en motståndare ska ansluta' });
+  const overlay = page.locator('[data-testid="overlay"]');
   await expect(overlay).toHaveCount(0);
 });
