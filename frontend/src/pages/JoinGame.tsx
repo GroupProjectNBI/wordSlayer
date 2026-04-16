@@ -27,7 +27,9 @@ export default function JoinGame() {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({})
+                body: JSON.stringify({
+                    "playerName": "Player 2"
+                })
             });
 
             if (!response.ok) {
