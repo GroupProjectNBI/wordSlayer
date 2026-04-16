@@ -4,8 +4,7 @@ import { useParams, useLocation } from "react-router-dom";
 import GameBoard from "../components/GameBoard";
 import DamagePopup from "../components/DamagePopup";
 import { useTurnManager, TimerState } from "../components/TurnManager/TurnManager";
-import { useSound } from "../hooks/useSound";
-
+import { useSound } from "../hooks/useSound"; // 🟩 NY IMPORT
 
 interface BackendGameSession {
   sessionId: string;
@@ -32,8 +31,6 @@ export default function PlayGame() {
 
   // CONNECTED PLAYERS
   const [connectedPlayers, setConnectedPlayers] = useState(0);
-  //SOUND
-  const playDangerBeep = useSound("/sounds/danger-beep.mp3");
 
   // WEBSOCKET: PlayerJoined
   useWebsocket(sessionId, () => {
@@ -55,6 +52,9 @@ export default function PlayGame() {
   // BACKEND LOADING
   const [, setLoading] = useState(true);
   const [, setError] = useState("");
+
+  // 🟩 DANGER ZONE SOUND
+  const playDangerBeep = useSound("/sounds/danger-beep.mp3");
 
   // TURN MANAGER
   const { timer, dispatch } = useTurnManager(isTest, () => {
@@ -147,6 +147,17 @@ export default function PlayGame() {
   }, [isTest, dispatch]);
 
   //
+  // 🟩 DANGER ZONE SOUND EFFECT
+  //
+  useEffect(() => {
+    if (isTest) return; // aldrig ljud i test mode
+
+    if (timer.state === TimerState.Running && timer.value <= 5) {
+      playDangerBeep();
+    }
+  }, [timer.value, timer.state, isTest, playDangerBeep]);
+
+  //
   // DAMAGE LOGIC
   //
   function dealDamage(amount: number, target: "left" | "right") {
@@ -234,14 +245,6 @@ export default function PlayGame() {
       console.error("Network error:", err);
     }
   }
-  useEffect(() => {
-    if (isTest) return; // aldrig ljud i test mode
-
-    if (timer.value <= 5 && timer.state === TimerState.Running) {
-      playDangerBeep();
-    }
-  }, [timer.value, timer.state, isTest]);
-
 
   //
   // OVERLAY
@@ -261,8 +264,8 @@ export default function PlayGame() {
     <div style={{ position: "relative", width: "100%", height: "100vh" }}>
       <GameBoard
         player1={player1}
-        player2={player2}   // alltid skickas
-        timer={timer.value} // FIX
+        player2={player2}
+        timer={timer.value}
         turn={turn}
         word={word}
         setWord={handleWordChange}
