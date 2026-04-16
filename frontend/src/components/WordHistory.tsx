@@ -1,3 +1,4 @@
+
 interface WordEntry {
   word: string;
   player: "player1" | "player2";

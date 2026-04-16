@@ -46,7 +46,7 @@ export default function WordInput({
           : "Waiting for opponent..."
       }
       className={`
-        w-full px-4 py-3 rounded-xl text-black text-lg
+        w-full px-4 py-3 rounded-xl text-white text-lg
         transition-all duration-200
 
         ${disabled ? "opacity-50 cursor-not-allowed" : "opacity-100"}
