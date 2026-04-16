@@ -43,22 +43,30 @@ app.MapGet("/api/newGame", (GameManager manager) =>
     return Results.Ok(createdGame);
 });
 
-app.MapPost("/api/game/{sessionId}/join", (Guid sessionId, JoinGameRequest request, GameManager manager) =>
+app.MapPost("/api/game/{sessionId}/join", (Guid sessionId, GameManager manager) =>
 {
-    // DÖRRVAKTEN: Kontrollera spelarnamn
-    if (string.IsNullOrWhiteSpace(request?.PlayerName))
-    {
-        return Results.BadRequest(new { message = "Spelarnamn får inte vara tomt!" });
-    }
-
-    GameSession? updatedGame = manager.JoinGame(sessionId, request.PlayerName);
+    // The player that joins is automatically Player 2 in the existing room.
+    GameSession? updatedGame = manager.JoinGame(sessionId);
 
     if (updatedGame == null)
     {
-        return Results.NotFound(new { message = "Kunde inte hitta spelrummet. Kontrollera koden!" });
+        return Results.NotFound(new { message = "Kunde inte hitta spelrummet eller rummet är fullt. Kontrollera koden!" });
     }
 
     return Results.Ok(updatedGame);
+});
+
+app.MapGet("/api/game/{sessionId}", (Guid sessionId, GameManager manager) =>
+{
+    // Return the current game state for this session ID.
+    // The frontend uses this to show the player list and health values.
+    GameSession? game = manager.GetGameById(sessionId);
+    if (game == null)
+    {
+        return Results.NotFound(new { message = "Spelet hittades inte!" });
+    }
+
+    return Results.Ok(game);
 });
 
 app.MapPost("/api/game/{sessionId}/playword", (Guid sessionId, HandeWordRequest request, WordService wordService, GameManager gameManager) =>
