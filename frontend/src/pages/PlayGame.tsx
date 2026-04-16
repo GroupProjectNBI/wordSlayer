@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import GameBoard from "../components/GameBoard";
 import DamagePopup from "../components/DamagePopup";
+import { useTurnManager, TimerState } from "../components/TurnManager/TurnManager";
 
 interface BackendGameSession {
   sessionId: string;
@@ -11,24 +12,22 @@ interface BackendGameSession {
 export default function PlayGame() {
   const { sessionId } = useParams<{ sessionId: string; }>();
 
-  //
-  // TEST DETECTION (detta är den kritiska fixen från dev)
-  //
+  // TEST MODE
   const location = useLocation();
   const isTest = location.search.includes("test");
 
-
+  // PLAYER STATE
   const [player1, setPlayer1] = useState({ username: "PlayerOne", hp: 100 });
   const [player2, setPlayer2] = useState({ username: "PlayerTwo", hp: 100 });
 
+  // WORD INPUT
   const [word, setWord] = useState("");
-  const [timer, setTimer] = useState(30);
+
+  // TURN
   const [turn, setTurn] = useState<"player1" | "player2">("player1");
-  const [timerRunning, setTimerRunning] = useState(false);
-
   const localPlayer: "player1" | "player2" = "player1";
-  const [connectedPlayers, setConnectedPlayers] = useState(1);
 
+  // POPUPS + HISTORY
   const [popups, setPopups] = useState<
     { id: number; amount: number; position: "left" | "right"; }[]
   >([]);
@@ -37,52 +36,61 @@ export default function PlayGame() {
     { word: string; player: "player1" | "player2"; damage: number; }[]
   >([]);
 
+  // BACKEND LOADING
   const [, setLoading] = useState(true);
   const [, setError] = useState("");
 
+  // TURN MANAGER (premium timer state machine)
+  const { timer, dispatch } = useTurnManager(isTest, () => {
+    // TIMEOUT → switch turn
+    setTurn((prev) => (prev === "player1" ? "player2" : "player1"));
+  });
+
   //
-  // LOAD GAME FROM BACKEND (för live mode, från HEAD men med sessionId från params)
+  // LOAD GAME FROM BACKEND (live mode)
   //
   useEffect(() => {
-    if (isTest) return; // Skip loading in test mode
+    if (isTest) return;
 
     async function loadGame() {
-      // If the URL does not include a session ID, we cannot load the game.
       if (!sessionId) {
         setError("Ingen session hittades i URL:en.");
         setLoading(false);
         return;
       }
 
-      // Load the current game state from the backend for this session.
       setLoading(true);
       try {
         const response = await fetch(`/api/game/${sessionId}`, {
-          method: 'GET',
-          credentials: 'same-origin',
-          cache: 'no-store'
+          method: "GET",
+          credentials: "same-origin",
+          cache: "no-store",
         });
 
         if (!response.ok) {
           const body = await response.json().catch(() => null);
-          setError(body?.message ?? 'Kunde inte hämta speldata.');
+          setError(body?.message ?? "Kunde inte hämta speldata.");
           return;
         }
 
-        // Build the local player state from the backend response.
         const game = (await response.json()) as BackendGameSession;
-        setConnectedPlayers(game.players.length);
 
         if (game.players.length > 0) {
-          setPlayer1({ username: game.players[0].name, hp: game.players[0].health });
+          setPlayer1({
+            username: game.players[0].name,
+            hp: game.players[0].health,
+          });
         }
 
         if (game.players.length > 1) {
-          setPlayer2({ username: game.players[1].name, hp: game.players[1].health });
+          setPlayer2({
+            username: game.players[1].name,
+            hp: game.players[1].health,
+          });
         }
       } catch (err) {
         console.error(err);
-        setError('Kunde inte nå servern för att läsa spelet.');
+        setError("Kunde inte nå servern för att läsa spelet.");
       } finally {
         setLoading(false);
       }
@@ -92,48 +100,21 @@ export default function PlayGame() {
   }, [sessionId, isTest]);
 
   //
-  // TIMER (LIVE MODE) från dev
-  //
-  useEffect(() => {
-    if (!timerRunning || isTest) return;
-
-    const interval = setInterval(() => {
-      setTimer((t) => {
-        if (t <= 1) {
-          setTurn((prev) => (prev === "player1" ? "player2" : "player1"));
-          setTimerRunning(false);
-          return 30;
-        }
-        return t - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [timerRunning, turn, isTest]);
-
-  //
-  // MANUAL TIMER TICK (TEST MODE) från dev
+  // TEST MODE: manual timer tick
   //
   useEffect(() => {
     if (!isTest) return;
 
     function manualTick() {
-      setTimer((t) => {
-        if (t <= 1) {
-          setTurn((prev) => (prev === "player1" ? "player2" : "player1"));
-          setTimerRunning(false);
-          return 30;
-        }
-        return t - 1;
-      });
+      dispatch({ type: "TICK" });
     }
 
     window.addEventListener("manual-timer-tick", manualTick);
     return () => window.removeEventListener("manual-timer-tick", manualTick);
-  }, [isTest]);
+  }, [isTest, dispatch]);
 
   //
-  // DAMAGE LOGIC från dev
+  // DAMAGE LOGIC
   //
   function dealDamage(amount: number, target: "left" | "right") {
     const id = Date.now();
@@ -147,21 +128,21 @@ export default function PlayGame() {
   }
 
   //
-  // WORD INPUT CHANGE från dev
+  // WORD INPUT CHANGE
   //
   function handleWordChange(value: string) {
     setWord(value);
 
-    // 🟩 FIX: I testläge ska timerRunning ALDRIG starta automatiskt
     if (isTest) return;
 
-    if (!timerRunning && value.trim().length > 0) {
-      setTimerRunning(true);
+    // Start timer when player begins typing
+    if (timer.state === TimerState.Idle && value.trim().length > 0) {
+      dispatch({ type: "TURN_START" });
     }
   }
 
   //
-  // GEMENSAM DAMAGE-HANTERING (det som testerna förväntar sig) från dev
+  // APPLY DAMAGE + TURN SWITCH
   //
   function applyWordDamage(cleanWord: string) {
     const damage = cleanWord.length;
@@ -179,29 +160,23 @@ export default function PlayGame() {
       setTurn("player1");
     }
 
-    setTimer(30);
-    setTimerRunning(false);
+    // Reset timer
+    dispatch({ type: "RESET" });
     setWord("");
   }
 
   //
-  // WORD SUBMISSION kombinerad
+  // WORD SUBMISSION
   //
   async function onSubmitWord() {
     const cleanWord = word.trim();
     if (!cleanWord) return;
 
-    //
-    // 🧪 TEST MODE — exakt gamla fungerande logiken från dev
-    //
     if (isTest) {
       applyWordDamage(cleanWord);
       return;
     }
 
-    //
-    // 🌐 LIVE MODE — backend submission från HEAD, men med sessionId från params
-    //
     if (!sessionId) {
       console.error("No session ID found");
       return;
@@ -213,7 +188,7 @@ export default function PlayGame() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           wordGuess: cleanWord,
-          playerId: localPlayer == 'player1' ? 'Player 1' : 'Player 2',
+          playerId: localPlayer === "player1" ? "Player 1" : "Player 2",
         }),
       });
 
@@ -229,33 +204,31 @@ export default function PlayGame() {
   }
 
   //
-  // OVERLAY LOGIC (AV I TESTLÄGE) från dev
+  // OVERLAY (disabled in test mode)
   //
   let overlayMessage: string | null = null;
 
   if (!isTest) {
-    if (connectedPlayers < 2) {
-      overlayMessage = "Väntar på att en motståndare ska ansluta... ⏳";
-    } else if (turn !== localPlayer) {
+    if (turn !== localPlayer) {
       overlayMessage = "Motståndaren tänker... 🧠";
     }
   }
 
   //
-  // RENDER från dev
+  // RENDER
   //
   return (
     <div style={{ position: "relative", width: "100%", height: "100vh" }}>
       <GameBoard
         player1={player1}
         player2={player2}
-        timer={timer}
+        timer={timer.value}
         turn={turn}
         word={word}
         setWord={handleWordChange}
         onSubmitWord={onSubmitWord}
         history={history}
-        timerRunning={timerRunning}
+        timerRunning={timer.state === TimerState.Running}
       >
         {popups.map((p) => (
           <DamagePopup
@@ -286,30 +259,7 @@ export default function PlayGame() {
             textAlign: "center",
           }}
         >
-          <div>
-            <p>{overlayMessage}</p>
-
-            <div
-              style={{
-                marginTop: 20,
-                display: "flex",
-                gap: 10,
-                justifyContent: "center",
-              }}
-            >
-              {connectedPlayers < 2 && (
-                <button onClick={() => setConnectedPlayers(2)}>
-                  Test: Motståndare anslöt
-                </button>
-              )}
-
-              {turn !== localPlayer && connectedPlayers === 2 && (
-                <button onClick={() => setTurn(localPlayer)}>
-                  Test: Min tur nu
-                </button>
-              )}
-            </div>
-          </div>
+          <p>{overlayMessage}</p>
         </div>
       )}
     </div>
