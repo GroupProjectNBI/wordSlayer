@@ -22,6 +22,8 @@ export default function PlayGame() {
   const localPlayer: "player1" | "player2" = "player1";
   const [connectedPlayers, setConnectedPlayers] = useState(1);
   const [turn, setTurn] = useState<"player1" | "player2">("player1");
+  const [timer] = useState(30);
+  const [timerRunning] = useState(true);
 
   // Typer från dev-branschen
   const [popups, setPopups] = useState<{ id: number; amount: number; position: "left" | "right"; }[]>([]);
@@ -141,11 +143,13 @@ export default function PlayGame() {
       <GameBoard
         player1={player1}
         player2={player2}
+        timer={timer}
         turn={turn}
         word={word}
         setWord={setWord}
         onSubmitWord={onSubmitWord}
         history={history}
+        timerRunning={timerRunning}
       >
         {popups.map((p) => (
           <DamagePopup
