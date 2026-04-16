@@ -5,11 +5,11 @@ import DamagePopup from "../components/DamagePopup";
 
 interface BackendGameSession {
   sessionId: string;
-  players: { name: string; health: number }[];
+  players: { name: string; health: number; }[];
 }
 
 export default function PlayGame() {
-  const { sessionId } = useParams<{ sessionId: string }>();
+  const { sessionId } = useParams<{ sessionId: string; }>();
 
   //
   // TEST DETECTION (detta är den kritiska fixen från dev)
@@ -17,9 +17,7 @@ export default function PlayGame() {
   const location = useLocation();
   const isTest = location.search.includes("test");
 
-  //
-  // STATE
-  //
+
   const [player1, setPlayer1] = useState({ username: "PlayerOne", hp: 100 });
   const [player2, setPlayer2] = useState({ username: "PlayerTwo", hp: 100 });
 
@@ -97,7 +95,7 @@ export default function PlayGame() {
   // TIMER (LIVE MODE) från dev
   //
   useEffect(() => {
-    if (!timerRunning || isTest) return; // testläge använder manual ticks
+    if (!timerRunning || isTest) return;
 
     const interval = setInterval(() => {
       setTimer((t) => {
@@ -153,6 +151,9 @@ export default function PlayGame() {
   //
   function handleWordChange(value: string) {
     setWord(value);
+
+    // 🟩 FIX: I testläge ska timerRunning ALDRIG starta automatiskt
+    if (isTest) return;
 
     if (!timerRunning && value.trim().length > 0) {
       setTimerRunning(true);
@@ -268,7 +269,6 @@ export default function PlayGame() {
         ))}
       </GameBoard>
 
-      {/* OVERLAY – visas bara i live-läge */}
       {overlayMessage && (
         <div
           style={{
