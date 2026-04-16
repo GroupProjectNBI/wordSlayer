@@ -56,6 +56,7 @@ Then('I see input value {string}', async ({ page }, value) => {
 
 Given("the input is enabled", async ({ page }) => {
   await page.waitForSelector('input:not([disabled])');
+  await page.locator('input:not([disabled])').waitFor({ state: 'visible' });
 });
 
 Then('I should be redirected to {string}', async ({ page }, url) => {

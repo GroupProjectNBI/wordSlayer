@@ -35,8 +35,7 @@ Feature: PlayGame Page
 
   Scenario: Timer runs out and turn switches
     Given the timer is mocked
-    And I intercept game session response
-    And I go to "/game/test-session-id"
+    And I go to "/game/test-session-id?test"
     And the input is enabled
     Then the timer should show 30
     When the timer ticks 30 seconds
@@ -45,13 +44,13 @@ Feature: PlayGame Page
 
     Scenario: Player 1 HP bar shows correct initial value
   Given the timer is mocked
-  And I go to "/game?test"
+  And I go to "/game/test-session-id?test"
   Then player 1 has 100 HP
   And player 1 HP bar is at 100 percent
 
 Scenario: Player 2 HP bar decreases after taking damage
   Given the timer is mocked
-  And I go to "/game?test"
+  And I go to "/game/test-session-id?test"
   And the input is enabled
   When I type the word "dragon"
   And I submit the word
@@ -60,7 +59,7 @@ Scenario: Player 2 HP bar decreases after taking damage
 
 Scenario: Player 1 HP bar decreases after taking damage
   Given the timer is mocked
-  And I go to "/game?test"
+  And I go to "/game/test-session-id?test"
   And the input is enabled
   When I type the word "dragon"
   And I submit the word

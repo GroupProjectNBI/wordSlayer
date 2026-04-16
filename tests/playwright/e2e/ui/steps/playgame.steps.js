@@ -7,7 +7,7 @@ const { Given, When, Then } = createBdd();
 // NAVIGATION (used only where referenced in features)
 //
 Given("I am on the PlayGame page", async ({ page }) => {
-  await page.goto("/game?test");
+  await page.goto("/game/test-session-id?test");
 });
 
 //
