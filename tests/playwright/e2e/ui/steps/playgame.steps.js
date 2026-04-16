@@ -18,6 +18,32 @@ Given("the timer is mocked", async ({ page }) => {
   });
 });
 
+Given('I intercept game session response', async ({ page }) => {
+  await page.route('**/api/game/test-session-id', (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        sessionId: 'test-session-id',
+        players: [
+          { name: 'PlayerOne', health: 100 },
+          { name: 'PlayerTwo', health: 100 }
+        ]
+      }),
+    });
+  });
+});
+
+Given('I intercept playword response', async ({ page }) => {
+  await page.route('**/api/game/test-session-id/playword', (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({}),
+    });
+  });
+});
+
 When("the timer ticks {int} seconds", async ({ page }, seconds) => {
   for (let i = 0; i < seconds; i++) {
     await page.evaluate(() => {
