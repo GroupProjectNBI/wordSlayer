@@ -6,6 +6,7 @@ Feature: HomePage
         And I see button "New game"
         And I see button "Join Game"
         And I see button "Rules"
+        And I see button "Welocme message"
 
     Scenario: User starts a new game from homepage
         Given I am on the homepage
@@ -22,10 +23,10 @@ Feature: HomePage
         Then I am on "/rules"
         And I see "Rules"
 
-Scenario: User clicks Play Music button
+Scenario: User clicks Welcome message button
     Given I am on the homepage
-    When I press button "Play Music"
-    Then I see button "Play Music"
+    When I press button "Welcome message"
+    Then I see button "Welcome message"
 
 Scenario: User triggers autoplay by clicking anywhere
     Given I am on the homepage
