@@ -7,11 +7,7 @@ Feature: PlayGame Page
     And I intercept playword response
     And I am on the PlayGame page
 
-  #
-  # ─────────────────────────────────────────────
-  #   COLLEAGUE SCENARIOS (ADAPTED)
-  # ─────────────────────────────────────────────
-  #
+  
 
   Scenario: Player 1 submits a word and triggers turn switch
     And the game input is enabled
