@@ -6,13 +6,23 @@
 
 # Test info
 
-- Name: e2e\ui\features\playgame.feature.spec.js >> PlayGame Page >> Player 1 HP bar decreases after taking damage
-- Location: .features-gen\e2e\ui\features\playgame.feature.spec.js:79:7
+- Name: e2e\ui\features\playgame.feature.spec.js >> PlayGame Page >> User sees the PlayGame page
+- Location: .features-gen\e2e\ui\features\playgame.feature.spec.js:32:7
 
 # Error details
 
 ```
-Error: Expected HP bar to be 95% but was 97%
+Error: expect(locator).toBeVisible() failed
+
+Locator: locator('[data-player=\'player2\']')
+Expected: visible
+Timeout: 10000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toBeVisible" with timeout 10000ms
+  - waiting for locator('[data-player=\'player2\']')
+
 ```
 
 # Page snapshot
@@ -25,29 +35,37 @@ Error: Expected HP bar to be 95% but was 97%
     - heading "Word Slayer" [level=1] [ref=e8]
     - generic [ref=e9]:
       - heading "History" [level=2] [ref=e10]
-      - generic [ref=e11]:
-        - generic [ref=e12]:
-          - generic [ref=e13]: dragon
-          - generic [ref=e14]: "-6"
-        - generic [ref=e15]:
-          - generic [ref=e16]: hello
-          - generic [ref=e17]: "-5"
-    - generic [ref=e18]:
-      - generic [ref=e19]: Player 1
-      - generic [ref=e22]: 95 HP
+      - generic [ref=e12]: No words yet
+    - generic [ref=e13]:
+      - generic [ref=e14]: Player 1
+      - generic [ref=e17]: 100 HP
     - generic:
       - heading "VS" [level=1]
       - generic:
         - generic:
           - img
           - generic: 30s
-    - textbox "Type your word..." [active] [ref=e24]
-  - generic [ref=e25]: Väntar på motståndare... ⏳
+    - textbox "Type your word..." [ref=e19]
+  - generic [ref=e20]: Väntar på motståndare... ⏳
 ```
 
 # Test source
 
 ```ts
+  145 |   ).toBeVisible();
+  146 | });
+  147 | 
+  148 | Then("player {int} is highlighted", async ({ page }, player) => {
+  149 |   await expect(
+  150 |     page.locator(`[data-player='player${player}']`)
+  151 |   ).toHaveAttribute("data-active", "true");
+  152 | });
+  153 | 
+  154 | //
+  155 | // ─────────────────────────────────────────────
+  156 | //   7. DAMAGE POPUP
+  157 | // ─────────────────────────────────────────────
+  158 | //
   159 | 
   160 | Then("I see a damage popup with {int}", async ({ page }, amount) => {
   161 |   const popup = page.locator("div").filter({ hasText: `-${amount}` });
@@ -134,7 +152,8 @@ Error: Expected HP bar to be 95% but was 97%
   242 | });
   243 | 
   244 | Then("I see the player {int} username", async ({ page }, player) => {
-  245 |   await expect(page.locator(`[data-player='player${player}']`)).toBeVisible();
+> 245 |   await expect(page.locator(`[data-player='player${player}']`)).toBeVisible();
+      |                                                                 ^ Error: expect(locator).toBeVisible() failed
   246 | });
   247 | 
   248 | Then("player {int} HP bar is at {int} percent", async ({ page }, player, percent) => {
@@ -148,8 +167,7 @@ Error: Expected HP bar to be 95% but was 97%
   256 |   const diff = Math.abs(actualPercent - percent);
   257 | 
   258 |   if (diff > 1) {
-> 259 |     throw new Error(`Expected HP bar to be ${percent}% but was ${actualPercent}%`);
-      |           ^ Error: Expected HP bar to be 95% but was 97%
+  259 |     throw new Error(`Expected HP bar to be ${percent}% but was ${actualPercent}%`);
   260 |   }
   261 | });
   262 | 

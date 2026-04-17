@@ -6,8 +6,8 @@
 
 # Test info
 
-- Name: e2e\ui\features\playgame.feature.spec.js >> PlayGame Page >> Player 2 HP bar decreases after taking damage
-- Location: .features-gen\e2e\ui\features\playgame.feature.spec.js:71:7
+- Name: e2e\ui\features\newgamepage.feature.spec.js >> PlayGame Page >> Player 1 submits a word and waits for server sync
+- Location: .features-gen\e2e\ui\features\newgamepage.feature.spec.js:15:7
 
 # Error details
 

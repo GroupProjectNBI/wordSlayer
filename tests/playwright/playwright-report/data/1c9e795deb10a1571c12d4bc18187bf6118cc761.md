@@ -6,22 +6,22 @@
 
 # Test info
 
-- Name: e2e\ui\features\playgame.feature.spec.js >> PlayGame Page >> Player 2 HP bar decreases after taking damage
-- Location: .features-gen\e2e\ui\features\playgame.feature.spec.js:71:7
+- Name: e2e\ui\features\playgame.feature.spec.js >> PlayGame Page >> Active player highlight switches with turn
+- Location: .features-gen\e2e\ui\features\playgame.feature.spec.js:150:7
 
 # Error details
 
 ```
-Error: expect(locator).toBeVisible() failed
+Error: expect(locator).toHaveAttribute(expected) failed
 
-Locator: locator('[data-player=\'player2\']').locator('text=\'94 HP\'')
-Expected: visible
+Locator: locator('[data-player=\'player2\']')
+Expected: "true"
 Timeout: 10000ms
 Error: element(s) not found
 
 Call log:
-  - Expect "toBeVisible" with timeout 10000ms
-  - waiting for locator('[data-player=\'player2\']').locator('text=\'94 HP\'')
+  - Expect "toHaveAttribute" with timeout 10000ms
+  - waiting for locator('[data-player=\'player2\']')
 
 ```
 
@@ -35,37 +35,23 @@ Call log:
     - heading "Word Slayer" [level=1] [ref=e8]
     - generic [ref=e9]:
       - heading "History" [level=2] [ref=e10]
-      - generic [ref=e12]:
-        - generic [ref=e13]: dragon
-        - generic [ref=e14]: "-6"
-    - generic [ref=e15]:
-      - generic [ref=e16]: Player 1
-      - generic [ref=e19]: 100 HP
+      - generic [ref=e12]: No words yet
+    - generic [ref=e13]:
+      - generic [ref=e14]: Player 1
+      - generic [ref=e17]: 100 HP
     - generic:
       - heading "VS" [level=1]
       - generic:
         - generic:
           - img
           - generic: 30s
-    - textbox "Type your word..." [active] [ref=e21]
-  - generic [ref=e22]: Väntar på motståndare... ⏳
+    - textbox "Type your word..." [ref=e19]
+  - generic [ref=e20]: Väntar på motståndare... ⏳
 ```
 
 # Test source
 
 ```ts
-  39  | // ─────────────────────────────────────────────
-  40  | //   3. API MOCKING
-  41  | // ─────────────────────────────────────────────
-  42  | //
-  43  | 
-  44  | Given('I intercept game session response', async ({ page }) => {
-  45  |   await page.route(`**/api/game/${VALID_GUID}`, (route) => {
-  46  |     route.fulfill({
-  47  |       status: 200,
-  48  |       contentType: 'application/json',
-  49  |       body: JSON.stringify({
-  50  |         sessionId: VALID_GUID,
   51  |         players: [
   52  |           { name: 'Player 1', health: 100 },
   53  |           { name: 'Player 2', health: 100 }
@@ -154,8 +140,7 @@ Call log:
   136 | Then("player {int} has {int} HP", async ({ page }, player, hp) => {
   137 |   await expect(
   138 |     page.locator(`[data-player='player${player}'] >> text='${hp} HP'`)
-> 139 |   ).toBeVisible();
-      |     ^ Error: expect(locator).toBeVisible() failed
+  139 |   ).toBeVisible();
   140 | });
   141 | 
   142 | Then("it is player {int} turn", async ({ page }, player) => {
@@ -167,7 +152,8 @@ Call log:
   148 | Then("player {int} is highlighted", async ({ page }, player) => {
   149 |   await expect(
   150 |     page.locator(`[data-player='player${player}']`)
-  151 |   ).toHaveAttribute("data-active", "true");
+> 151 |   ).toHaveAttribute("data-active", "true");
+      |     ^ Error: expect(locator).toHaveAttribute(expected) failed
   152 | });
   153 | 
   154 | //
@@ -256,4 +242,16 @@ Call log:
   237 | 
   238 | Then("I do not see the game overlay", async ({ page }) => {
   239 |   await expect(
+  240 |     page.getByText(/Väntar på motståndare|Motståndaren tänker/i)
+  241 |   ).toHaveCount(0);
+  242 | });
+  243 | 
+  244 | Then("I see the player {int} username", async ({ page }, player) => {
+  245 |   await expect(page.locator(`[data-player='player${player}']`)).toBeVisible();
+  246 | });
+  247 | 
+  248 | Then("player {int} HP bar is at {int} percent", async ({ page }, player, percent) => {
+  249 |   const bar = page.locator(`[data-player='player${player}'] .hp-fill`);
+  250 |   const wrapper = page.locator(`[data-player='player${player}'] .hp-bar`);
+  251 | 
 ```
