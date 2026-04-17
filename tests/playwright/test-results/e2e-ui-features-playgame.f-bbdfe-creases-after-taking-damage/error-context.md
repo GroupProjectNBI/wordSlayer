@@ -19,28 +19,30 @@ Error: Expected HP bar to be 94% but was 99%
 
 ```yaml
 - generic [ref=e3]:
-  - main [ref=e4]:
-    - heading "Word Slayer" [level=1] [ref=e6]
-    - generic [ref=e7]:
-      - heading "History" [level=2] [ref=e8]
-      - generic [ref=e10]:
-        - generic [ref=e11]: dragon
-        - generic [ref=e12]: "-6"
-    - generic [ref=e13]:
-      - generic [ref=e14]: Player 1
-      - generic [ref=e18]: 100 HP
-    - generic [ref=e19]:
-      - generic [ref=e20]: Player 2
-      - generic [ref=e24]: 94 HP
+  - button "Mute Music" [ref=e4]
+  - button "Motståndare anslöt" [ref=e5]
+  - main [ref=e6]:
+    - heading "Word Slayer" [level=1] [ref=e8]
+    - generic [ref=e9]:
+      - heading "History" [level=2] [ref=e10]
+      - generic [ref=e12]:
+        - generic [ref=e13]: dragon
+        - generic [ref=e14]: "-6"
+    - generic [ref=e15]:
+      - generic [ref=e16]: Player 1
+      - generic [ref=e20]: 100 HP
+    - generic [ref=e21]:
+      - generic [ref=e22]: Player 2
+      - generic [ref=e26]: 94 HP
     - generic:
       - heading "VS" [level=1]
       - generic:
         - generic:
           - img
           - generic: 30s
-    - textbox "Type your word..." [active] [ref=e26]
+    - textbox "Type your word..." [active] [ref=e28]
     - generic: "-6"
-  - generic [ref=e27]: Motståndaren tänker... 🧠
+  - generic [ref=e29]: Motståndaren tänker... 🧠
 ```
 
 # Test source
