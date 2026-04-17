@@ -36,6 +36,8 @@ export default function PlayGame() {
     { word: string; player: "player1" | "player2"; damage: number; }[]
   >([]);
 
+  const [musicMuted, setMusicMuted] = useState(false);
+
   const localPlayer: "player1" | "player2" =
     myName === "Player 2" ? "player2" : "player1";
 
@@ -236,7 +238,7 @@ export default function PlayGame() {
     }
   }
 
-  // --- OVERLAY ---
+  // --- OVERLAY MESSAGE ---
   let overlayMessage: string | null = null;
 
   if (connectedPlayers < 2) {
@@ -248,18 +250,42 @@ export default function PlayGame() {
   // --- RENDER ---
   return (
     <div className="relative w-full h-screen overflow-hidden bg-slate-900">
+
+      {/* ERROR BANNER */}
       {error && (
         <div className="absolute top-10 left-1/2 -translate-x-1/2 z-[110] bg-red-600 text-white px-6 py-2 rounded-full font-bold shadow-2xl">
           {error}
         </div>
       )}
 
+      {/* MUTE MUSIC BUTTON (TEST MODE ONLY) */}
+      {isTest && (
+        <button
+          onClick={() => setMusicMuted((m) => !m)}
+          className="absolute top-4 right-4 z-[300] bg-black/60 text-white px-4 py-2 rounded border border-white"
+        >
+          {musicMuted ? "Unmute Music" : "Mute Music"}
+        </button>
+      )}
+
+      {/* SIMULATE SECOND PLAYER JOIN (TEST MODE ONLY) */}
+      {isTest && (
+        <button
+          onClick={() => setConnectedPlayers(2)}
+          className="absolute top-4 left-4 z-[300] bg-blue-600 text-white px-4 py-2 rounded"
+        >
+          Motståndare anslöt
+        </button>
+      )}
+
+      {/* LOADING OVERLAY */}
       {loading && (
         <div className="absolute inset-0 bg-black/70 text-white text-3xl flex items-center justify-center z-[200]">
           Laddar spel...
         </div>
       )}
 
+      {/* GAME BOARD */}
       <GameBoard
         player1={player1}
         {...(connectedPlayers > 1 ? { player2 } : {})}
@@ -283,6 +309,7 @@ export default function PlayGame() {
         ))}
       </GameBoard>
 
+      {/* OVERLAY */}
       {overlayMessage && (
         <div
           data-testid="overlay"
