@@ -33,6 +33,11 @@ When('I click the {string} button', async ({ page }, text) => {
   await page.getByRole('button', { name: text }).click();
 });
 
+When('I click on text {string}', async ({ page }, text) => {
+  await page.getByText(text).click();
+});
+
+
 //
 // ASSERTIONS (for example i'm supposed to see a textfield)
 //
