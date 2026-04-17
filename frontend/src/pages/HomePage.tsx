@@ -1,10 +1,37 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
+import { useSound } from "../hooks/useSound"; //  NY IMPORT
 
 export default function HomePage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  //  TEST MODE CHECK (ingen musik i test)
+  const isTest =
+    typeof window !== "undefined" &&
+    window.location.search.includes("test");
+
+  //  MUTE STATE
+  const [muted, setMuted] = useState(false);
+
+  //  LOAD HOME MUSIC (no loop)
+  const homeMusic = useSound("/sounds/Welcome.mp3");
+
+  //  AUTO-PLAY ONCE WHEN PAGE LOADS
+  useEffect(() => {
+    if (isTest) return;   // no sound in test mode
+    if (muted) return;    // don't auto-play if muted
+
+    homeMusic.play();     // play once
+  }, [muted, isTest]);
+
+  //  MANUAL PLAY BUTTON
+  function playAgain() {
+    if (!muted) {
+      homeMusic.play();
+    }
+  }
 
   // When the user clicks New game on the homepage,
   // we ask the backend to create the game session immediately.
@@ -38,6 +65,23 @@ export default function HomePage() {
   return (
     <main className="min-h-screen flex items-center justify-center">
       <section className="w-full max-w-md px-4 text-center">
+
+        {/*  MUTE BUTTON */}
+        <button
+          onClick={() => setMuted((m) => !m)}
+          className="absolute top-4 right-4 px-4 py-2 bg-black/60 text-white rounded-lg border border-white"
+        >
+          {muted ? "Unmute" : "Mute"}
+        </button>
+
+        {/*  PLAY AGAIN BUTTON */}
+        <button
+          onClick={playAgain}
+          className="absolute top-4 left-4 px-4 py-2 bg-purple-700 text-white rounded-lg border border-white"
+        >
+          Play Music
+        </button>
+
         <h1 className="mb-10 text-5xl font-extrabold uppercase tracking-widest">
           Word Slayer
         </h1>
