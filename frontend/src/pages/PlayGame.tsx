@@ -27,9 +27,11 @@ export default function PlayGame() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
   const [popups, setPopups] = useState<
     { id: number; amount: number; position: "left" | "right"; }[]
   >([]);
+
   const [history, setHistory] = useState<
     { word: string; player: "player1" | "player2"; damage: number; }[]
   >([]);
@@ -78,10 +80,13 @@ export default function PlayGame() {
         return;
       }
 
+      setLoading(true);
+
       try {
         const res = await fetch(`/api/game/${sessionId}`);
         if (!res.ok) {
           setError("Kunde inte hämta speldata.");
+          setLoading(false);
           return;
         }
 
@@ -230,16 +235,57 @@ export default function PlayGame() {
   // --- RENDER ---
   return (
     <div style={{ position: "relative", width: "100%", height: "100vh" }}>
+
+      {/* ERROR MESSAGE */}
+      {error && (
+        <div
+          style={{
+            position: "absolute",
+            top: 20,
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: "rgba(255,0,0,0.2)",
+            padding: "10px 20px",
+            borderRadius: 8,
+            color: "white",
+            zIndex: 200,
+            fontWeight: "bold",
+          }}
+        >
+          {error}
+        </div>
+      )}
+
+      {/* LOADING OVERLAY */}
+      {loading && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: "rgba(0,0,0,0.6)",
+            color: "white",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 300,
+            fontSize: "2rem",
+            fontWeight: "bold",
+          }}
+        >
+          Laddar spel...
+        </div>
+      )}
+
       <GameBoard
         player1={player1}
         {...(connectedPlayers > 1 ? { player2 } : {})}
         timer={timer}
         turn={turn}
         word={word}
-        history={history}
-        timerRunning={timerRunning}
         onWordChange={handleWordChange}
         onSubmitWord={onSubmitWord}
+        history={history}
+        timerRunning={timerRunning}
       >
         {popups.map((p) => (
           <DamagePopup
