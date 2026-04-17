@@ -6,13 +6,23 @@
 
 # Test info
 
-- Name: e2e\ui\features\playgame.feature.spec.js >> PlayGame Page >> Player 2 HP bar decreases after taking damage
-- Location: .features-gen\e2e\ui\features\playgame.feature.spec.js:71:7
+- Name: e2e\ui\features\playgame.feature.spec.js >> PlayGame Page >> Game music mute button toggles correctly
+- Location: .features-gen\e2e\ui\features\playgame.feature.spec.js:140:7
 
 # Error details
 
 ```
-Error: Expected HP bar to be 94% but was 99%
+Error: expect(locator).toBeVisible() failed
+
+Locator: getByRole('button', { name: 'Mute Music' })
+Expected: visible
+Timeout: 10000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toBeVisible" with timeout 10000ms
+  - waiting for getByRole('button', { name: 'Mute Music' })
+
 ```
 
 # Page snapshot
@@ -24,29 +34,59 @@ Error: Expected HP bar to be 94% but was 99%
     - heading "Word Slayer" [level=1] [ref=e7]
     - generic [ref=e8]:
       - heading "History" [level=2] [ref=e9]
-      - generic [ref=e11]:
-        - generic [ref=e12]: dragon
-        - generic [ref=e13]: "-6"
-    - generic [ref=e14]:
-      - generic [ref=e16]: Player 1
-      - generic [ref=e19]: 100 HP
-    - generic [ref=e20]:
-      - generic [ref=e22]: Player 2
-      - generic [ref=e25]: 94 HP
+      - generic [ref=e11]: No words yet
+    - generic [ref=e12]:
+      - generic [ref=e14]: Player 1
+      - generic [ref=e17]: 100 HP
+    - generic [ref=e18]:
+      - generic [ref=e20]: Player 2
+      - generic [ref=e23]: 100 HP
     - generic:
       - heading "VS" [level=1]
       - generic:
         - generic:
           - img
           - generic: 30s
-    - textbox "Type your word..." [active] [ref=e27]
-    - generic: "-6"
-  - generic [ref=e28]: Motståndaren tänker... 🧠
+    - textbox "Type your word..." [ref=e25]
 ```
 
 # Test source
 
 ```ts
+  125 | //
+  126 | // ─────────────────────────────────────────────
+  127 | //   6. TIMER + HP + TURN + HIGHLIGHT
+  128 | // ─────────────────────────────────────────────
+  129 | //
+  130 | 
+  131 | Then("the timer should show {int}", async ({ page }, value) => {
+  132 |   const timer = page.getByText(new RegExp(`^\\s*${value}s\\s*$`));
+  133 |   await expect(timer).toBeVisible();
+  134 | });
+  135 | 
+  136 | Then("player {int} has {int} HP", async ({ page }, player, hp) => {
+  137 |   await expect(
+  138 |     page.locator(`[data-player='player${player}'] >> text='${hp} HP'`)
+  139 |   ).toBeVisible();
+  140 | });
+  141 | 
+  142 | Then("it is player {int} turn", async ({ page }, player) => {
+  143 |   await expect(
+  144 |     page.locator(`[data-player='player${player}'][data-active='true']`)
+  145 |   ).toBeVisible();
+  146 | });
+  147 | 
+  148 | Then("player {int} is highlighted", async ({ page }, player) => {
+  149 |   await expect(
+  150 |     page.locator(`[data-player='player${player}']`)
+  151 |   ).toHaveAttribute("data-active", "true");
+  152 | });
+  153 | 
+  154 | //
+  155 | // ─────────────────────────────────────────────
+  156 | //   7. DAMAGE POPUP
+  157 | // ─────────────────────────────────────────────
+  158 | //
   159 | 
   160 | Then("I see a damage popup with {int}", async ({ page }, amount) => {
   161 |   const popup = page.locator("div").filter({ hasText: `-${amount}` });
@@ -113,7 +153,8 @@ Error: Expected HP bar to be 94% but was 99%
   222 | Then("the music mute button shows {string}", async ({ page }, label) => {
   223 |   await expect(
   224 |     page.getByRole("button", { name: label })
-  225 |   ).toBeVisible();
+> 225 |   ).toBeVisible();
+      |     ^ Error: expect(locator).toBeVisible() failed
   226 | });
   227 | Given("I am on the PlayGame page", async ({ page }) => {
   228 |   await page.goto(`/game/00000000-0000-0000-0000-000000000000?test`);
@@ -147,8 +188,7 @@ Error: Expected HP bar to be 94% but was 99%
   256 |   const diff = Math.abs(actualPercent - percent);
   257 | 
   258 |   if (diff > 1) {
-> 259 |     throw new Error(`Expected HP bar to be ${percent}% but was ${actualPercent}%`);
-      |           ^ Error: Expected HP bar to be 94% but was 99%
+  259 |     throw new Error(`Expected HP bar to be ${percent}% but was ${actualPercent}%`);
   260 |   }
   261 | });
   262 | 

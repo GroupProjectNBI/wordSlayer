@@ -10,11 +10,23 @@ export default function HPBar({ hp, color = "green", width = 160 }: HPBarProps) 
   return (
     <div
       className="hp-bar h-4 bg-gray-700 rounded-full overflow-hidden"
-      style={{ width, boxSizing: "border-box" }}
+      style={{
+        width,
+        height: 16,
+        padding: 0,
+        margin: 0,
+        boxSizing: "content-box" // IMPORTANT FIX
+      }}
     >
       <div
         className={`hp-fill h-full ${barColor} transition-all duration-300`}
-        style={{ width: `${hp}%` }}
+        style={{
+          width: `${hp}%`,
+          height: "100%",
+          padding: 0,
+          margin: 0,
+          boxSizing: "content-box" // IMPORTANT FIX
+        }}
       />
     </div>
   );

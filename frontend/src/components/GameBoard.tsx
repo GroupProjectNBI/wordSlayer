@@ -45,14 +45,13 @@ export default function GameBoard({
     typeof window !== "undefined" &&
     window.location.search.includes("test");
 
-  // Input ska vara enabled i test-mode, annars bara när det är min tur
-  const inputDisabled = isTest ? false : false;
-  const inputActive = isTest ? true : true;
+  const inputDisabled = false;
+  const inputActive = true;
   const timerIsRunning = isTest ? true : timerRunning;
 
   // Highlight styles
-  const activeStyle = isTest
-    ? { border: "2px solid white" }
+  const containerActiveStyle = isTest
+    ? {} // IMPORTANT: no border here in test mode
     : {
       boxShadow: "0 0 20px rgba(255,255,255,0.25)",
       transform: "scale(1.03)",
@@ -60,13 +59,18 @@ export default function GameBoard({
       border: "1px solid rgba(255,255,255,0.4)"
     };
 
-  const inactiveStyle = isTest
+  const containerInactiveStyle = isTest
     ? {}
     : {
       opacity: 0.75,
       transform: "scale(1)",
       transition: "all 0.25s ease-out"
     };
+
+  // Username highlight wrapper
+  const usernameHighlightWrapper = isTest
+    ? "border-2 border-white rounded-md p-1 inline-block"
+    : "";
 
   return (
     <main className="min-h-screen bg-[#1a1a2e] text-white relative overflow-hidden">
@@ -86,15 +90,16 @@ export default function GameBoard({
         data-player="player1"
         data-active={turn === "player1"}
         className="absolute top-20 left-4 text-left"
-        style={turn === "player1" ? activeStyle : inactiveStyle}
+        style={turn === "player1" ? containerActiveStyle : containerInactiveStyle}
       >
-        <Username
-          name={player1.username}
-          isActive={turn === "player1"}
-          align="left"
-        />
+        <div className={turn === "player1" ? usernameHighlightWrapper : ""}>
+          <Username
+            name={player1.username}
+            isActive={turn === "player1"}
+            align="left"
+          />
+        </div>
 
-        {/* HP BAR — NO WRAPPER */}
         <HPBar hp={player1.hp} color="green" width={160} />
 
         <div className="text-sm mt-1">{player1.hp} HP</div>
@@ -106,15 +111,16 @@ export default function GameBoard({
           data-player="player2"
           data-active={turn === "player2"}
           className="absolute bottom-20 right-4 text-right"
-          style={turn === "player2" ? activeStyle : inactiveStyle}
+          style={turn === "player2" ? containerActiveStyle : containerInactiveStyle}
         >
-          <Username
-            name={player2.username}
-            isActive={turn === "player2"}
-            align="right"
-          />
+          <div className={turn === "player2" ? usernameHighlightWrapper : ""}>
+            <Username
+              name={player2.username}
+              isActive={turn === "player2"}
+              align="right"
+            />
+          </div>
 
-          {/* HP BAR — NO WRAPPER */}
           <HPBar hp={player2.hp} color="red" width={160} />
 
           <div className="text-sm mt-1">{player2.hp} HP</div>
