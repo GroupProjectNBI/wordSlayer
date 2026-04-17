@@ -12,7 +12,7 @@ When('I intercept new game response', async ({ page }) => {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ sessionId: 'test-session-id' }),
+      body: JSON.stringify({ sessionId: '00000000-0000-0000-0000-000000000000' }),
     });
   });
 });

@@ -15,6 +15,7 @@ export default function PlayGame() {
   const myName = sessionStorage.getItem("playerName") || "Player 1";
   const isTest = useLocation().search.includes("test");
 
+  // --- 1. STATES ---
   const [player1, setPlayer1] = useState({ username: "PlayerOne", hp: 100 });
   const [player2, setPlayer2] = useState({ username: "PlayerTwo", hp: 100 });
   const [connectedPlayers, setConnectedPlayers] = useState(0);
@@ -29,30 +30,37 @@ export default function PlayGame() {
   const [popups, setPopups] = useState<{ id: number; amount: number; position: "left" | "right" }[]>([]);
   const [history, setHistory] = useState<{ word: string; player: "player1" | "player2"; damage: number }[]>([]);
 
+  // Identifiera om användaren är vänster (p1) eller höger (p2)
   const localPlayer: "player1" | "player2" = myName === "Player 2" ? "player2" : "player1";
 
-  // --- 1. SIGNALR CALLBACKS ---
-  const handlePlayerJoined = useCallback(() => {
-    setConnectedPlayers((prev) => Math.min(prev + 1, 2));
-  }, []);
-
-  // Här tar vi emot den absoluta sanningen från servern
+  // --- 2. SIGNALR CALLBACKS ---
   const handleTurnChanged = useCallback((nextTurn: "player1" | "player2", p1Hp: number, p2Hp: number) => {
-    console.log("Mottagen HP från server:", { p1Hp, p2Hp });
     setTurn(nextTurn);
-
-    // Uppdatera båda spelarnas HP mätare
-    setPlayer1(prev => ({ ...prev, hp: p1Hp }));
+    setPlayer1(prev => ({ ...prev, hp: p1Hp })); // Synka HP från servern
     setPlayer2(prev => ({ ...prev, hp: p2Hp }));
-
     setTimer(30);
     setTimerRunning(false);
     setError("");
   }, []);
 
+  const handlePlayerJoined = useCallback((_playerName: string) => {
+    setConnectedPlayers((prev) => Math.min(prev + 1, 2));
+  }, []);
+
   useWebsocket(sessionId, myName, handlePlayerJoined, handleTurnChanged);
 
-  // --- 2. INITIAL LADDNING ---
+  // --- 3. TEST-BAKDÖRR (För Playwright) ---
+  useEffect(() => {
+    if (!isTest) return; // Bara aktivt i Playwright-test
+    const handleTestSignal = (e: any) => {
+      const { nextTurn, p1Hp, p2Hp } = e.detail;
+      handleTurnChanged(nextTurn, p1Hp, p2Hp); // Tvinga staten att uppdateras
+    };
+    window.addEventListener("signalr-turn-changed", handleTestSignal);
+    return () => window.removeEventListener("signalr-turn-changed", handleTestSignal);
+  }, [isTest, handleTurnChanged]);
+
+  // --- 4. INITIAL LADDNING ---
   useEffect(() => {
     async function loadInitialData() {
       if (!sessionId) return;
@@ -71,21 +79,22 @@ export default function PlayGame() {
           setTurn(game.currentTurn.toLowerCase() as "player1" | "player2");
         }
       } catch (err) {
-        setError("Ett fel uppstod vid laddning av spelet.");
+        setError("Ett fel uppstod vid laddning.");
       } finally {
         setLoading(false);
       }
     }
     loadInitialData();
-  }, [sessionId]);
+  }, [sessionId]); //
 
-  // --- 3. TIMER LOGIK ---
+  // --- 5. TIMER LOGIK (Timeout till Backend) ---
   useEffect(() => {
-    if (!timerRunning || isTest) return;
+    if (!timerRunning || isTest || turn !== localPlayer) return;
+
     const interval = setInterval(() => {
       setTimer((t) => {
         if (t <= 1) {
-          setTurn((prev) => (prev === "player1" ? "player2" : "player1"));
+          fetch(`/api/game/${sessionId}/timeout?playerId=${myName}`, { method: "POST" }).catch(console.error);
           setTimerRunning(false);
           return 30;
         }
@@ -93,32 +102,21 @@ export default function PlayGame() {
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [timerRunning, turn, isTest]);
+  }, [timerRunning, turn, localPlayer, sessionId, myName, isTest]); //
 
-  // --- 4. SPEL-LOGIK ---
-  function showDamagePopup(amount: number, target: "left" | "right") {
-    const id = Date.now();
-    setPopups((prev) => [...prev, { id, amount, position: target }]);
-  }
-
+  // --- 6. SPEL-LOGIK ---
   function applyWordDamage(cleanWord: string) {
     const damage = cleanWord.length;
     setHistory(prev => [...prev, { word: cleanWord, player: turn, damage }]);
 
-    // Visa popup på rätt sida
-    showDamagePopup(damage, turn === "player1" ? "right" : "left");
+    // Visa popup på motståndarens sida
+    const target = turn === "player1" ? "right" : "left";
+    setPopups((prev) => [...prev, { id: Date.now(), amount: damage, position: target }]);
 
-    // Om vi är i TEST-läge måste vi simulera HP-minskning och turväxling manuellt
     if (isTest) {
-      if (turn === "player1") {
-        setPlayer2(p => ({ ...p, hp: Math.max(0, p.hp - damage) }));
-        setTurn("player2");
-      } else {
-        setPlayer1(p => ({ ...p, hp: Math.max(0, p.hp - damage) }));
-        setTurn("player1");
-      }
+      // Manuell simulering för testläge utan backend-signal
+      setTurn(prev => prev === "player1" ? "player2" : "player1");
     }
-
     setWord("");
   }
 
@@ -126,12 +124,7 @@ export default function PlayGame() {
     const cleanWord = word.trim();
     if (!cleanWord || !sessionId) return;
 
-    if (isTest) {
-      applyWordDamage(cleanWord);
-      return;
-    }
-
-    setWord(""); // Rensa direkt för bättre känsla
+    setWord(""); // Rensa fältet direkt för responsivitet
 
     try {
       const res = await fetch(`/api/game/${sessionId}/playword`, {
@@ -143,29 +136,29 @@ export default function PlayGame() {
       if (res.ok) {
         applyWordDamage(cleanWord);
       } else {
-        setWord(cleanWord); // Återställ ordet om det blev fel
+        setWord(cleanWord); // Återställ vid fel
         const data = await res.json();
-        setError(data.message);
+        setError(data.message || "Ogiltigt ord.");
       }
     } catch {
       setWord(cleanWord);
-      setError("Nätverksfel");
+      setError("Kunde inte nå servern.");
     }
   }
 
-  // --- 5. RENDER ---
-  if (loading) return <div className="h-screen flex items-center justify-center bg-black text-white">Laddar...</div>;
+  // --- 7. RENDER ---
+  if (loading) return <div className="h-screen flex items-center justify-center bg-black text-white uppercase">Laddar spel...</div>;
 
   let overlayMessage = null;
   if (connectedPlayers < 2) {
     overlayMessage = "Väntar på motståndare... ⏳";
-  } else if (!isTest && turn !== localPlayer) {
+  } else if (turn !== localPlayer) {
     overlayMessage = "Motståndaren tänker... 🧠";
-  }
+  } //
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-slate-900">
-      {error && connectedPlayers > 0 && (
+      {error && (
         <div className="absolute top-10 left-1/2 -translate-x-1/2 z-[110] bg-red-600 text-white px-6 py-2 rounded-full font-bold shadow-2xl">
           {error}
         </div>
@@ -197,14 +190,11 @@ export default function PlayGame() {
       </GameBoard>
 
       {overlayMessage && (
-        <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-[100] text-white text-3xl font-bold p-10 text-center">
+        <div
+          data-testid="overlay" // För common.steps.js
+          className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-[100] text-white text-3xl font-bold p-10 text-center"
+        >
           <p>{overlayMessage}</p>
-          {isTest && (
-            <div className="mt-8 flex gap-4">
-              <button onClick={() => setConnectedPlayers(2)} className="text-sm bg-white/20 px-4 py-2 rounded">Test: P2 anslöt</button>
-              <button onClick={() => setTurn(localPlayer)} className="text-sm bg-white/20 px-4 py-2 rounded">Test: Min tur</button>
-            </div>
-          )}
         </div>
       )}
     </div>
