@@ -3,7 +3,12 @@ import { expect } from "@playwright/test";
 
 const { Given, When, Then } = createBdd();
 const VALID_GUID = "00000000-0000-0000-0000-000000000000";
-// --- 1. IDENTITET & NAVIGATION ---
+
+//
+// ─────────────────────────────────────────────
+//   1. IDENTITET
+// ─────────────────────────────────────────────
+//
 
 Given('I am logged in as {string}', async ({ page }, playerName) => {
   await page.addInitScript((name) => {
@@ -11,21 +16,30 @@ Given('I am logged in as {string}', async ({ page }, playerName) => {
   }, playerName);
 });
 
-Given("I am on the PlayGame page", async ({ page }) => {
-  await page.goto(`/game/${VALID_GUID}?test`);
-});
+//
+// ─────────────────────────────────────────────
+//   2. SIGNALR SIMULERING
+// ─────────────────────────────────────────────
+//
 
-// --- 2. SIGNALR SIMULERING (BAKDÖRR) ---
+When(
+  'the server signals turn changed to {string} with HP {int} and {int}',
+  async ({ page }, nextTurn, p1Hp, p2Hp) => {
+    await page.evaluate(({ nextTurn, p1Hp, p2Hp }) => {
+      window.dispatchEvent(
+        new CustomEvent("signalr-turn-changed", {
+          detail: { nextTurn, p1Hp, p2Hp }
+        })
+      );
+    }, { nextTurn, p1Hp, p2Hp });
+  }
+);
 
-When('the server signals turn changed to {string} with HP {int} and {int}', async ({ page }, nextTurn, p1Hp, p2Hp) => {
-  await page.evaluate(({ nextTurn, p1Hp, p2Hp }) => {
-    window.dispatchEvent(new CustomEvent("signalr-turn-changed", {
-      detail: { nextTurn, p1Hp, p2Hp }
-    }));
-  }, { nextTurn, p1Hp, p2Hp });
-});
-
-// --- 3. API MOCKING ---
+//
+// ─────────────────────────────────────────────
+//   3. API MOCKING
+// ─────────────────────────────────────────────
+//
 
 Given('I intercept game session response', async ({ page }) => {
   await page.route(`**/api/game/${VALID_GUID}`, (route) => {
@@ -68,7 +82,11 @@ Given('I intercept playword response', async ({ page }) => {
   });
 });
 
-// --- 4. TIMER MOCKING ---
+//
+// ─────────────────────────────────────────────
+//   4. TIMER MOCKING
+// ─────────────────────────────────────────────
+//
 
 Given("the timer is mocked", async ({ page }) => {
   await page.addInitScript(() => {
@@ -77,13 +95,19 @@ Given("the timer is mocked", async ({ page }) => {
   });
 });
 
-When("the timer ticks {int} seconds", async ({ page }) => {
-  await page.evaluate(() => {
-    window.dispatchEvent(new Event("manual-timer-tick"));
-  });
+When("the timer ticks {int} seconds", async ({ page }, seconds) => {
+  for (let i = 0; i < seconds; i++) {
+    await page.evaluate(() => {
+      window.dispatchEvent(new Event("manual-timer-tick"));
+    });
+  }
 });
 
-// --- 5. HANDLINGAR ---
+//
+// ─────────────────────────────────────────────
+//   5. INPUT
+// ─────────────────────────────────────────────
+//
 
 Given("the game input is enabled", async ({ page }) => {
   const input = page.getByRole("textbox");
@@ -95,79 +119,75 @@ When("I type the word {string}", async ({ page }, text) => {
 });
 
 When("I submit the word", async ({ page }) => {
-  const input = page.getByRole("textbox");
-  await input.press("Enter");
+  await page.getByRole("textbox").press("Enter");
 });
 
-// --- 6. ASSERTIONS (TIMER, HP, TUR) ---
+//
+// ─────────────────────────────────────────────
+//   6. TIMER + HP + TURN + HIGHLIGHT
+// ─────────────────────────────────────────────
+//
 
 Then("the timer should show {int}", async ({ page }, value) => {
   const timer = page.getByText(new RegExp(`^\\s*${value}s\\s*$`));
   await expect(timer).toBeVisible();
 });
 
-//
-// ─────────────────────────────────────────────
-//   ASSERTIONS: HP + TURN + HIGHLIGHT
-// ─────────────────────────────────────────────
-//
-
 Then("player {int} has {int} HP", async ({ page }, player, hp) => {
-  const selector = `[data-player='player${player}'] >> text='${hp} HP'`;
-  await expect(page.locator(selector)).toBeVisible();
+  await expect(
+    page.locator(`[data-player='player${player}'] >> text='${hp} HP'`)
+  ).toBeVisible();
 });
 
 Then("it is player {int} turn", async ({ page }, player) => {
-  const selector = `[data-player='player${player}'][data-active='true']`;
-  await expect(page.locator(selector)).toBeVisible();
+  await expect(
+    page.locator(`[data-player='player${player}'][data-active='true']`)
+  ).toBeVisible();
 });
 
-// NEW: highlight test
 Then("player {int} is highlighted", async ({ page }, player) => {
-  const locator = page.locator(`[data-player='player${player}']`);
-  await expect(locator).toHaveAttribute("data-active", "true");
+  await expect(
+    page.locator(`[data-player='player${player}']`)
+  ).toHaveAttribute("data-active", "true");
 });
 
 //
 // ─────────────────────────────────────────────
-//   ASSERTIONS: DAMAGE POPUPS + HP BAR
+//   7. DAMAGE POPUP
 // ─────────────────────────────────────────────
 //
 
 Then("I see a damage popup with {int}", async ({ page }, amount) => {
-  // Vi letar efter texten "-6" var som helst i en div, istället för exakt matchning
-  const popup = page.locator('div').filter({ hasText: `-${amount}` });
+  const popup = page.locator("div").filter({ hasText: `-${amount}` });
   await expect(popup.first()).toBeVisible({ timeout: 10000 });
 });
-// --- 7. OVERLAY (UNIKA NAMN) ---
 
-Then("I see the game overlay", async ({ page }) => {
-  // Regex täcker in både "Väntar på motståndare" och "Motståndaren tänker"
-  await expect(page.getByText(/Väntar på motståndare|Motståndaren tänker/i)).toBeVisible();
-});
-
-Then("I do not see the game overlay", async ({ page }) => {
-  await expect(page.getByText(/Väntar på motståndare|Motståndaren tänker/i)).toHaveCount(0);
-});
-
-// --- 8. ORD-HISTORIK ---
+//
+// ─────────────────────────────────────────────
+//   8. WORD HISTORY
+// ─────────────────────────────────────────────
+//
 
 Then("the word history should be empty", async ({ page }) => {
-  const items = page.locator("[data-word-history] [data-word-entry]");
-  await expect(items).toHaveCount(0);
+  await expect(
+    page.locator("[data-word-history] [data-word-entry]")
+  ).toHaveCount(0);
 });
 
 Then("the word history contains {string}", async ({ page }, word) => {
-  await expect(page.locator("[data-word-history]").getByText(word)).toBeVisible();
+  await expect(
+    page.locator("[data-word-history]").getByText(word)
+  ).toBeVisible();
 });
 
 Then("the word history should show:", async ({ page }, table) => {
   const expected = table.rows().flat();
   const items = page.locator("[data-word-history] [data-word-entry]");
   const count = await items.count();
+
   if (count < expected.length) {
     throw new Error(
-      `Expected at least ${expected.length} word history entries, but found ${count}`
+      `Expected at least ${expected.length} entries, found ${count}`
     );
   }
 
@@ -188,18 +208,19 @@ Then("the word history shows damage {int} for {string}", async ({ page }, damage
   const entry = page.locator("[data-word-history] [data-word-entry]").filter({ hasText: word });
   await expect(entry).toHaveAttribute("data-damage", `${damage}`);
 });
+
 //
 // ─────────────────────────────────────────────
-//   GAME MUSIC MUTE BUTTON
+//   9. MUSIC MUTE BUTTON
 // ─────────────────────────────────────────────
 //
 
 When("I toggle the music mute button", async ({ page }) => {
-  const button = page.getByRole("button", { name: /Music/i });
-  await button.click();
+  await page.getByRole("button", { name: /Music/i }).click();
 });
 
 Then("the music mute button shows {string}", async ({ page }, label) => {
-  const button = page.getByRole("button", { name: label });
-  await expect(button).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: label })
+  ).toBeVisible();
 });

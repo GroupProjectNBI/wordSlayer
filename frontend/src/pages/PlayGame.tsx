@@ -3,8 +3,6 @@ import { useWebsocket } from "../hooks/useWebsocket";
 import { useParams, useLocation } from "react-router-dom";
 import GameBoard from "../components/GameBoard";
 import DamagePopup from "../components/DamagePopup";
-import { useTurnManager, TimerState } from "../components/TurnManager/TurnManager";
-import { useSound } from "../hooks/useSound";
 
 interface BackendGameSession {
   sessionId: string;
@@ -17,94 +15,101 @@ export default function PlayGame() {
   const myName = sessionStorage.getItem("playerName") || "Player 1";
   const isTest = useLocation().search.includes("test");
 
-  // --- 1. STATES ---
-  const [player1, setPlayer1] = useState({ username: "PlayerOne", hp: 100 });
-  const [player2, setPlayer2] = useState({ username: "PlayerTwo", hp: 100 });
+  // --- STATES ---
+  const [player1, setPlayer1] = useState({ username: "Player 1", hp: 100 });
+  const [player2, setPlayer2] = useState({ username: "Player 2", hp: 100 });
   const [connectedPlayers, setConnectedPlayers] = useState(0);
 
-  // WORD INPUT
   const [word, setWord] = useState("");
-
-  // TURN
   const [turn, setTurn] = useState<"player1" | "player2">("player1");
+  const [timer, setTimer] = useState(30);
   const [timerRunning, setTimerRunning] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [popups, setPopups] = useState<{ id: number; amount: number; position: "left" | "right"; }[]>([]);
-  const [history, setHistory] = useState<{ word: string; player: "player1" | "player2"; damage: number; }[]>([]);
+  const [popups, setPopups] = useState<
+    { id: number; amount: number; position: "left" | "right"; }[]
+  >([]);
+  const [history, setHistory] = useState<
+    { word: string; player: "player1" | "player2"; damage: number; }[]
+  >([]);
 
-  // Identifiera om användaren är vänster (p1) eller höger (p2)
-  const localPlayer: "player1" | "player2" = myName === "Player 2" ? "player2" : "player1";
+  const localPlayer: "player1" | "player2" =
+    myName === "Player 2" ? "player2" : "player1";
 
-  // --- 2. SIGNALR CALLBACKS ---
-  const handleTurnChanged = useCallback((nextTurn: "player1" | "player2", p1Hp: number, p2Hp: number) => {
-    setTurn(nextTurn);
-    setPlayer1(prev => ({ ...prev, hp: p1Hp })); // Synka HP från servern
-    setPlayer2(prev => ({ ...prev, hp: p2Hp }));
-    setTimer(30);
-    setTimerRunning(false);
-    setError("");
-  }, []);
+  // --- SIGNALR CALLBACKS ---
+  const handleTurnChanged = useCallback(
+    (nextTurn: "player1" | "player2", p1Hp: number, p2Hp: number) => {
+      setTurn(nextTurn);
+      setPlayer1((prev) => ({ ...prev, hp: p1Hp }));
+      setPlayer2((prev) => ({ ...prev, hp: p2Hp }));
+      setTimer(30);
+      setTimerRunning(false);
+      setError("");
+    },
+    []
+  );
 
-  const handlePlayerJoined = useCallback((_playerName: string) => {
+  const handlePlayerJoined = useCallback(() => {
     setConnectedPlayers((prev) => Math.min(prev + 1, 2));
   }, []);
 
   useWebsocket(sessionId, myName, handlePlayerJoined, handleTurnChanged);
 
-  // --- 3. TEST-BAKDÖRR (För Playwright) ---
+  // --- TEST SIGNALR BACKDOOR ---
   useEffect(() => {
-    if (!isTest) return; // Bara aktivt i Playwright-test
-    const handleTestSignal = (e: any) => {
+    if (!isTest) return;
+
+    const handler = (e: any) => {
       const { nextTurn, p1Hp, p2Hp } = e.detail;
-      handleTurnChanged(nextTurn, p1Hp, p2Hp); // Tvinga staten att uppdateras
+      handleTurnChanged(nextTurn, p1Hp, p2Hp);
     };
-    window.addEventListener("signalr-turn-changed", handleTestSignal);
-    return () => window.removeEventListener("signalr-turn-changed", handleTestSignal);
+
+    window.addEventListener("signalr-turn-changed", handler);
+    return () => window.removeEventListener("signalr-turn-changed", handler);
   }, [isTest, handleTurnChanged]);
 
-  // --- 4. INITIAL LADDNING ---
+  // --- INITIAL LOAD ---
   useEffect(() => {
     async function loadGame() {
       if (!sessionId) {
-        setError("Ingen session hittades i URL:en.");
+        setError("Ingen session hittades.");
         setLoading(false);
         return;
       }
-      setLoading(true);
+
       try {
-        const response = await fetch(`/api/game/${sessionId}`, {
-          method: 'GET',
-          credentials: 'same-origin',
-          cache: 'no-store'
-        });
-        if (!response.ok) {
-          const body = await response.json().catch(() => null);
-          setError(body?.message ?? 'Kunde inte hämta speldata.');
+        const res = await fetch(`/api/game/${sessionId}`);
+        if (!res.ok) {
+          setError("Kunde inte hämta speldata.");
           return;
         }
-        const game = (await response.json()) as BackendGameSession;
+
+        const game = (await res.json()) as BackendGameSession;
         setConnectedPlayers(game.players.length);
-        if (game.players.length > 0) {
-          setPlayer1({ username: game.players[0].name, hp: game.players[0].health });
-        }
-        if (game.players.length > 1) {
-          setPlayer2({ username: game.players[1].name, hp: game.players[1].health });
-        }
-      } catch (err) {
-        console.error(err);
-        setError('Kunde inte nå servern för att läsa spelet.');
+
+        if (game.players[0])
+          setPlayer1({
+            username: game.players[0].name,
+            hp: game.players[0].health,
+          });
+
+        if (game.players[1])
+          setPlayer2({
+            username: game.players[1].name,
+            hp: game.players[1].health,
+          });
+      } catch {
+        setError("Serverfel.");
       } finally {
         setLoading(false);
       }
     }
+
     loadGame();
   }, [sessionId]);
 
-  //
-  // TIMER (LIVE MODE) från dev
-  //
+  // --- LIVE TIMER ---
   useEffect(() => {
     if (!timerRunning || isTest) return;
 
@@ -120,15 +125,13 @@ export default function PlayGame() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [timerRunning, turn, isTest]);
+  }, [timerRunning, isTest]);
 
-  //
-  // MANUAL TIMER TICK (TEST MODE) från dev
-  //
+  // --- TEST TIMER ---
   useEffect(() => {
     if (!isTest) return;
 
-    function manualTick() {
+    const manualTick = () => {
       setTimer((t) => {
         if (t <= 1) {
           setTurn((prev) => (prev === "player1" ? "player2" : "player1"));
@@ -137,15 +140,13 @@ export default function PlayGame() {
         }
         return t - 1;
       });
-    }
+    };
 
     window.addEventListener("manual-timer-tick", manualTick);
     return () => window.removeEventListener("manual-timer-tick", manualTick);
   }, [isTest]);
 
-  //
-  // DAMAGE LOGIC från dev
-  //
+  // --- DAMAGE ---
   function dealDamage(amount: number, target: "left" | "right") {
     const id = Date.now();
     setPopups((prev) => [...prev, { id, amount, position: target }]);
@@ -157,13 +158,10 @@ export default function PlayGame() {
     }
   }
 
-  //
-  // WORD INPUT CHANGE från dev
-  //
+  // --- WORD INPUT ---
   function handleWordChange(value: string) {
     setWord(value);
 
-    // 🟩 FIX: I testläge ska timerRunning ALDRIG starta automatiskt
     if (isTest) return;
 
     if (!timerRunning && value.trim().length > 0) {
@@ -171,12 +169,11 @@ export default function PlayGame() {
     }
   }
 
-  //
-  // GEMENSAM DAMAGE-HANTERING (det som testerna förväntar sig) från dev
-  //
+  // --- APPLY DAMAGE ---
   function applyWordDamage(cleanWord: string) {
     const damage = cleanWord.length;
-    setHistory(prev => [...prev, { word: cleanWord, player: turn, damage }]);
+
+    setHistory((prev) => [...prev, { word: cleanWord, player: turn, damage }]);
 
     if (turn === "player1") {
       dealDamage(damage, "right");
@@ -191,26 +188,13 @@ export default function PlayGame() {
     setWord("");
   }
 
-  //
-  // WORD SUBMISSION kombinerad
-  //
+  // --- SUBMIT WORD ---
   async function onSubmitWord() {
     const cleanWord = word.trim();
     if (!cleanWord) return;
 
-    //
-    // 🧪 TEST MODE — exakt gamla fungerande logiken från dev
-    //
     if (isTest) {
       applyWordDamage(cleanWord);
-      return;
-    }
-
-    //
-    // 🌐 LIVE MODE — backend submission från HEAD, men med sessionId från params
-    //
-    if (!sessionId) {
-      console.error("No session ID found");
       return;
     }
 
@@ -220,54 +204,51 @@ export default function PlayGame() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           wordGuess: cleanWord,
-          playerId: localPlayer == 'player1' ? 'Player 1' : 'Player 2',
+          playerId: localPlayer === "player1" ? "Player 1" : "Player 2",
         }),
       });
 
       if (res.ok) {
         applyWordDamage(cleanWord);
       } else {
-        setWord(cleanWord); // Återställ vid fel
-        const data = await res.json();
-        setError(data.message || "Ogiltigt ord.");
+        setError("Ogiltigt ord.");
       }
     } catch {
-      setWord(cleanWord);
-      setError("Kunde inte nå servern.");
+      setError("Serverfel.");
     }
   }
 
-  //
-
-  // OVERLAY LOGIC: Always show overlay if less than 2 players, in both test and live mode
+  // --- OVERLAY ---
   let overlayMessage: string | null = null;
+
   if (connectedPlayers < 2) {
     overlayMessage = "Väntar på motståndare... ⏳";
   } else if (turn !== localPlayer) {
     overlayMessage = "Motståndaren tänker... 🧠";
-  } //
+  }
 
-  //
-  // RENDER från dev
-  //
+  // --- RENDER ---
   return (
     <div style={{ position: "relative", width: "100%", height: "100vh" }}>
       <GameBoard
         player1={player1}
-        // Only pass player2 if there are at least 2 players
         {...(connectedPlayers > 1 ? { player2 } : {})}
         timer={timer}
         turn={turn}
         word={word}
         history={history}
         timerRunning={timerRunning}
+        onWordChange={handleWordChange}
+        onSubmitWord={onSubmitWord}
       >
-        {popups.map(p => (
+        {popups.map((p) => (
           <DamagePopup
             key={p.id}
             amount={p.amount}
             position={p.position}
-            onComplete={() => setPopups(prev => prev.filter(x => x.id !== p.id))}
+            onComplete={() =>
+              setPopups((prev) => prev.filter((x) => x.id !== p.id))
+            }
           />
         ))}
       </GameBoard>
@@ -290,30 +271,7 @@ export default function PlayGame() {
             textAlign: "center",
           }}
         >
-          <div>
-            <p>{overlayMessage}</p>
-
-            <div
-              style={{
-                marginTop: 20,
-                display: "flex",
-                gap: 10,
-                justifyContent: "center",
-              }}
-            >
-              {connectedPlayers < 2 && (
-                <button onClick={() => setConnectedPlayers(2)}>
-                  Test: Motståndare anslöt
-                </button>
-              )}
-
-              {turn !== localPlayer && connectedPlayers === 2 && (
-                <button onClick={() => setTurn(localPlayer)}>
-                  Test: Min tur nu
-                </button>
-              )}
-            </div>
-          </div>
+          <p>{overlayMessage}</p>
         </div>
       )}
     </div>
