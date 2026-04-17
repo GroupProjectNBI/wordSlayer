@@ -6,13 +6,13 @@
 
 # Test info
 
-- Name: e2e\ui\features\playgame.feature.spec.js >> PlayGame Page >> Player 2 HP bar decreases after taking damage
-- Location: .features-gen\e2e\ui\features\playgame.feature.spec.js:71:7
+- Name: e2e\ui\features\playgame.feature.spec.js >> PlayGame Page >> Player 1 HP bar decreases after taking damage
+- Location: .features-gen\e2e\ui\features\playgame.feature.spec.js:79:7
 
 # Error details
 
 ```
-Error: Expected HP bar to be 94% but was 99%
+Error: Expected HP bar to be 95% but was 99%
 ```
 
 # Page snapshot
@@ -25,24 +25,28 @@ Error: Expected HP bar to be 94% but was 99%
     - heading "Word Slayer" [level=1] [ref=e8]
     - generic [ref=e9]:
       - heading "History" [level=2] [ref=e10]
-      - generic [ref=e12]:
-        - generic [ref=e13]: dragon
-        - generic [ref=e14]: "-6"
-    - generic [ref=e15]:
-      - generic [ref=e16]: Player 1
-      - generic [ref=e20]: 100 HP
-    - generic [ref=e21]:
-      - generic [ref=e22]: Player 2
-      - generic [ref=e26]: 94 HP
+      - generic [ref=e11]:
+        - generic [ref=e12]:
+          - generic [ref=e13]: dragon
+          - generic [ref=e14]: "-6"
+        - generic [ref=e15]:
+          - generic [ref=e16]: hello
+          - generic [ref=e17]: "-5"
+    - generic [ref=e18]:
+      - generic [ref=e19]: Player 1
+      - generic [ref=e22]: 95 HP
+    - generic [ref=e23]:
+      - generic [ref=e24]: Player 2
+      - generic [ref=e27]: 94 HP
     - generic:
       - heading "VS" [level=1]
       - generic:
         - generic:
           - img
           - generic: 30s
-    - textbox "Type your word..." [active] [ref=e28]
+    - textbox "Type your word..." [active] [ref=e29]
     - generic: "-6"
-  - generic [ref=e29]: Motståndaren tänker... 🧠
+    - generic: "-5"
 ```
 
 # Test source
@@ -149,7 +153,7 @@ Error: Expected HP bar to be 94% but was 99%
   257 | 
   258 |   if (diff > 1) {
 > 259 |     throw new Error(`Expected HP bar to be ${percent}% but was ${actualPercent}%`);
-      |           ^ Error: Expected HP bar to be 94% but was 99%
+      |           ^ Error: Expected HP bar to be 95% but was 99%
   260 |   }
   261 | });
   262 | 

@@ -46,8 +46,8 @@ export default function GameBoard({
     window.location.search.includes("test");
 
   // Input ska vara enabled i test-mode, annars bara när det är min tur
-  const inputDisabled = isTest ? false : false; // alltid enabled i test
-  const inputActive = isTest ? true : true;     // alltid aktiv i test
+  const inputDisabled = isTest ? false : false;
+  const inputActive = isTest ? true : true;
   const timerIsRunning = isTest ? true : timerRunning;
 
   // Highlight styles
@@ -94,9 +94,8 @@ export default function GameBoard({
           align="left"
         />
 
-        <div style={{ width: 160 }}>
-          <HPBar hp={player1.hp} color="green" width={160} />
-        </div>
+        {/* HP BAR — NO WRAPPER */}
+        <HPBar hp={player1.hp} color="green" width={160} />
 
         <div className="text-sm mt-1">{player1.hp} HP</div>
       </div>
@@ -115,9 +114,8 @@ export default function GameBoard({
             align="right"
           />
 
-          <div style={{ width: 160 }}>
-            <HPBar hp={player2.hp} color="red" width={160} />
-          </div>
+          {/* HP BAR — NO WRAPPER */}
+          <HPBar hp={player2.hp} color="red" width={160} />
 
           <div className="text-sm mt-1">{player2.hp} HP</div>
         </div>

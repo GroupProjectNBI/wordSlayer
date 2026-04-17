@@ -34,17 +34,17 @@ Error: Expected HP bar to be 95% but was 99%
           - generic [ref=e17]: "-5"
     - generic [ref=e18]:
       - generic [ref=e19]: Player 1
-      - generic [ref=e23]: 95 HP
-    - generic [ref=e24]:
-      - generic [ref=e25]: Player 2
-      - generic [ref=e29]: 94 HP
+      - generic [ref=e22]: 95 HP
+    - generic [ref=e23]:
+      - generic [ref=e24]: Player 2
+      - generic [ref=e27]: 94 HP
     - generic:
       - heading "VS" [level=1]
       - generic:
         - generic:
           - img
           - generic: 30s
-    - textbox "Type your word..." [active] [ref=e31]
+    - textbox "Type your word..." [active] [ref=e29]
     - generic: "-6"
     - generic: "-5"
 ```
