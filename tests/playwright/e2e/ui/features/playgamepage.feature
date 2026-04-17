@@ -1,5 +1,11 @@
 Feature: PlayGame Page
 
+  #
+  # ─────────────────────────────────────────────
+  #   BASIC PAGE LOAD
+  # ─────────────────────────────────────────────
+  #
+
   Scenario: User sees the PlayGame page
     Given the timer is mocked
     And I intercept game session response
@@ -11,6 +17,13 @@ Feature: PlayGame Page
     And I see "VS"
     And the timer should show 30
 
+
+  #
+  # ─────────────────────────────────────────────
+  #   TIMER + INPUT
+  # ─────────────────────────────────────────────
+  #
+
   Scenario: Player 1 starts typing and timer begins
     Given the timer is mocked
     And I intercept game session response
@@ -18,6 +31,13 @@ Feature: PlayGame Page
     And the input is enabled
     When I type the word "dragon"
     Then the timer should show 30
+
+
+  #
+  # ─────────────────────────────────────────────
+  #   DAMAGE + TURN SWITCH
+  # ─────────────────────────────────────────────
+  #
 
   Scenario: Player 1 submits a word and deals damage
     Given the timer is mocked
@@ -33,6 +53,7 @@ Feature: PlayGame Page
     And it is player 2 turn
     And the timer should show 30
 
+
   Scenario: Timer runs out and turn switches
     Given the timer is mocked
     And I intercept game session response
@@ -43,12 +64,20 @@ Feature: PlayGame Page
     Then it is player 2 turn
     And the timer should show 30
 
+
+  #
+  # ─────────────────────────────────────────────
+  #   HP BAR
+  # ─────────────────────────────────────────────
+  #
+
   Scenario: Player 1 HP bar shows correct initial value
     Given the timer is mocked
     And I intercept game session response
     And I go to "/game/test-session-id?test"
     Then player 1 has 100 HP
     And player 1 HP bar is at 100 percent
+
 
   Scenario: Player 2 HP bar decreases after taking damage
     Given the timer is mocked
@@ -60,6 +89,7 @@ Feature: PlayGame Page
     And I submit the word
     Then player 2 has 94 HP
     And player 2 HP bar is at 94 percent
+
 
   Scenario: Player 1 HP bar decreases after taking damage
     Given the timer is mocked
@@ -74,33 +104,48 @@ Feature: PlayGame Page
     Then player 1 has 95 HP
     And player 1 HP bar is at 95 percent
 
-Scenario: Overlay is visible when only one player is present and disappears when two players are present
-  Given I intercept game session response with only one player
-  And I go to "/game/test-session-id"
-  Then I see the overlay
-  When I simulate a second player joining
-  Then I do not see the overlay
+
+  #
+  # ─────────────────────────────────────────────
+  #   OVERLAY
+  # ─────────────────────────────────────────────
+  #
+
+  Scenario: Overlay is visible when only one player is present and disappears when two players are present
+    Given I intercept game session response with only one player
+    And I go to "/game/test-session-id"
+    Then I see the overlay
+    When I simulate a second player joining
+    Then I do not see the overlay
 
 
+  Scenario: Overlay is not visible when two players are present from the beginning
+    Given I intercept game session response
+    And I go to "/game/test-session-id"
+    Then I do not see the overlay
 
-Scenario: Overlay is not visible when two players are present from the beginning
-  Given I intercept game session response
-  And I go to "/game/test-session-id"
-  Then I do not see the overlay
 
-Scenario: Word history starts empty
-  Given the timer is mocked
-  And I intercept game session response
-  And I go to "/game/test-session-id?test"
-  Then the word history should be empty
+  #
+  # ─────────────────────────────────────────────
+  #   WORD HISTORY
+  # ─────────────────────────────────────────────
+  #
 
-Scenario: Word history shows a submitted word
-  Given the timer is mocked
-  And I intercept game session response
-  And I go to "/game/test-session-id?test"
-  When I type the word "dragon"
-  And I submit the word
-  Then the word history contains "dragon"
+  Scenario: Word history starts empty
+    Given the timer is mocked
+    And I intercept game session response
+    And I go to "/game/test-session-id?test"
+    Then the word history should be empty
+
+
+  Scenario: Word history shows a submitted word
+    Given the timer is mocked
+    And I intercept game session response
+    And I go to "/game/test-session-id?test"
+    When I type the word "dragon"
+    And I submit the word
+    Then the word history contains "dragon"
+
 
   Scenario: Word history shows multiple words in order
     Given the timer is mocked
@@ -114,6 +159,7 @@ Scenario: Word history shows a submitted word
       | dragon |
       | hello  |
 
+
   Scenario: Word history shows which player submitted each word
     Given the timer is mocked
     And I intercept game session response
@@ -125,6 +171,7 @@ Scenario: Word history shows a submitted word
     Then the word history entry "dragon" belongs to player 1
     And the word history entry "hello" belongs to player 2
 
+
   Scenario: Word history shows correct damage values
     Given the timer is mocked
     And I intercept game session response
@@ -132,3 +179,38 @@ Scenario: Word history shows a submitted word
     When I type the word "dragon"
     And I submit the word
     Then the word history shows damage 6 for "dragon"
+
+
+  #
+  # ─────────────────────────────────────────────
+  #   GAME MUSIC MUTE BUTTON
+  # ─────────────────────────────────────────────
+  #
+
+  Scenario: Game music mute button toggles correctly
+    Given I intercept game session response
+    And I go to "/game/test-session-id"
+    Then the music mute button shows "Mute Music"
+    When I toggle the music mute button
+    Then the music mute button shows "Unmute Music"
+
+
+  Scenario: Music button visible in test mode but audio disabled
+    Given I intercept game session response
+    And I go to "/game/test-session-id?test"
+    Then I see button "Mute Music"
+
+
+  #
+  # ─────────────────────────────────────────────
+  #   HIGHLIGHT (TURN INDICATOR)
+  # ─────────────────────────────────────────────
+  #
+
+  Scenario: Active player highlight switches with turn
+    Given the timer is mocked
+    And I intercept game session response
+    And I go to "/game/test-session-id?test"
+    Then player 1 is highlighted
+    When the timer ticks 30 seconds
+    Then player 2 is highlighted
