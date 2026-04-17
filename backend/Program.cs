@@ -91,9 +91,10 @@ app.MapPost("/api/game/{sessionId}/playword", (Guid sessionId, HandeWordRequest 
     // 5. BERÄKNA SKADA: Hur långt är ordet?
     int damage = request.wordGuess.Trim().Length;
 
-    // 6. REDUCERA HÄLSA: Dra av skadan från motståndaren
-    // Math.Max(0, ...) gör att hälsan aldrig blir minus (t.ex. -5 HP)
-    opponent.Health = Math.Max(0, opponent.Health - damage);
+// 6. ANVÄND EN NY FUNKTION 
+// Vi hittar index för motståndaren (0 eller 1)
+int opponentIndex = game.Players.IndexOf(opponent);
+game.ApplyDamage(opponentIndex, damage);
 
     // 7. SPARA: Lägg till ordet i historiken
     attacker.Guesses.Add(request.wordGuess.Trim().ToLower());

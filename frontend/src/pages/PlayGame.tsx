@@ -66,8 +66,25 @@ export default function PlayGame() {
     }
   }
 
-  // --- 4. LOGIK FÖR OVERLAY (Från din HEAD) --- 
+  // --- 4. LOGIK FÖR OVERLAY & VINNARE  --- 
   let overlayMessage = null;
+  // Vi introducerar en variabel för att hålla koll på om spelet är slut
+  let isGameOver = false;
+  // Kolla först om någon har vunnit (HP är 0)
+  if (player1.hp <= 0) {
+    overlayMessage = `🏆 ${player2.username} VINNER! 🏆`;
+    isGameOver = true;
+  } else if (player2.hp <= 0) {
+    overlayMessage = `🏆 ${player1.username} VINNER! 🏆`;
+    isGameOver = true;
+  } 
+  // Om ingen vunnit, visa de vanliga meddelandena
+  else if (connectedPlayers < 2) {
+    overlayMessage = "Väntar på att en motståndare ska ansluta... ⏳";
+    // 3. Sist, kolla vems tur det är
+  } else if (turn !== localPlayer) {
+    overlayMessage = "Motståndaren tänker... 🧠";
+  }
 
   if (connectedPlayers < 2) {
     overlayMessage = "Väntar på att en motståndare ska ansluta... ⏳";
@@ -98,30 +115,52 @@ export default function PlayGame() {
         ))}
       </GameBoard>
 
-      {/* OVERLAYEN */}
+      {/* OVERLAYEN (Visas vid väntan ELLER vinst) */}
       {overlayMessage && (
         <div style={{
           position: "absolute",
           top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: "rgba(0, 0, 0, 0.7)",
+          backgroundColor: isGameOver ? "rgba(88, 28, 135, 0.95)" : "rgba(0, 0, 0, 0.7)", 
           backdropFilter: "blur(4px)",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
           zIndex: 100,
           color: "white",
-          fontSize: "2rem",
+          fontSize: "2.5rem",
           fontWeight: "bold",
           textAlign: "center"
         }}>
-          <div>
-            <p>{overlayMessage}</p>
+          <div style={{ padding: "20px", borderRadius: "20px", border: isGameOver ? "5px solid gold" : "none" }}>
+            {/* data-testid="winner-message" används av Playwright för att verifiera vinsten */}
+            <p data-testid="winner-message">{overlayMessage}</p>
+            
             <div style={{ marginTop: "20px", display: "flex", gap: "10px", justifyContent: "center" }}>
-              {connectedPlayers < 2 && (
-                <button onClick={() => setConnectedPlayers(2)}>Test: Motståndare anslöt</button>
-              )}
-              {turn !== localPlayer && connectedPlayers === 2 && (
-                <button onClick={() => setTurn(localPlayer)}>Test: Min tur nu</button>
+              {/* ÄNDRING: Om spelet är slut visar vi en knapp för att gå hem */}
+              {isGameOver ? (
+                <button 
+                  onClick={() => window.location.href = '/'}
+                  style={{ 
+                    padding: "10px 20px", 
+                    fontSize: "1.2rem", 
+                    cursor: "pointer", 
+                    backgroundColor: "#9333ea", 
+                    border: "none", 
+                    color: "white", 
+                    borderRadius: "10px" 
+                  }}
+                >
+                  Spela igen
+                </button>
+              ) : (
+                <>
+                  {connectedPlayers < 2 && (
+                    <button onClick={() => setConnectedPlayers(2)}>Test: Motståndare anslöt</button>
+                  )}
+                  {turn !== localPlayer && connectedPlayers === 2 && (
+                    <button onClick={() => setTurn(localPlayer)}>Test: Min tur nu</button>
+                  )}
+                </>
               )}
             </div>
           </div>
