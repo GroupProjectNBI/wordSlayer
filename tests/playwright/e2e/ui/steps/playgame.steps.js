@@ -224,3 +224,42 @@ Then("the music mute button shows {string}", async ({ page }, label) => {
     page.getByRole("button", { name: label })
   ).toBeVisible();
 });
+Given("I am on the PlayGame page", async ({ page }) => {
+  await page.goto(`/game/00000000-0000-0000-0000-000000000000?test`);
+  await page.waitForURL(`/game/00000000-0000-0000-0000-000000000000?test`);
+});
+
+Then("I see the game overlay", async ({ page }) => {
+  await expect(
+    page.getByText(/Väntar på motståndare|Motståndaren tänker/i)
+  ).toBeVisible();
+});
+
+Then("I do not see the game overlay", async ({ page }) => {
+  await expect(
+    page.getByText(/Väntar på motståndare|Motståndaren tänker/i)
+  ).toHaveCount(0);
+});
+
+Then("I see the player {int} username", async ({ page }, player) => {
+  await expect(page.locator(`[data-player='player${player}']`)).toBeVisible();
+});
+
+Then("player {int} HP bar is at {int} percent", async ({ page }, player, percent) => {
+  const bar = page.locator(`[data-player='player${player}'] .hp-fill`);
+  const wrapper = page.locator(`[data-player='player${player}'] .hp-bar`);
+
+  const barWidth = await bar.evaluate(el => el.getBoundingClientRect().width);
+  const wrapperWidth = await wrapper.evaluate(el => el.getBoundingClientRect().width);
+
+  const actualPercent = Math.round((barWidth / wrapperWidth) * 100);
+  const diff = Math.abs(actualPercent - percent);
+
+  if (diff > 1) {
+    throw new Error(`Expected HP bar to be ${percent}% but was ${actualPercent}%`);
+  }
+});
+
+When("I simulate a second player joining", async ({ page }) => {
+  await page.getByRole("button", { name: /Motståndare anslöt/i }).click();
+});
