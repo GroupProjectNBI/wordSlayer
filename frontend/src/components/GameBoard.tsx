@@ -20,6 +20,7 @@ interface GameBoardProps {
   player2?: Player;
   timer: number;
   turn: "player1" | "player2";
+  activePlayer: "player1" | "player2"; // 🟩 NY PROP
   word: string;
   setWord: (value: string) => void;
   onSubmitWord: () => void;
@@ -34,6 +35,7 @@ export default function GameBoard({
   player2,
   timer,
   turn,
+  activePlayer, // 🟩 NY PROP
   word,
   setWord,
   onSubmitWord,
@@ -50,59 +52,90 @@ export default function GameBoard({
   const inputActive = isTest ? true : turn === "player1";
   const timerIsRunning = isTest ? true : timerRunning;
 
+  // 🟩 PREMIUM HIGHLIGHT STYLES
+  const activeStyle = isTest
+    ? { border: "2px solid white" } // statiskt i test mode
+    : {
+      boxShadow: "0 0 20px rgba(255,255,255,0.25)",
+      transform: "scale(1.03)",
+      transition: "all 0.25s ease-out",
+      border: "1px solid rgba(255,255,255,0.4)"
+    };
+
+  const inactiveStyle = isTest
+    ? {}
+    : {
+      opacity: 0.75,
+      transform: "scale(1)",
+      transition: "all 0.25s ease-out"
+    };
+
   return (
     <main className="min-h-screen bg-[#1a1a2e] text-white relative overflow-hidden">
+
       {/* TITLE */}
       <div className="absolute top-4 left-1/2 -translate-x-1/2 text-center">
         <h1 className="text-4xl font-extrabold tracking-widest uppercase">
           Word Slayer
         </h1>
       </div>
+
       {/* WORD HISTORY */}
       <WordHistory words={history} />
+
       {/* PLAYER 1 */}
       <div
         data-player="player1"
         data-active={turn === "player1"}
         className="absolute top-20 left-4 text-left"
+        style={activePlayer === "player1" ? activeStyle : inactiveStyle} // 🟩 HIGHLIGHT
       >
         <Username
           name={player1.username}
           isActive={turn === "player1"}
           align="left"
         />
+
         <div style={{ width: 160 }}>
           <HPBar hp={player1.hp} color="green" width={160} />
         </div>
+
         <div className="text-sm mt-1">{player1.hp} HP</div>
       </div>
-      {/* PLAYER 2 (conditionally render) */}
+
+      {/* PLAYER 2 */}
       {player2 ? (
         <div
           data-player="player2"
           data-active={turn === "player2"}
           className="absolute bottom-20 right-4 text-right"
+          style={activePlayer === "player2" ? activeStyle : inactiveStyle} // 🟩 HIGHLIGHT
         >
           <Username
             name={player2.username}
             isActive={turn === "player2"}
             align="right"
           />
+
           <div style={{ width: 160 }}>
             <HPBar hp={player2.hp} color="red" width={160} />
           </div>
+
           <div className="text-sm mt-1">{player2.hp} HP</div>
         </div>
       ) : null}
+
       {/* CENTER VS + TIMER */}
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
         <h1 className="text-7xl font-extrabold tracking-widest opacity-80">
           VS
         </h1>
+
         <div className="mt-4">
           <Timer value={timer} />
         </div>
       </div>
+
       {/* WORD INPUT */}
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-full max-w-md px-4">
         <WordInput
@@ -114,6 +147,7 @@ export default function GameBoard({
           isTimerRunning={timerIsRunning}
         />
       </div>
+
       {/* DAMAGE POPUPS */}
       {children}
     </main>

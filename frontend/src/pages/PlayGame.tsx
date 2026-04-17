@@ -4,7 +4,7 @@ import { useParams, useLocation } from "react-router-dom";
 import GameBoard from "../components/GameBoard";
 import DamagePopup from "../components/DamagePopup";
 import { useTurnManager, TimerState } from "../components/TurnManager/TurnManager";
-import { useSound } from "../hooks/useSound"; // 🟩 NY IMPORT
+import { useSound } from "../hooks/useSound";
 
 interface BackendGameSession {
   sessionId: string;
@@ -56,7 +56,7 @@ export default function PlayGame() {
   const [, setLoading] = useState(true);
   const [, setError] = useState("");
 
-  // 🟩 GAME MUSIC (looping)
+  // GAME MUSIC (looping)
   const gameMusic = useSound("/sounds/game-music.mp3", { loop: true });
 
   // TURN MANAGER
@@ -150,10 +150,10 @@ export default function PlayGame() {
   }, [isTest, dispatch]);
 
   //
-  // 🟩 GAME MUSIC AUTO-START / STOP
+  // GAME MUSIC AUTO-START / STOP
   //
   useEffect(() => {
-    if (isTest) return; // aldrig musik i test mode
+    if (isTest) return;
 
     if (connectedPlayers === 2 && !musicMuted) {
       gameMusic.play();
@@ -268,7 +268,7 @@ export default function PlayGame() {
   return (
     <div style={{ position: "relative", width: "100%", height: "100vh" }}>
 
-      {/* 🟩 MUTE BUTTON */}
+      {/* MUTE BUTTON */}
       <button
         onClick={() => setMusicMuted((m) => !m)}
         style={{
@@ -293,6 +293,7 @@ export default function PlayGame() {
         player2={player2}
         timer={timer.value}
         turn={turn}
+        activePlayer={turn}
         word={word}
         setWord={handleWordChange}
         onSubmitWord={onSubmitWord}
