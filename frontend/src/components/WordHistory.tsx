@@ -11,7 +11,10 @@ interface WordHistoryProps {
 
 export default function WordHistory({ words }: WordHistoryProps) {
   return (
-    <div className="absolute left-4 top-1/2 -translate-y-1/2 w-48 bg-black/30 backdrop-blur-sm p-3 rounded-xl border border-white/10">
+    <div
+      className="absolute left-4 top-1/2 -translate-y-1/2 w-48 bg-black/30 backdrop-blur-sm p-3 rounded-xl border border-white/10"
+      data-word-history
+    >
       <h2 className="text-lg font-bold mb-2 text-center tracking-wide">
         History
       </h2>
@@ -26,6 +29,9 @@ export default function WordHistory({ words }: WordHistoryProps) {
         {words.map((entry, index) => (
           <div
             key={index}
+            data-word-entry
+            data-player={entry.player}
+            data-damage={entry.damage}
             className={`
               flex justify-between items-center px-2 py-1 rounded-md
               ${entry.player === "player1" ? "bg-green-600/30" : "bg-red-600/30"}

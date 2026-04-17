@@ -1,4 +1,5 @@
 using backend;
+using Microsoft.AspNetCore.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,7 @@ if (string.IsNullOrWhiteSpace(builder.Configuration["urls"]))
 // 2. Registrera tjänster (Dependency Injection)
 builder.Services.AddSingleton<WordService>();
 builder.Services.AddSingleton<GameManager>();
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
@@ -43,23 +45,59 @@ app.MapGet("/api/newGame", (GameManager manager) =>
     return Results.Ok(createdGame);
 });
 
-app.MapPost("/api/game/{sessionId}/join", (Guid sessionId, JoinGameRequest request, GameManager manager) =>
+app.MapPost("/api/game/{sessionId}/join", async (Guid sessionId, JoinGameRequest? request, GameManager manager, Microsoft.AspNetCore.SignalR.IHubContext<backend.GameHub> hubContext) =>
 {
-    // DÖRRVAKTEN: Kontrollera spelarnamn
-    if (string.IsNullOrWhiteSpace(request?.PlayerName))
+    var game = manager.GetGameById(sessionId);
+    if (game == null) return Results.NotFound(new { message = "Spelet hittades inte!" });
+
+    string? playerName = null;
+
+    // DÖRRVAKTEN: Validera spelarnamn om det skickas med.
+    if (request != null && !string.IsNullOrWhiteSpace(request.PlayerName))
     {
-        return Results.BadRequest(new { message = "Spelarnamn får inte vara tomt!" });
+        var user = game.Players.FirstOrDefault(p => p.Name == request.PlayerName);
+        if (user != null) return Results.Conflict(new { message = "Spelare finns redan!" });
+
+        GameSession? updatedGame = manager.JoinGame(sessionId, request.PlayerName);
+        if (updatedGame == null)
+        {
+            return Results.NotFound(new { message = "Kunde inte hitta spelrummet. Kontrollera koden!" });
+        }
+        playerName = request.PlayerName;
+        // Notify all clients in the session that a player joined
+        await hubContext.Clients.Group(sessionId.ToString()).SendAsync("PlayerJoined", playerName);
+        return Results.Ok(updatedGame);
     }
 
-    GameSession? updatedGame = manager.JoinGame(sessionId, request.PlayerName);
-
-    if (updatedGame == null)
+    // Om inget namn anges, använd säkrare auto-assign-flöde.
+    GameSession? joinedGame = manager.JoinGame(sessionId);
+    if (joinedGame == null)
     {
         return Results.NotFound(new { message = "Kunde inte hitta spelrummet. Kontrollera koden!" });
     }
-
-    return Results.Ok(updatedGame);
+    playerName = joinedGame.Players.LastOrDefault()?.Name;
+    if (!string.IsNullOrEmpty(playerName))
+    {
+        await hubContext.Clients.Group(sessionId.ToString()).SendAsync("PlayerJoined", playerName);
+    }
+    return Results.Ok(joinedGame);
 });
+
+// Denna endpoint används för att hämta spelets nuvarande status (F5 eller nyladdning)
+app.MapGet("/api/game/{sessionId}", (Guid sessionId, GameManager manager) =>
+{
+    var game = manager.GetGameById(sessionId);
+
+    if (game == null)
+    {
+        return Results.NotFound(new { message = "Spelet hittades inte!" });
+    }
+
+    // Vi returnerar hela objektet. .NET kommer automatiskt göra om 
+    // PascalCase (Health) till camelCase (health) för React.
+    return Results.Ok(game);
+});
+
 
 app.MapPost("/api/game/{sessionId}/playword", (Guid sessionId, HandeWordRequest request, WordService wordService, GameManager gameManager) =>
 {
@@ -103,7 +141,11 @@ game.ApplyDamage(opponentIndex, damage);
     return Results.Ok(game);
 });
 
-// 6. Fallback & Start (Fallback sköter React-routing)
+
+// 6. SignalR endpoint
+app.MapHub<backend.GameHub>("/gamehub");
+
+// 7. Fallback & Start (Fallback sköter React-routing)
 app.MapFallbackToFile("index.html");
 
 app.Run();
@@ -113,6 +155,11 @@ app.Run();
 // DATA-KLASSER (DTOs)
 // ==========================================
 
+public class JoinGameRequest
+{
+    public string PlayerName { get; set; } = string.Empty;
+}
+
 public class HandeWordRequest
 {
     public string wordGuess { get; set; } = string.Empty;
@@ -120,7 +167,3 @@ public class HandeWordRequest
     public string PlayerId { get; set; } = string.Empty;
 }
 
-public class JoinGameRequest
-{
-    public string PlayerName { get; set; } = string.Empty;
-}
