@@ -6,6 +6,7 @@ Scenario: User sees homepage
     And I see button "New game"
     And I see button "Join Game"
     And I see button "Rules"
+    And I see button "Play Music"
 
 Scenario: User starts a new game from homepage
     Given I am on the homepage
@@ -22,3 +23,12 @@ Scenario: User clicks rules button
     Then I am on "/rules"
     And I see "Rules"
 
+Scenario: User clicks Play Music button
+    Given I am on the homepage
+    When I press button "Play Music"
+    Then I see button "Play Music"
+
+Scenario: User triggers autoplay by clicking anywhere
+    Given I am on the homepage
+    When I click the "Word Slayer" button
+    Then I see "Word Slayer"
