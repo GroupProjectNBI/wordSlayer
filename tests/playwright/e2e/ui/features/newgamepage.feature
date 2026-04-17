@@ -31,5 +31,5 @@ Feature: PlayGame Page
         Given I am on the newgame page
         Then I see the button "Copy Game Code"
         When I press the button "Copy Game Code"
-        Then I see "Copied to clipboard!"
+        Then I see "Copied Game Code!"
         And the button should have a green styling

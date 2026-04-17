@@ -5,7 +5,8 @@ const { Given, When, Then } = createBdd();
 
 // Vi använder den befintliga navigationen
 Given('I am on the newgame page', async ({ page }) => {
-  await page.goto('/newgame/00000000-0000-0000-0000-000000000000?test');
+  await page.goto('/newgame/00000000-0000-0000-0000-000000000000');
+  await page.waitForURL('/newgame/00000000-0000-0000-0000-000000000000');
 });
 
 Then('I see the button {string}', async ({ page }, name) => {
@@ -23,7 +24,7 @@ When('I press the button {string}', async ({ page }, name) => {
 });
 
 Then('the button should have a green styling', async ({ page }) => {
-  const button = page.locator('button').filter({ hasText: 'Copied to clipboard!' });
+  const button = page.locator('button').filter({ hasText: 'Copied Game Code!' });
   // Vi kollar om den gröna klassen finns (från Tailwind)
   await expect(button).toHaveClass(/text-green-400/);
 });
