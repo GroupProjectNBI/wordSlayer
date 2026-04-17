@@ -1,42 +1,34 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from 'react-router-dom';
-import { useSound } from "../hooks/useSound"; //  NY IMPORT
+import { useSound } from "../hooks/useSound";
 
 export default function HomePage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  //  TEST MODE CHECK (ingen musik i test)
+  // TEST MODE CHECK (ingen musik i test)
   const isTest =
     typeof window !== "undefined" &&
     window.location.search.includes("test");
 
-  //  LOAD HOME MUSIC (no loop)
+  // LOAD HOME MUSIC (no loop)
   const homeMusic = useSound("/sounds/Welcome.mp3");
 
-  //  AUTO-PLAY AFTER FIRST USER INTERACTION
-  useEffect(() => {
+  // PLAY ONLY WHEN USER CLICKS SPECIFIC BUTTONS
+  function playWelcome() {
     if (isTest) return;
-
-    function unlockAudio() {
-      homeMusic.play();
-      window.removeEventListener("click", unlockAudio);
-    }
-
-    window.addEventListener("click", unlockAudio);
-
-    return () => window.removeEventListener("click", unlockAudio);
-  }, [isTest]);
-
-  //  MANUAL PLAY BUTTON
-  function playAgain() {
+    homeMusic.stop();        // säkerställ att den startar från början
     homeMusic.play();
   }
 
-  // When the user clicks New game on the homepage,
-  // we ask the backend to create the game session immediately.
-  // The backend returns a session ID that we keep in the URL.
+  // RULES BUTTON — spelar musik + navigerar
+  function handleRulesClick() {
+    playWelcome();
+    navigate('/rules');
+  }
+
+  // NEW GAME
   async function handleCreateNewGame() {
     setError('');
     setLoading(true);
@@ -53,7 +45,6 @@ export default function HomePage() {
       }
 
       const data = await response.json();
-      // Go to the new game page with the session ID in the URL.
       navigate(`/newgame/${data.sessionId}`);
     } catch (err) {
       console.error(err);
@@ -90,15 +81,15 @@ export default function HomePage() {
           </button>
 
           <button
-            onClick={() => navigate('/rules')}
+            onClick={handleRulesClick}
             className="w-full rounded-xl bg-purple-600 py-4 text-lg font-semibold text-white transition hover:bg-purple-500"
           >
             Rules
           </button>
 
-          {/*  PLAY MUSIC BUTTON (flyttad hit, samma design) */}
+          {/* PLAY WELCOME MUSIC BUTTON */}
           <button
-            onClick={playAgain}
+            onClick={playWelcome}
             className="w-full rounded-xl bg-purple-600 py-4 text-lg font-semibold text-white transition hover:bg-purple-500"
           >
             Welcome message
