@@ -20,7 +20,7 @@ public class GameSession
     /// Om det är ett 1v1-spel kommer denna lista max ha två objekt i sig.
     /// </summary>
     public List<Player> Players { get; set; } = new List<Player>();
-    
+
     // --- Logik för vinst och status ---
     public string Status { get; set; } = "InProgress"; // Håller koll på om spelet pågår eller är slut
     public string? Winner { get; set; } // Sparar namnet på vinnaren
@@ -45,7 +45,7 @@ public class GameSession
         {
             Players[playerIndex].HP = 0;
             Status = "Finished";
-            
+
             // Om playerIndex 1 dog, vann playerIndex 0 (och tvärtom)
             int winnerIndex = (playerIndex == 0) ? 1 : 0;
             Winner = Players[winnerIndex].Name;
