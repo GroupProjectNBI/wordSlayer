@@ -3,6 +3,49 @@ import { expect } from "@playwright/test";
 const { Given, When, Then } = createBdd();
 const VALID_GUID = "00000000-0000-0000-0000-000000000000";
 
+// Username assertion
+Then('I see the player {int} username', async ({ page }, playerNum) => {
+  const selector = `[data-player="player${playerNum}"]`;
+  await expect(page.locator(selector)).toBeVisible();
+});
+
+// Damage popup assertion
+Then('I see a damage popup with {int}', async ({ page }, amount) => {
+  const popup = page.locator('div').filter({ hasText: `-${amount}` });
+  await expect(popup.first()).toBeVisible({ timeout: 10000 });
+});
+
+// Word history assertions
+Then('the word history should be empty', async ({ page }) => {
+  const items = page.locator('[data-word-history] [data-word-entry]');
+  await expect(items).toHaveCount(0);
+});
+
+Then('the word history contains {string}', async ({ page }, word) => {
+  await expect(page.locator('[data-word-history]').getByText(word)).toBeVisible();
+});
+
+Then('the word history should show:', async ({ page }, table) => {
+  const expected = table.rows().flat();
+  const items = page.locator('[data-word-history] [data-word-entry]');
+  const count = await items.count();
+  const offset = count - expected.length;
+  for (let i = 0; i < expected.length; i++) {
+    const text = await items.nth(offset + i).innerText();
+    expect(text).toContain(expected[i]);
+  }
+});
+
+Then('the word history entry {string} belongs to player {int}', async ({ page }, word, playerNum) => {
+  const entry = page.locator('[data-word-history] [data-word-entry]').filter({ hasText: word });
+  await expect(entry).toHaveAttribute('data-player', `player${playerNum}`);
+});
+
+Then('the word history shows damage {int} for {string}', async ({ page }, damage, word) => {
+  const entry = page.locator('[data-word-history] [data-word-entry]').filter({ hasText: word });
+  await expect(entry).toHaveAttribute('data-damage', `${damage}`);
+});
+
 Then('I see turn indicator {string}', async ({ page }, text) => {
   const visible = await page.getByTestId('turn-indicator').filter({ hasText: text }).isVisible();
   if (!visible) {
