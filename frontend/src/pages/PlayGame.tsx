@@ -40,6 +40,9 @@ export default function PlayGame() {
   // COOLDOWN
   const [cooldown, setCooldown] = useState(false);
 
+  // MUSIC MUTE STATE
+  const [musicMuted, setMusicMuted] = useState(false);
+
   // POPUPS + HISTORY
   const [popups, setPopups] = useState<
     { id: number; amount: number; position: "left" | "right"; }[]
@@ -53,8 +56,8 @@ export default function PlayGame() {
   const [, setLoading] = useState(true);
   const [, setError] = useState("");
 
-  // 🟩 DANGER ZONE SOUND
-  const playDangerBeep = useSound("/sounds/danger-beep.mp3");
+  // 🟩 GAME MUSIC (looping)
+  const gameMusic = useSound("/sounds/game-music.mp3", { loop: true });
 
   // TURN MANAGER
   const { timer, dispatch } = useTurnManager(isTest, () => {
@@ -147,15 +150,17 @@ export default function PlayGame() {
   }, [isTest, dispatch]);
 
   //
-  // 🟩 DANGER ZONE SOUND EFFECT
+  // 🟩 GAME MUSIC AUTO-START / STOP
   //
   useEffect(() => {
-    if (isTest) return; // aldrig ljud i test mode
+    if (isTest) return; // aldrig musik i test mode
 
-    if (timer.state === TimerState.Running && timer.value <= 5) {
-      playDangerBeep();
+    if (connectedPlayers === 2 && !musicMuted) {
+      gameMusic.play();
+    } else {
+      gameMusic.stop();
     }
-  }, [timer.value, timer.state, isTest, playDangerBeep]);
+  }, [connectedPlayers, musicMuted, isTest]);
 
   //
   // DAMAGE LOGIC
@@ -262,6 +267,27 @@ export default function PlayGame() {
   //
   return (
     <div style={{ position: "relative", width: "100%", height: "100vh" }}>
+
+      {/* 🟩 MUTE BUTTON */}
+      <button
+        onClick={() => setMusicMuted((m) => !m)}
+        style={{
+          position: "absolute",
+          top: 20,
+          right: 20,
+          zIndex: 200,
+          padding: "10px 16px",
+          background: "rgba(0,0,0,0.6)",
+          color: "white",
+          borderRadius: 8,
+          border: "1px solid white",
+          cursor: "pointer",
+          fontSize: "1rem",
+        }}
+      >
+        {musicMuted ? "Unmute Music" : "Mute Music"}
+      </button>
+
       <GameBoard
         player1={player1}
         player2={player2}
