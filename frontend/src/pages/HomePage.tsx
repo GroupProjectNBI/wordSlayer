@@ -12,25 +12,26 @@ export default function HomePage() {
     typeof window !== "undefined" &&
     window.location.search.includes("test");
 
-  //  MUTE STATE
-  const [muted, setMuted] = useState(false);
-
   //  LOAD HOME MUSIC (no loop)
-  const homeMusic = useSound("/sounds/Welcome.mp3");
+  const homeMusic = useSound("/sounds/home-music.mp3");
 
-  //  AUTO-PLAY ONCE WHEN PAGE LOADS
+  //  AUTO-PLAY AFTER FIRST USER INTERACTION
   useEffect(() => {
-    if (isTest) return;   // no sound in test mode
-    if (muted) return;    // don't auto-play if muted
+    if (isTest) return;
 
-    homeMusic.play();     // play once
-  }, [muted, isTest]);
+    function unlockAudio() {
+      homeMusic.play();
+      window.removeEventListener("click", unlockAudio);
+    }
+
+    window.addEventListener("click", unlockAudio);
+
+    return () => window.removeEventListener("click", unlockAudio);
+  }, [isTest]);
 
   //  MANUAL PLAY BUTTON
   function playAgain() {
-    if (!muted) {
-      homeMusic.play();
-    }
+    homeMusic.play();
   }
 
   // When the user clicks New game on the homepage,
@@ -65,23 +66,6 @@ export default function HomePage() {
   return (
     <main className="min-h-screen flex items-center justify-center">
       <section className="w-full max-w-md px-4 text-center">
-
-        {/*  MUTE BUTTON */}
-        <button
-          onClick={() => setMuted((m) => !m)}
-          className="absolute top-4 right-4 px-4 py-2 bg-black/60 text-white rounded-lg border border-white"
-        >
-          {muted ? "Unmute" : "Mute"}
-        </button>
-
-        {/*  PLAY AGAIN BUTTON */}
-        <button
-          onClick={playAgain}
-          className="absolute top-4 left-4 px-4 py-2 bg-purple-700 text-white rounded-lg border border-white"
-        >
-          Play Music
-        </button>
-
         <h1 className="mb-10 text-5xl font-extrabold uppercase tracking-widest">
           Word Slayer
         </h1>
@@ -110,6 +94,14 @@ export default function HomePage() {
             className="w-full rounded-xl bg-purple-600 py-4 text-lg font-semibold text-white transition hover:bg-purple-500"
           >
             Rules
+          </button>
+
+          {/*  PLAY MUSIC BUTTON (flyttad hit, samma design) */}
+          <button
+            onClick={playAgain}
+            className="w-full rounded-xl bg-purple-600 py-4 text-lg font-semibold text-white transition hover:bg-purple-500"
+          >
+            Play Music
           </button>
         </div>
       </section>
