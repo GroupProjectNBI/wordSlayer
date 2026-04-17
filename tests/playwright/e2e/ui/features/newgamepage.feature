@@ -25,3 +25,11 @@ Feature: PlayGame Page
         And the server signals turn changed to "player2" with HP 100 and 100
         Then it is player 2 turn
         And the timer should show 30
+
+
+    Scenario: Copy game code to clipboard and see feedback
+        Given I am on the newgame page
+        Then I see the button "Copy Game Code"
+        When I press the button "Copy Game Code"
+        Then I see "Copied to clipboard!"
+        And the button should have a green styling
