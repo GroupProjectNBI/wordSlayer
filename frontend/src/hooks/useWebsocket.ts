@@ -1,6 +1,12 @@
 import { useEffect, useRef } from "react";
 import * as signalR from "@microsoft/signalr";
 
+/**
+ * useWebsocket hook for connecting to SignalR and handling PlayerJoined events.
+ * @param sessionId The game session ID (string)
+ * @param onPlayerJoined Callback when a player joins (playerName: string) => void
+ */
+
 export function useWebsocket(
     sessionId: string | undefined,
     playerName: string,
