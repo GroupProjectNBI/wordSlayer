@@ -44,7 +44,6 @@ export default function PlayGame() {
   // --- SIGNALR CALLBACKS ---
   const handleTurnChanged = useCallback(
     (nextTurn: "player1" | "player2", p1Hp: number, p2Hp: number) => {
-      if (isTest) return; // TEST MODE: blockera backend‑turn‑events
       setTurn(nextTurn);
       setPlayer1((prev) => ({ ...prev, hp: p1Hp }));
       setPlayer2((prev) => ({ ...prev, hp: p2Hp }));
@@ -52,13 +51,12 @@ export default function PlayGame() {
       setTimerRunning(false);
       setError("");
     },
-    [isTest]
+    []
   );
 
   const handlePlayerJoined = useCallback(() => {
-    if (isTest) return; // TEST MODE: vi styr connectedPlayers manuellt
     setConnectedPlayers((prev) => Math.min(prev + 1, 2));
-  }, [isTest]);
+  }, []);
 
   useWebsocket(sessionId, myName, handlePlayerJoined, handleTurnChanged);
 
@@ -67,15 +65,13 @@ export default function PlayGame() {
     if (!isTest) return;
 
     const handler = (e: any) => {
-      // TEST MODE: vi ignorerar backend‑HP och turn
-      // eftersom testerna styr HP själva
-      const { nextTurn } = e.detail;
-      setTurn(nextTurn);
+      const { nextTurn, p1Hp, p2Hp } = e.detail;
+      handleTurnChanged(nextTurn, p1Hp, p2Hp);
     };
 
     window.addEventListener("signalr-turn-changed", handler);
     return () => window.removeEventListener("signalr-turn-changed", handler);
-  }, [isTest]);
+  }, [isTest, handleTurnChanged]);
 
   // --- INITIAL LOAD ---
   useEffect(() => {
@@ -103,9 +99,7 @@ export default function PlayGame() {
 
         const game = (await response.json()) as BackendGameSession;
 
-        if (!isTest) {
-          setConnectedPlayers(game.players.length);
-        }
+        setConnectedPlayers(game.players.length);
 
         if (game.players.length > 0) {
           setPlayer1({
@@ -121,7 +115,7 @@ export default function PlayGame() {
           });
         }
 
-        if (!isTest && game.currentTurn) {
+        if (game.currentTurn) {
           setTurn(game.currentTurn.toLowerCase() as "player1" | "player2");
         }
       } catch (err) {
@@ -133,7 +127,7 @@ export default function PlayGame() {
     }
 
     loadGame();
-  }, [sessionId, isTest]);
+  }, [sessionId]);
 
   // --- LIVE TIMER ---
   useEffect(() => {
@@ -184,29 +178,23 @@ export default function PlayGame() {
     }
   }
 
-  // --- APPLY DAMAGE (TEST‑SAFE VERSION) ---
+  // --- WORD INPUT ---
+  function handleWordChange(value: string) {
+    setWord(value);
+
+    if (isTest) return;
+
+    if (!timerRunning && value.trim().length > 0) {
+      setTimerRunning(true);
+    }
+  }
+
+  // --- APPLY DAMAGE ---
   function applyWordDamage(cleanWord: string) {
     const damage = cleanWord.length;
 
     setHistory((prev) => [...prev, { word: cleanWord, player: turn, damage }]);
 
-    if (isTest) {
-      // TEST MODE: exakt EN HP‑ändring
-      if (turn === "player1") {
-        setPlayer2((p) => ({ ...p, hp: Math.max(0, p.hp - damage) }));
-        setTurn("player2");
-      } else {
-        setPlayer1((p) => ({ ...p, hp: Math.max(0, p.hp - damage) }));
-        setTurn("player1");
-      }
-
-      setTimer(30);
-      setTimerRunning(false);
-      setWord("");
-      return;
-    }
-
-    // LIVE MODE
     if (turn === "player1") {
       dealDamage(damage, "right");
       setTurn("player2");
@@ -250,7 +238,7 @@ export default function PlayGame() {
     }
   }
 
-  // --- OVERLAY ---
+  // --- OVERLAY MESSAGE ---
   let overlayMessage: string | null = null;
 
   if (connectedPlayers < 2) {
@@ -263,14 +251,14 @@ export default function PlayGame() {
   return (
     <div className="relative w-full h-screen overflow-hidden bg-slate-900">
 
-      {/* ERROR */}
+      {/* ERROR BANNER */}
       {error && (
         <div className="absolute top-10 left-1/2 -translate-x-1/2 z-[110] bg-red-600 text-white px-6 py-2 rounded-full font-bold shadow-2xl">
           {error}
         </div>
       )}
 
-      {/* MUTE MUSIC BUTTON (TEST MODE) */}
+      {/* MUTE MUSIC BUTTON (TEST MODE ONLY) */}
       {isTest && (
         <button
           onClick={() => setMusicMuted((m) => !m)}
@@ -280,7 +268,7 @@ export default function PlayGame() {
         </button>
       )}
 
-      {/* SIMULATE SECOND PLAYER JOIN (TEST MODE) */}
+      {/* SIMULATE SECOND PLAYER JOIN (TEST MODE ONLY) */}
       {isTest && (
         <button
           onClick={() => setConnectedPlayers(2)}
@@ -290,7 +278,7 @@ export default function PlayGame() {
         </button>
       )}
 
-      {/* LOADING */}
+      {/* LOADING OVERLAY */}
       {loading && (
         <div className="absolute inset-0 bg-black/70 text-white text-3xl flex items-center justify-center z-[200]">
           Laddar spel...
@@ -304,7 +292,7 @@ export default function PlayGame() {
         timer={timer}
         turn={turn}
         word={word}
-        onWordChange={setWord}
+        onWordChange={handleWordChange}
         onSubmitWord={onSubmitWord}
         history={history}
         timerRunning={timerRunning}
