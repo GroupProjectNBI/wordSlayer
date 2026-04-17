@@ -13,7 +13,7 @@ export default function HomePage() {
     window.location.search.includes("test");
 
   //  LOAD HOME MUSIC (no loop)
-  const homeMusic = useSound("/sounds/home-music.mp3");
+  const homeMusic = useSound("/sounds/Welcome.mp3");
 
   //  AUTO-PLAY AFTER FIRST USER INTERACTION
   useEffect(() => {
@@ -101,7 +101,7 @@ export default function HomePage() {
             onClick={playAgain}
             className="w-full rounded-xl bg-purple-600 py-4 text-lg font-semibold text-white transition hover:bg-purple-500"
           >
-            Play Music
+            Welcome message
           </button>
         </div>
       </section>
