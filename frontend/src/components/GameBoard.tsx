@@ -20,7 +20,7 @@ interface GameBoardProps {
   player2?: Player;
   timer: number;
   turn: "player1" | "player2";
-  activePlayer: "player1" | "player2"; // 🟩 NY PROP
+  localPlayer: "player1" | "player2"; // NY: Berättar vem JAG är
   word: string;
   setWord: (value: string) => void;
   onSubmitWord: () => void;
@@ -35,7 +35,7 @@ export default function GameBoard({
   player2,
   timer,
   turn,
-  activePlayer, // 🟩 NY PROP
+  localPlayer, // Ta emot den här
   word,
   setWord,
   onSubmitWord,
@@ -48,8 +48,9 @@ export default function GameBoard({
     typeof window !== "undefined" &&
     window.location.search.includes("test");
 
-  const inputDisabled = isTest ? false : turn !== "player1";
-  const inputActive = isTest ? true : turn === "player1";
+  // ÄNDRING: Jämför turn med localPlayer istället för hårdkodat "player1"
+  const inputDisabled = isTest ? false : turn !== localPlayer;
+  const inputActive = isTest ? true : turn === localPlayer;
   const timerIsRunning = isTest ? true : timerRunning;
 
   // 🟩 PREMIUM HIGHLIGHT STYLES

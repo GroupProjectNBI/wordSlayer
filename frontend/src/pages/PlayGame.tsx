@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useWebsocket } from "../hooks/useWebsocket";
 import { useParams, useLocation } from "react-router-dom";
 import GameBoard from "../components/GameBoard";
@@ -9,82 +9,62 @@ import { useSound } from "../hooks/useSound";
 interface BackendGameSession {
   sessionId: string;
   players: { name: string; health: number; }[];
+  currentTurn: string;
 }
 
 export default function PlayGame() {
   const { sessionId } = useParams<{ sessionId: string; }>();
+  const myName = sessionStorage.getItem("playerName") || "Player 1";
+  const isTest = useLocation().search.includes("test");
 
-  // TEST MODE
-  const location = useLocation();
-  const isTest = location.search.includes("test");
-
-  // PLAYER STATE
+  // --- 1. STATES ---
   const [player1, setPlayer1] = useState({ username: "PlayerOne", hp: 100 });
   const [player2, setPlayer2] = useState({ username: "PlayerTwo", hp: 100 });
+  const [connectedPlayers, setConnectedPlayers] = useState(0);
 
   // WORD INPUT
   const [word, setWord] = useState("");
 
   // TURN
   const [turn, setTurn] = useState<"player1" | "player2">("player1");
-  const localPlayer: "player1" | "player2" = "player1";
+  const [timerRunning, setTimerRunning] = useState(false);
 
-  // CONNECTED PLAYERS
-  const [connectedPlayers, setConnectedPlayers] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [popups, setPopups] = useState<{ id: number; amount: number; position: "left" | "right"; }[]>([]);
+  const [history, setHistory] = useState<{ word: string; player: "player1" | "player2"; damage: number; }[]>([]);
 
-  // WEBSOCKET: PlayerJoined
-  useWebsocket(sessionId, () => {
+  // Identifiera om användaren är vänster (p1) eller höger (p2)
+  const localPlayer: "player1" | "player2" = myName === "Player 2" ? "player2" : "player1";
+
+  // --- 2. SIGNALR CALLBACKS ---
+  const handleTurnChanged = useCallback((nextTurn: "player1" | "player2", p1Hp: number, p2Hp: number) => {
+    setTurn(nextTurn);
+    setPlayer1(prev => ({ ...prev, hp: p1Hp })); // Synka HP från servern
+    setPlayer2(prev => ({ ...prev, hp: p2Hp }));
+    setTimer(30);
+    setTimerRunning(false);
+    setError("");
+  }, []);
+
+  const handlePlayerJoined = useCallback((_playerName: string) => {
     setConnectedPlayers((prev) => Math.min(prev + 1, 2));
-  });
+  }, []);
 
-  // COOLDOWN
-  const [cooldown, setCooldown] = useState(false);
+  useWebsocket(sessionId, myName, handlePlayerJoined, handleTurnChanged);
 
-  // MUSIC MUTE STATE
-  const [musicMuted, setMusicMuted] = useState(false);
+  // --- 3. TEST-BAKDÖRR (För Playwright) ---
+  useEffect(() => {
+    if (!isTest) return; // Bara aktivt i Playwright-test
+    const handleTestSignal = (e: any) => {
+      const { nextTurn, p1Hp, p2Hp } = e.detail;
+      handleTurnChanged(nextTurn, p1Hp, p2Hp); // Tvinga staten att uppdateras
+    };
+    window.addEventListener("signalr-turn-changed", handleTestSignal);
+    return () => window.removeEventListener("signalr-turn-changed", handleTestSignal);
+  }, [isTest, handleTurnChanged]);
 
-  // POPUPS + HISTORY
-  const [popups, setPopups] = useState<
-    { id: number; amount: number; position: "left" | "right"; }[]
-  >([]);
-
-  const [history, setHistory] = useState<
-    { word: string; player: "player1" | "player2"; damage: number; }[]
-  >([]);
-
-  // BACKEND LOADING
-  const [, setLoading] = useState(true);
-  const [, setError] = useState("");
-
-  // GAME MUSIC (looping)
-  const gameMusic = useSound("/sounds/game-music.mp3", { loop: true });
-
-  // TURN MANAGER
-  const { timer, dispatch } = useTurnManager(isTest, () => {
-    setTurn((prev) => (prev === "player1" ? "player2" : "player1"));
-    startCooldown();
-  });
-
-  //
-  // COOLDOWN HANDLER
-  //
-  function startCooldown() {
-    if (isTest) {
-      dispatch({ type: "TURN_START" });
-      return;
-    }
-
-    setCooldown(true);
-
-    setTimeout(() => {
-      setCooldown(false);
-      dispatch({ type: "TURN_START" });
-    }, 800);
-  }
-
-  //
-  // LOAD GAME FROM BACKEND
-  //
+  // --- 4. INITIAL LADDNING ---
   useEffect(() => {
     async function loadGame() {
       if (!sessionId) {
@@ -92,78 +72,79 @@ export default function PlayGame() {
         setLoading(false);
         return;
       }
-
       setLoading(true);
       try {
         const response = await fetch(`/api/game/${sessionId}`, {
-          method: "GET",
-          credentials: "same-origin",
-          cache: "no-store",
+          method: 'GET',
+          credentials: 'same-origin',
+          cache: 'no-store'
         });
-
         if (!response.ok) {
           const body = await response.json().catch(() => null);
-          setError(body?.message ?? "Kunde inte hämta speldata.");
+          setError(body?.message ?? 'Kunde inte hämta speldata.');
           return;
         }
-
         const game = (await response.json()) as BackendGameSession;
-
         setConnectedPlayers(game.players.length);
-
         if (game.players.length > 0) {
-          setPlayer1({
-            username: game.players[0].name,
-            hp: game.players[0].health,
-          });
+          setPlayer1({ username: game.players[0].name, hp: game.players[0].health });
         }
-
         if (game.players.length > 1) {
-          setPlayer2({
-            username: game.players[1].name,
-            hp: game.players[1].health,
-          });
+          setPlayer2({ username: game.players[1].name, hp: game.players[1].health });
         }
       } catch (err) {
         console.error(err);
-        setError("Kunde inte nå servern för att läsa spelet.");
+        setError('Kunde inte nå servern för att läsa spelet.');
       } finally {
         setLoading(false);
       }
     }
-
     loadGame();
   }, [sessionId]);
 
   //
-  // TEST MODE: manual timer tick
+  // TIMER (LIVE MODE) från dev
+  //
+  useEffect(() => {
+    if (!timerRunning || isTest) return;
+
+    const interval = setInterval(() => {
+      setTimer((t) => {
+        if (t <= 1) {
+          setTurn((prev) => (prev === "player1" ? "player2" : "player1"));
+          setTimerRunning(false);
+          return 30;
+        }
+        return t - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [timerRunning, turn, isTest]);
+
+  //
+  // MANUAL TIMER TICK (TEST MODE) från dev
   //
   useEffect(() => {
     if (!isTest) return;
 
     function manualTick() {
-      dispatch({ type: "TICK" });
+      setTimer((t) => {
+        if (t <= 1) {
+          setTurn((prev) => (prev === "player1" ? "player2" : "player1"));
+          setTimerRunning(false);
+          return 30;
+        }
+        return t - 1;
+      });
     }
 
     window.addEventListener("manual-timer-tick", manualTick);
     return () => window.removeEventListener("manual-timer-tick", manualTick);
-  }, [isTest, dispatch]);
+  }, [isTest]);
 
   //
-  // GAME MUSIC AUTO-START / STOP
-  //
-  useEffect(() => {
-    if (isTest) return;
-
-    if (connectedPlayers === 2 && !musicMuted) {
-      gameMusic.play();
-    } else {
-      gameMusic.stop();
-    }
-  }, [connectedPlayers, musicMuted, isTest]);
-
-  //
-  // DAMAGE LOGIC
+  // DAMAGE LOGIC från dev
   //
   function dealDamage(amount: number, target: "left" | "right") {
     const id = Date.now();
@@ -177,28 +158,25 @@ export default function PlayGame() {
   }
 
   //
-  // WORD INPUT CHANGE
+  // WORD INPUT CHANGE från dev
   //
   function handleWordChange(value: string) {
     setWord(value);
 
+    // 🟩 FIX: I testläge ska timerRunning ALDRIG starta automatiskt
     if (isTest) return;
 
-    if (timer.state === TimerState.Idle && value.trim().length > 0) {
-      dispatch({ type: "TURN_START" });
+    if (!timerRunning && value.trim().length > 0) {
+      setTimerRunning(true);
     }
   }
 
   //
-  // APPLY DAMAGE + TURN SWITCH
+  // GEMENSAM DAMAGE-HANTERING (det som testerna förväntar sig) från dev
   //
   function applyWordDamage(cleanWord: string) {
     const damage = cleanWord.length;
-
-    setHistory((prev) => [
-      ...prev,
-      { word: cleanWord, player: turn, damage },
-    ]);
+    setHistory(prev => [...prev, { word: cleanWord, player: turn, damage }]);
 
     if (turn === "player1") {
       dealDamage(damage, "right");
@@ -208,107 +186,88 @@ export default function PlayGame() {
       setTurn("player1");
     }
 
-    dispatch({ type: "RESET" });
-    startCooldown();
+    setTimer(30);
+    setTimerRunning(false);
     setWord("");
   }
 
   //
-  // WORD SUBMISSION
+  // WORD SUBMISSION kombinerad
   //
   async function onSubmitWord() {
     const cleanWord = word.trim();
     if (!cleanWord) return;
 
+    //
+    // 🧪 TEST MODE — exakt gamla fungerande logiken från dev
+    //
     if (isTest) {
       applyWordDamage(cleanWord);
       return;
     }
 
+    //
+    // 🌐 LIVE MODE — backend submission från HEAD, men med sessionId från params
+    //
     if (!sessionId) {
       console.error("No session ID found");
       return;
     }
 
     try {
-      const response = await fetch(`/api/game/${sessionId}/playword`, {
+      const res = await fetch(`/api/game/${sessionId}/playword`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           wordGuess: cleanWord,
-          playerId: localPlayer === "player1" ? "Player 1" : "Player 2",
+          playerId: localPlayer == 'player1' ? 'Player 1' : 'Player 2',
         }),
       });
 
-      if (response.ok) {
+      if (res.ok) {
         applyWordDamage(cleanWord);
       } else {
-        const errorData = await response.json().catch(() => null);
-        alert(errorData?.message ?? "Något gick fel.");
+        setWord(cleanWord); // Återställ vid fel
+        const data = await res.json();
+        setError(data.message || "Ogiltigt ord.");
       }
-    } catch (err) {
-      console.error("Network error:", err);
+    } catch {
+      setWord(cleanWord);
+      setError("Kunde inte nå servern.");
     }
   }
 
   //
-  // OVERLAY
-  //
+
+  // OVERLAY LOGIC: Always show overlay if less than 2 players, in both test and live mode
   let overlayMessage: string | null = null;
-
   if (connectedPlayers < 2) {
-    overlayMessage = "Väntar på att en motståndare ska ansluta... ⏳";
-  } else if (!isTest && turn !== localPlayer) {
+    overlayMessage = "Väntar på motståndare... ⏳";
+  } else if (turn !== localPlayer) {
     overlayMessage = "Motståndaren tänker... 🧠";
-  }
+  } //
 
   //
-  // RENDER
+  // RENDER från dev
   //
   return (
     <div style={{ position: "relative", width: "100%", height: "100vh" }}>
-
-      {/* MUTE BUTTON */}
-      <button
-        onClick={() => setMusicMuted((m) => !m)}
-        style={{
-          position: "absolute",
-          top: 20,
-          right: 20,
-          zIndex: 200,
-          padding: "10px 16px",
-          background: "rgba(0,0,0,0.6)",
-          color: "white",
-          borderRadius: 8,
-          border: "1px solid white",
-          cursor: "pointer",
-          fontSize: "1rem",
-        }}
-      >
-        {musicMuted ? "Unmute Music" : "Mute Music"}
-      </button>
-
       <GameBoard
         player1={player1}
-        player2={player2}
-        timer={timer.value}
+        // Only pass player2 if there are at least 2 players
+        {...(connectedPlayers > 1 ? { player2 } : {})}
+        timer={timer}
         turn={turn}
-        activePlayer={turn}
         word={word}
-        setWord={handleWordChange}
-        onSubmitWord={onSubmitWord}
         history={history}
-        timerRunning={timer.state === TimerState.Running}
-        inputDisabled={cooldown || timer.state !== TimerState.Running}
+        timerRunning={timerRunning}
       >
-        {popups.map((p) => (
+        {popups.map(p => (
           <DamagePopup
             key={p.id}
             amount={p.amount}
             position={p.position}
-            onComplete={() =>
-              setPopups((prev) => prev.filter((x) => x.id !== p.id))
-            }
+            onComplete={() => setPopups(prev => prev.filter(x => x.id !== p.id))}
           />
         ))}
       </GameBoard>
@@ -331,7 +290,30 @@ export default function PlayGame() {
             textAlign: "center",
           }}
         >
-          <p>{overlayMessage}</p>
+          <div>
+            <p>{overlayMessage}</p>
+
+            <div
+              style={{
+                marginTop: 20,
+                display: "flex",
+                gap: 10,
+                justifyContent: "center",
+              }}
+            >
+              {connectedPlayers < 2 && (
+                <button onClick={() => setConnectedPlayers(2)}>
+                  Test: Motståndare anslöt
+                </button>
+              )}
+
+              {turn !== localPlayer && connectedPlayers === 2 && (
+                <button onClick={() => setTurn(localPlayer)}>
+                  Test: Min tur nu
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

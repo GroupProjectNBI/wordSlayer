@@ -4,14 +4,17 @@ namespace backend
 {
   public class GameHub : Hub
   {
-    // Called when a player joins a game room
     public async Task PlayerJoined(string sessionId, string playerName)
     {
+      // 1. Lägg till i gruppen FÖRST
       await Groups.AddToGroupAsync(Context.ConnectionId, sessionId);
-      await Clients.Group(sessionId).SendAsync("PlayerJoined", playerName);
+
+      // 2. Meddela de andra i rummet
+      await Clients.OthersInGroup(sessionId).SendAsync("PlayerJoined", playerName);
+
+      System.Console.WriteLine($"SignalR: {playerName} anslöt till rum {sessionId}");
     }
 
-    // Called when a player leaves a game room
     public async Task PlayerLeft(string sessionId, string playerName)
     {
       await Groups.RemoveFromGroupAsync(Context.ConnectionId, sessionId);
