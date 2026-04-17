@@ -38,6 +38,10 @@ export default function JoinGame() {
                 return;
             }
 
+            // Om vi kommer hit har det gått bra! 
+            // Spara att jag är Player 2 i den här fliken
+            sessionStorage.setItem("playerName", "Player 2");
+
             navigate(`/game/${gameCode}`);
         } catch (err) {
             console.error(err);

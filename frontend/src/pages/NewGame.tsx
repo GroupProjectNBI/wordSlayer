@@ -9,6 +9,8 @@ export default function NewGame() {
     // The user does not type the ID here, it comes from the URL.
     const handleStartGame = () => {
         if (sessionId) {
+            // Spara att jag är Player 1 i den här fliken
+            sessionStorage.setItem("playerName", "Player 1");
             navigate(`/game/${sessionId}`);
         }
     };

@@ -20,6 +20,7 @@ interface GameBoardProps {
   player2?: Player;
   timer: number;
   turn: "player1" | "player2";
+  localPlayer: "player1" | "player2"; // NY: Berättar vem JAG är
   word: string;
   setWord: (value: string) => void;
   onSubmitWord: () => void;
@@ -33,6 +34,7 @@ export default function GameBoard({
   player2,
   timer,
   turn,
+  localPlayer, // Ta emot den här
   word,
   setWord,
   onSubmitWord,
@@ -45,8 +47,9 @@ export default function GameBoard({
     typeof window !== "undefined" &&
     window.location.search.includes("test");
 
-  const inputDisabled = isTest ? false : turn !== "player1";
-  const inputActive = isTest ? true : turn === "player1";
+  // ÄNDRING: Jämför turn med localPlayer istället för hårdkodat "player1"
+  const inputDisabled = isTest ? false : turn !== localPlayer;
+  const inputActive = isTest ? true : turn === localPlayer;
   const timerIsRunning = isTest ? true : timerRunning;
 
   return (
@@ -57,8 +60,10 @@ export default function GameBoard({
           Word Slayer
         </h1>
       </div>
+
       {/* WORD HISTORY */}
       <WordHistory words={history} />
+
       {/* PLAYER 1 */}
       <div
         data-player="player1"
@@ -75,7 +80,8 @@ export default function GameBoard({
         </div>
         <div className="text-sm mt-1">{player1.hp} HP</div>
       </div>
-      {/* PLAYER 2 (conditionally render) */}
+
+      {/* PLAYER 2 */}
       {player2 ? (
         <div
           data-player="player2"
@@ -93,6 +99,7 @@ export default function GameBoard({
           <div className="text-sm mt-1">{player2.hp} HP</div>
         </div>
       ) : null}
+
       {/* CENTER VS + TIMER */}
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
         <h1 className="text-7xl font-extrabold tracking-widest opacity-80">
@@ -102,6 +109,7 @@ export default function GameBoard({
           <Timer value={timer} />
         </div>
       </div>
+
       {/* WORD INPUT */}
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-full max-w-md px-4">
         <WordInput
@@ -113,6 +121,7 @@ export default function GameBoard({
           isTimerRunning={timerIsRunning}
         />
       </div>
+
       {/* DAMAGE POPUPS */}
       {children}
     </main>

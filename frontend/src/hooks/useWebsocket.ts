@@ -1,41 +1,46 @@
 import { useEffect, useRef } from "react";
 import * as signalR from "@microsoft/signalr";
 
-/**
- * useWebsocket hook for connecting to SignalR and handling PlayerJoined events.
- * @param sessionId The game session ID (string)
- * @param onPlayerJoined Callback when a player joins (playerName: string) => void
- */
-export function useWebsocket(sessionId: string | undefined, onPlayerJoined: (playerName: string) => void) {
-  const connectionRef = useRef<signalR.HubConnection | null>(null);
+export function useWebsocket(
+    sessionId: string | undefined,
+    playerName: string,
+    onPlayerJoined: (playerName: string) => void,
+    onTurnChanged: (nextTurn: "player1" | "player2", p1Hp: number, p2Hp: number) => void
+) {
+    const connectionRef = useRef<signalR.HubConnection | null>(null);
 
-  useEffect(() => {
-    if (!sessionId) return;
+    useEffect(() => {
+        if (!sessionId) return;
+        if (connectionRef.current) return; // Förhindra dubbla anslutningar
 
-    // Create connection
-    const connection = new signalR.HubConnectionBuilder()
-      .withUrl("/gamehub")
-      .withAutomaticReconnect()
-      .build();
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/gamehub")
+            .withAutomaticReconnect()
+            .build();
 
-    connectionRef.current = connection;
+        // Lyssna på när någon ansluter
+        connection.on("PlayerJoined", (name: string) => {
+            onPlayerJoined(name);
+        });
 
-    // Listen for PlayerJoined events
-    connection.on("PlayerJoined", (playerName: string) => {
-      onPlayerJoined(playerName);
-    });
+        // Lyssna på när servern växlar tur
+        connection.on("TurnChanged", (nextTurn: "player1" | "player2", p1Hp: number, p2Hp: number) => {
+            console.log("SignalR Update:", { nextTurn, p1Hp, p2Hp });
+            onTurnChanged(nextTurn, p1Hp, p2Hp); // Skicka vidare alla tre värden
+        });
 
-    // Start connection and join group
-    connection
-      .start()
-      .then(() => {
-        // Call a method on the hub to join the group (if needed)
-        connection.invoke("PlayerJoined", sessionId, ""); // Empty playerName for just joining group
-      })
-      .catch(console.error);
+        connection.start()
+            .then(() => {
+                // Skicka med det riktiga namnet till hubben
+                connection.invoke("PlayerJoined", sessionId, playerName);
+            })
+            .catch(console.error);
 
-    return () => {
-      connection.stop();
-    };
-  }, [sessionId, onPlayerJoined]);
+        connectionRef.current = connection;
+
+        return () => {
+            connection.stop();
+            connectionRef.current = null;
+        };
+    }, [sessionId, playerName, onPlayerJoined, onTurnChanged]); // Stabilt tack vare useCallback
 }
