@@ -75,7 +75,7 @@ export default function PlayGame() {
   useEffect(() => {
     async function loadGame() {
       if (!sessionId) {
-        setError("Ingen session hittades.");
+        setError("Ingen session hittades i URL:en.");
         setLoading(false);
         return;
       }
@@ -83,33 +83,42 @@ export default function PlayGame() {
       setLoading(true);
 
       try {
-        const res = await fetch(`/api/game/${sessionId}`);
-        if (!res.ok) {
-          setError("Kunde inte hämta speldata.");
-          setLoading(false);
+        const response = await fetch(`/api/game/${sessionId}`, {
+          method: "GET",
+          credentials: "same-origin",
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          const body = await response.json().catch(() => null);
+          setError(body?.message ?? "Kunde inte hämta speldata.");
           return;
         }
 
-        const game = (await res.json()) as BackendGameSession;
+        const game = (await response.json()) as BackendGameSession;
 
         setConnectedPlayers(game.players.length);
 
-        if (game.players[0])
+        if (game.players.length > 0) {
           setPlayer1({
             username: game.players[0].name,
             hp: game.players[0].health,
           });
+        }
 
-        if (game.players[1])
+        if (game.players.length > 1) {
           setPlayer2({
             username: game.players[1].name,
             hp: game.players[1].health,
           });
+        }
 
-        if (game.currentTurn)
+        if (game.currentTurn) {
           setTurn(game.currentTurn.toLowerCase() as "player1" | "player2");
-      } catch {
-        setError("Kunde inte nå servern.");
+        }
+      } catch (err) {
+        console.error(err);
+        setError("Kunde inte nå servern för att läsa spelet.");
       } finally {
         setLoading(false);
       }
