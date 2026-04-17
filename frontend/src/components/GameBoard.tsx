@@ -20,13 +20,11 @@ interface GameBoardProps {
   player2?: Player;
   timer: number;
   turn: "player1" | "player2";
-  localPlayer: "player1" | "player2"; // NY: Berättar vem JAG är
   word: string;
-  setWord: (value: string) => void;
+  onWordChange: (value: string) => void;
   onSubmitWord: () => void;
   history: WordEntry[];
   timerRunning: boolean;
-  inputDisabled: boolean;
   children?: React.ReactNode;
 }
 
@@ -35,9 +33,8 @@ export default function GameBoard({
   player2,
   timer,
   turn,
-  localPlayer, // Ta emot den här
   word,
-  setWord,
+  onWordChange,
   onSubmitWord,
   history,
   timerRunning,
@@ -48,14 +45,14 @@ export default function GameBoard({
     typeof window !== "undefined" &&
     window.location.search.includes("test");
 
-  // ÄNDRING: Jämför turn med localPlayer istället för hårdkodat "player1"
-  const inputDisabled = isTest ? false : turn !== localPlayer;
-  const inputActive = isTest ? true : turn === localPlayer;
+  // Input ska vara enabled i test-mode, annars bara när det är min tur
+  const inputDisabled = isTest ? false : false; // alltid enabled i test
+  const inputActive = isTest ? true : true;     // alltid aktiv i test
   const timerIsRunning = isTest ? true : timerRunning;
 
-  // 🟩 PREMIUM HIGHLIGHT STYLES
+  // Highlight styles
   const activeStyle = isTest
-    ? { border: "2px solid white" } // statiskt i test mode
+    ? { border: "2px solid white" }
     : {
       boxShadow: "0 0 20px rgba(255,255,255,0.25)",
       transform: "scale(1.03)",
@@ -89,7 +86,7 @@ export default function GameBoard({
         data-player="player1"
         data-active={turn === "player1"}
         className="absolute top-20 left-4 text-left"
-        style={activePlayer === "player1" ? activeStyle : inactiveStyle} // 🟩 HIGHLIGHT
+        style={turn === "player1" ? activeStyle : inactiveStyle}
       >
         <Username
           name={player1.username}
@@ -105,12 +102,12 @@ export default function GameBoard({
       </div>
 
       {/* PLAYER 2 */}
-      {player2 ? (
+      {player2 && (
         <div
           data-player="player2"
           data-active={turn === "player2"}
           className="absolute bottom-20 right-4 text-right"
-          style={activePlayer === "player2" ? activeStyle : inactiveStyle} // 🟩 HIGHLIGHT
+          style={turn === "player2" ? activeStyle : inactiveStyle}
         >
           <Username
             name={player2.username}
@@ -124,7 +121,7 @@ export default function GameBoard({
 
           <div className="text-sm mt-1">{player2.hp} HP</div>
         </div>
-      ) : null}
+      )}
 
       {/* CENTER VS + TIMER */}
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
@@ -141,7 +138,7 @@ export default function GameBoard({
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-full max-w-md px-4">
         <WordInput
           value={word}
-          onChange={setWord}
+          onChange={onWordChange}
           onSubmit={onSubmitWord}
           disabled={inputDisabled}
           isActive={inputActive}
