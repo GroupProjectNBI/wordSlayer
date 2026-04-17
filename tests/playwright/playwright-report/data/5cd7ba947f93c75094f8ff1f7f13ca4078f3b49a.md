@@ -7,7 +7,7 @@
 # Test info
 
 - Name: e2e\ui\features\homepage.feature.spec.js >> HomePage >> User triggers autoplay by clicking anywhere
-- Location: .features-gen\e2e\ui\features\homepage.feature.spec.js:37:7
+- Location: .features-gen\e2e\ui\features\homepage.feature.spec.js:38:7
 
 # Error details
 

@@ -41,7 +41,7 @@ Call log:
           - img
           - generic: 30s
     - textbox "Type your word..." [ref=e18]
-  - paragraph [ref=e20]: Väntar på motståndare... ⏳
+  - generic [ref=e19]: Väntar på motståndare... ⏳
 ```
 
 # Test source

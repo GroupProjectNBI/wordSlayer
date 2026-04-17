@@ -6,20 +6,13 @@
 
 # Test info
 
-- Name: e2e\ui\features\homepage.feature.spec.js >> HomePage >> User clicks Play Music button
-- Location: .features-gen\e2e\ui\features\homepage.feature.spec.js:31:7
+- Name: e2e\ui\features\homepage.feature.spec.js >> HomePage >> User sees homepage
+- Location: .features-gen\e2e\ui\features\homepage.feature.spec.js:6:7
 
 # Error details
 
 ```
-Test timeout of 30000ms exceeded.
-```
-
-```
-Error: locator.click: Test timeout of 30000ms exceeded.
-Call log:
-  - waiting for getByRole('button', { name: 'Play Music' })
-
+Error: Expected to see button "Welocme message"
 ```
 
 # Page snapshot
@@ -66,8 +59,7 @@ Call log:
   26 | // ACTIONS (When somethin happens etc pressing a button)
   27 | //
   28 | When('I press button {string}', async ({ page }, text) => {
-> 29 |   await page.getByRole('button', { name: text }).click();
-     |                                                  ^ Error: locator.click: Test timeout of 30000ms exceeded.
+  29 |   await page.getByRole('button', { name: text }).click();
   30 | });
   31 | 
   32 | When('I click the {string} button', async ({ page }, text) => {
@@ -92,7 +84,8 @@ Call log:
   51 | Then('I see button {string}', async ({ page }, text) => {
   52 |   const visible = await page.getByRole('button', { name: text }).isVisible();
   53 |   if (!visible) {
-  54 |     throw new Error(`Expected to see button "${text}"`);
+> 54 |     throw new Error(`Expected to see button "${text}"`);
+     |           ^ Error: Expected to see button "Welocme message"
   55 |   }
   56 | });
   57 | 
