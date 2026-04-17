@@ -29,7 +29,7 @@ export default function HomePage() {
       navigate(`/newgame/${data.sessionId}`);
     } catch (err) {
       console.error(err);
-      setError('Det gick inte att skapa nytt spel. Försök igen.');
+      setError('Could not create a new game. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -50,7 +50,7 @@ export default function HomePage() {
             disabled={loading}
             className="w-full rounded-xl bg-purple-600 py-4 text-lg font-semibold text-white transition hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? 'Skapar nytt spel...' : 'New game'}
+            {loading ? 'Creating new game...' : 'New Game'}
           </button>
 
           <button
