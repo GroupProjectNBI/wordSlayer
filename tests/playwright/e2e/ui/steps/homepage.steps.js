@@ -16,3 +16,8 @@ When('I intercept new game response', async ({ page }) => {
     });
   });
 });
+
+// 🟩 NEW STEP: click on text (for autoplay trigger)
+When('I click on text {string}', async ({ page }, text) => {
+  await page.getByText(text).click();
+});
