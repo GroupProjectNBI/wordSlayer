@@ -1,10 +1,41 @@
 import { useState } from "react";
 import { useNavigate } from 'react-router-dom';
+import swedenFlag from "../assets/sweden.png";
+import ukFlag from "../assets/uk.png";
+
+type Language = "en" | "sv";
 
 export default function HomePage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const savedLang = localStorage.getItem("lang");
+  const [lang, setLang] = useState<Language>(savedLang === "sv" ? "sv" : "en");
+
+
+  const texts: Record<Language, {
+    newGame: string;
+    creatingNewGame: string;
+    joinGame: string;
+    rules: string;
+    errorCreateGame: string;
+  }> = {
+    en: {
+      newGame: "New Game",
+      creatingNewGame: "Creating new game...",
+      joinGame: "Join Game",
+      rules: "Rules",
+      errorCreateGame: "Could not create a new game. Please try again."
+    },
+    sv: {
+      newGame: "Nytt spel",
+      creatingNewGame: "Skapar nytt spel...",
+      joinGame: "Gå med i spel",
+      rules: "Regler",
+      errorCreateGame: "Kunde inte skapa ett nytt spel. Försök igen."
+    }
+  };
+  
 
   // When the user clicks New game on the homepage,
   // we ask the backend to create the game session immediately.
@@ -29,7 +60,7 @@ export default function HomePage() {
       navigate(`/newgame/${data.sessionId}`);
     } catch (err) {
       console.error(err);
-      setError('Could not create a new game. Please try again.');
+      setError(texts[lang].errorCreateGame);
     } finally {
       setLoading(false);
     }
@@ -41,6 +72,27 @@ export default function HomePage() {
         <h1 className="mb-10 text-5xl font-extrabold uppercase tracking-widest">
           Word Slayer
         </h1>
+        <div className="mb-6 flex justify-center gap-4">
+          <button
+            className="hover:scale-110 transition"
+            onClick={() => {
+              localStorage.setItem("lang", "sv");
+              setLang("sv");
+            }}
+          >
+            <img src={swedenFlag} alt="Swedish" className="h-6 w-8 object-cover" />
+          </button>
+
+          <button
+            className="hover:scale-110 transition"
+            onClick={() => {
+              localStorage.setItem("lang", "en");
+              setLang("en");
+            }}
+          >
+            <img src={ukFlag} alt="English" className="h-6 w-8 object-cover" />
+          </button>
+        </div>
 
         {error && <div className="mb-4 text-sm text-red-400">{error}</div>}
 
@@ -50,7 +102,7 @@ export default function HomePage() {
             disabled={loading}
             className="w-full rounded-xl bg-purple-600 py-4 text-lg font-semibold text-white transition hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? 'Creating new game...' : 'New Game'}
+            {loading ? texts[lang].creatingNewGame : texts[lang].newGame}
           </button>
 
           <button
@@ -58,14 +110,14 @@ export default function HomePage() {
             onClick={() => navigate('/join')}
             className="w-full rounded-xl bg-purple-600 py-4 text-lg font-semibold text-white transition hover:bg-purple-500"
           >
-            Join Game
+            {texts[lang].joinGame}
           </button>
 
           <button
             onClick={() => navigate('/rules')}
             className="w-full rounded-xl bg-purple-600 py-4 text-lg font-semibold text-white transition hover:bg-purple-500"
           >
-            Rules
+            {texts[lang].rules}
           </button>
         </div>
       </section>
