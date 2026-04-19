@@ -1,9 +1,27 @@
 import { useNavigate, useParams } from 'react-router-dom';
 
+type Language = "en" | "sv";
+
 export default function NewGame() {
     const navigate = useNavigate();
     const { sessionId } = useParams<{ sessionId: string }>();
     const error = '';
+
+    const savedLang = localStorage.getItem("lang");
+    const lang: Language = savedLang === "sv" ? "sv" : "en";
+
+    const texts = {
+        en: {
+            title: "Start new game",
+            noSession: "No session found",
+            startGame: "Start Game",
+        },
+        sv: {
+            title: "Starta nytt spel",
+            noSession: "Ingen session hittades",
+            startGame: "Starta spel",
+        }
+    };
 
     // This page shows the session ID that was created on the homepage.
     // The user does not type the ID here, it comes from the URL.
@@ -20,13 +38,13 @@ export default function NewGame() {
             <section className="w-full max-w-md px-4 text-center">
 
                 <h1 className="mb-10 text-5xl font-extrabold uppercase tracking-widest">
-                    Start new game
+                    {texts[lang].title}
                 </h1>
 
                 {/* Show the backend-generated session code in a readonly field. */}
                 <input
                     type="text"
-                    value={sessionId || 'No session found'}
+                    value={sessionId || texts[lang].noSession}
                     readOnly
                     className="mb-3 w-full rounded-lg border px-4 py-3 text-center text-lg font-mono text-sm"
                 />
@@ -39,7 +57,7 @@ export default function NewGame() {
                         disabled={!sessionId}
                         className="w-full rounded-xl bg-purple-600 py-4 text-lg font-semibold text-white transition hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                        Start Game
+                        {texts[lang].startGame}
                     </button>
                 </div>
 

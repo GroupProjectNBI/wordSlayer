@@ -4,6 +4,8 @@ import { useParams, useLocation } from "react-router-dom";
 import GameBoard from "../components/GameBoard";
 import DamagePopup from "../components/DamagePopup";
 
+type Language = "en" | "sv";
+
 interface BackendGameSession {
   sessionId: string;
   players: { name: string; health: number; }[];
@@ -14,6 +16,30 @@ export default function PlayGame() {
   const { sessionId } = useParams<{ sessionId: string; }>();
   const myName = sessionStorage.getItem("playerName") || "Player 1";
   const isTest = useLocation().search.includes("test");
+
+  const savedLang = localStorage.getItem("lang");
+  const lang: Language = savedLang === "sv" ? "sv" : "en";
+
+  const texts = {
+    en: {
+      fetchError: "Could not fetch game data",
+      loadingError: "An error occurred while loading.",
+      invalidWord: "Invalid word.",
+      serverError: "Could not reach the server.",
+      loadingGame: "Loading game...",
+      waitingForOpponent: "Waiting for opponent... ⏳",
+      opponentThinking: "Opponent is thinking... 🧠",
+    },
+    sv: {
+      fetchError: "Kunde inte hämta speldata",
+      loadingError: "Ett fel uppstod vid laddning.",
+      invalidWord: "Ogiltigt ord.",
+      serverError: "Kunde inte nå servern.",
+      loadingGame: "Laddar spel...",
+      waitingForOpponent: "Väntar på motståndare... ⏳",
+      opponentThinking: "Motståndaren tänker... 🧠",
+    }
+  };
 
   // --- 1. STATES ---
   const [player1, setPlayer1] = useState({ username: "PlayerOne", hp: 100 });
@@ -67,7 +93,7 @@ export default function PlayGame() {
       setLoading(true);
       try {
         const res = await fetch(`/api/game/${sessionId}`);
-        if (!res.ok) throw new Error("Could not fetch game data");
+        if (!res.ok) throw new Error(texts[lang].fetchError);
 
         const game = await res.json() as BackendGameSession;
         setConnectedPlayers(game.players.length);
@@ -79,7 +105,7 @@ export default function PlayGame() {
           setTurn(game.currentTurn.toLowerCase() as "player1" | "player2");
         }
       } catch (err) {
-        setError("An error occured while loading.");
+        setError(texts[lang].loadingError);
       } finally {
         setLoading(false);
       }
@@ -137,22 +163,26 @@ export default function PlayGame() {
         applyWordDamage(cleanWord);
       } else {
         setWord(cleanWord); // Återställ vid fel
-        setError ("Invalid word.");
+        setError(texts[lang].invalidWord);
       }
     } catch {
       setWord(cleanWord);
-      setError("Could not reach the server.");
+      setError(texts[lang].serverError);
     }
   }
 
   // --- 7. RENDER ---
-  if (loading) return <div className="h-screen flex items-center justify-center bg-black text-white uppercase">Loading game...</div>;
+  if (loading) return (
+    <div className="h-screen flex items-center justify-center bg-black text-white uppercase">
+      {texts[lang].loadingGame}
+    </div>
+  );
 
   let overlayMessage = null;
   if (connectedPlayers < 2) {
-    overlayMessage = "Waiting for opponent... ⏳";
+    overlayMessage = texts[lang].waitingForOpponent;
   } else if (turn !== localPlayer) {
-    overlayMessage = "Opponent is thinking... 🧠";
+    overlayMessage = texts[lang].opponentThinking;
   } //
 
   return (
