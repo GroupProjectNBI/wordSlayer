@@ -47,14 +47,23 @@ Then('the word history shows damage {int} for {string}', async ({ page }, damage
 });
 
 Then('I see turn indicator {string}', async ({ page }, text) => {
-  const visible = await page.getByTestId('turn-indicator').filter({ hasText: text }).isVisible();
-  if (!visible) {
-    throw new Error(`Expected to see turn indicator with text "${text}"`);
+  const playerNum = text.match(/\d+/)?.[0];
+
+  if (!playerNum) {
+    throw new Error(`Could not extract player number from "${text}"`);
   }
+
+  await expect(
+    page.locator(`[data-player="player${playerNum}"][data-active="true"]`)
+  ).toBeVisible();
 });
 
 
-Given('I am logged in as {string}', async ({ }, arg) => { });
+Given('I am logged in as {string}', async ({ page }, playerName) => {
+  await page.addInitScript((name) => {
+    window.sessionStorage.setItem('playerName', name);
+  }, playerName);
+});
 
 Given('I am on the PlayGame page', async ({ page }) => {
   await page.addInitScript(() => {
