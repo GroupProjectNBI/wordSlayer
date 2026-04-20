@@ -145,6 +145,7 @@ export default function PlayGame() {
     }
   }
 
+  if (loading) return <div className="h-screen flex items-center justify-center bg-black text-white uppercase">Loading game... </div>;
 
   // --- 4. LOGIK FÖR OVERLAY & VINNARE (kombinerad) ---
   let overlayMessage: string | null = null;

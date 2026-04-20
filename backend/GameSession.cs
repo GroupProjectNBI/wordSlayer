@@ -38,12 +38,12 @@ public class GameSession
         if (playerIndex < 0 || playerIndex >= Players.Count) return;
 
         // 2. Minska HP
-        Players[playerIndex].HP -= amount;
+        Players[playerIndex].Health -= amount;
 
         // 3. Kontrollera om någon förlorade (HP nådde 0)
-        if (Players[playerIndex].HP <= 0)
+        if (Players[playerIndex].Health <= 0)
         {
-            Players[playerIndex].HP = 0;
+            Players[playerIndex].Health = 0;
             Status = "Finished";
 
             // Om playerIndex 1 dog, vann playerIndex 0 (och tvärtom)
