@@ -1,11 +1,11 @@
 {
   "info": {
-    "_postman_id": "a614688a-a76d-43f9-b1a5-dc97beb95cc9",
+    "_postman_id": "c7879375-bd49-44d6-b383-6635d09b87c0",
     "name": "My Collection",
     "description": "### Welcome to Postman! This is your first collection. \n\nCollections are your starting point for building and testing APIs. You can use this one to:\n\n• Group related requests\n• Test your API in real-world scenarios\n• Document and share your requests\n\nUpdate the name and overview whenever you’re ready to make it yours.\n\n[Learn more about Postman Collections.](https://learning.postman.com/docs/collections/collections-overview/)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "50574776",
-    "_collection_link": "https://go.postman.co/collection/50574776-a614688a-a76d-43f9-b1a5-dc97beb95cc9?source=collection_link"
+    "_collection_link": "https://go.postman.co/collection/50574776-c7879375-bd49-44d6-b383-6635d09b87c0?source=collection_link"
   },
   "item": [
     {
@@ -91,7 +91,7 @@
               "\r",
               "pm.test(\"Spelare 2 ska ha lagts till korrekt\", function () {\r",
               "    const secondPlayer = jsonData.players[1]; \r",
-              "    pm.expect(secondPlayer.name).to.eql(\"Spelare 2\");\r",
+              "    pm.expect(secondPlayer.name).to.eql(\"Player 2\");\r",
               "    pm.expect(secondPlayer.health).to.eql(100);\r",
               "});"
             ],
@@ -265,7 +265,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"wordGuess\": \"Goodbye\" ,\r\n  \"playerId\": \"{{player2}}\"\r\n}",
+          "raw": "{\r\n    \"wordGuess\": \"Goodbye\" ,\r\n  \"playerId\": \"{{player2}}\", \r\n    \"language\": {{lang}}\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -308,7 +308,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "\r\n{\r\n   \"wordGuess\": \"falflapå\" ,\r\n    \"playerId\": \"{{player1}}\"\r\n}",
+          "raw": "\r\n{\r\n   \"wordGuess\": \"falflapå\" ,\r\n    \"playerId\": \"{{player1}}\", \r\n    \"language\": {{lang}}\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -360,7 +360,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"wordGuess\": \"hello\" ,\r\n  \"playerId\": \"{{player1}}\"\r\n}",
+          "raw": "{\r\n    \"wordGuess\": \"hello\" ,\r\n  \"playerId\": \"{{player1}}\",\r\n  \"language\": {{lang}}   \r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -412,7 +412,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"wordGuess\": \"goodbye\" ,\r\n  \"playerId\": \"{{player2}}\"\r\n}",
+          "raw": "{\r\n    \"wordGuess\": \"goodbye\" ,\r\n  \"playerId\": \"{{player2}}\", \r\n   \"language\": {{lang}}\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -495,7 +495,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"wordGuess\": \"structural\" ,\r\n    \"playerId\": \"{{player1}}\"\r\n}",
+          "raw": "{\r\n    \"wordGuess\": \"structural\" ,\r\n    \"playerId\": \"{{player1}}\", \"language\": {{lang}}\r\n}",
           "options": {
             "raw": {
               "language": "json"
