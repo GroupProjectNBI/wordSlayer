@@ -147,10 +147,10 @@ jobs:
             tests/postman/package-lock.json
 
       # Nytt: Installerar i Postman-mappen när api-testerna ska köras
-      - name: Install API test dependencies
-        if: ${{ matrix.suite == 'api' }}
-        working-directory: tests/postman
-        run: npm ci
+      # - name: Install API test dependencies
+      #   if: ${{ matrix.suite == 'api' }}
+      #   working-directory: tests/postman
+      #   run: npm ci
 
       # Nytt: Installerar i Playwright-mappen när ui-testerna ska köras
       - name: Install UI test dependencies
