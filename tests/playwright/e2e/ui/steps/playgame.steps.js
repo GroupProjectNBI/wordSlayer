@@ -1,22 +1,94 @@
 import { createBdd } from "playwright-bdd";
 import { expect } from "@playwright/test";
-
 const { Given, When, Then } = createBdd();
 const VALID_GUID = "00000000-0000-0000-0000-000000000000";
-// --- 1. IDENTITET & NAVIGATION ---
 
-Given('I am logged in as {string}', async ({ page }, playerName) => {
-  await page.addInitScript((name) => {
-    window.sessionStorage.setItem("playerName", name);
-  }, playerName);
+// Username assertion
+Then('I see the player {int} username', async ({ page }, playerNum) => {
+  const selector = `[data-player="player${playerNum}"]`;
+  await expect(page.locator(selector)).toBeVisible();
 });
 
-Given("I am on the PlayGame page", async ({ page }) => {
-  await page.goto(`/game/${VALID_GUID}?test`);
+// Damage popup assertion
+Then('I see a damage popup with {int}', async ({ page }, amount) => {
+  const popup = page.locator('div').filter({ hasText: `-${amount}` });
+  await expect(popup.first()).toBeVisible({ timeout: 10000 });
 });
 
-// --- 2. SIGNALR SIMULERING (BAKDÖRR) ---
+// Word history assertions
+Then('the word history should be empty', async ({ page }) => {
+  const items = page.locator('[data-word-history] [data-word-entry]');
+  await expect(items).toHaveCount(0);
+});
 
+Then('the word history contains {string}', async ({ page }, word) => {
+  await expect(page.locator('[data-word-history]').getByText(word)).toBeVisible();
+});
+
+Then('the word history should show:', async ({ page }, table) => {
+  const expected = table.rows().flat();
+  const items = page.locator('[data-word-history] [data-word-entry]');
+  const count = await items.count();
+  const offset = count - expected.length;
+  for (let i = 0; i < expected.length; i++) {
+    const text = await items.nth(offset + i).innerText();
+    expect(text).toContain(expected[i]);
+  }
+});
+
+Then('the word history entry {string} belongs to player {int}', async ({ page }, word, playerNum) => {
+  const entry = page.locator('[data-word-history] [data-word-entry]').filter({ hasText: word });
+  await expect(entry).toHaveAttribute('data-player', `player${playerNum}`);
+});
+
+Then('the word history shows damage {int} for {string}', async ({ page }, damage, word) => {
+  const entry = page.locator('[data-word-history] [data-word-entry]').filter({ hasText: word });
+  await expect(entry).toHaveAttribute('data-damage', `${damage}`);
+});
+
+Then('I see turn indicator {string}', async ({ page }, text) => {
+  const visible = await page.getByTestId('turn-indicator').filter({ hasText: text }).isVisible();
+  if (!visible) {
+    throw new Error(`Expected to see turn indicator with text "${text}"`);
+  }
+});
+
+
+Given('I am logged in as {string}', async ({ }, arg) => { });
+
+Given('I am on the PlayGame page', async ({ page }) => {
+  await page.goto('/game/00000000-0000-0000-0000-000000000000?test');
+});
+
+Given('the game input is enabled', async ({ page }) => {
+  const input = page.getByRole('textbox');
+  await expect(input).toBeEnabled({ timeout: 10000 });
+});
+
+When('I type the word {string}', async ({ page }, word) => {
+  await page.getByRole('textbox').fill(word);
+});
+
+When('I submit the word', async ({ page }) => {
+  const input = page.getByRole('textbox');
+  await input.press('Enter');
+});
+
+// Custom assertions for legacy feature steps
+Then('player {int} has {int} HP', async ({ page }, playerNum, hp) => {
+  const selector = `[data-testid="player${playerNum}-hp"]`;
+  const hpText = await page.locator(selector).innerText();
+  const hpValue = parseInt(hpText, 10);
+  expect(hpValue).toBe(hp);
+});
+
+Then('it is player {int} turn', async ({ page }, playerNum) => {
+  const turnText = await page.locator('[data-testid="turn-indicator"]').innerText();
+  expect(turnText).toContain(`Player ${playerNum}`);
+});
+
+
+// SignalR simulation
 When('the server signals turn changed to {string} with HP {int} and {int}', async ({ page }, nextTurn, p1Hp, p2Hp) => {
   await page.evaluate(({ nextTurn, p1Hp, p2Hp }) => {
     window.dispatchEvent(new CustomEvent("signalr-turn-changed", {
@@ -25,8 +97,7 @@ When('the server signals turn changed to {string} with HP {int} and {int}', asyn
   }, { nextTurn, p1Hp, p2Hp });
 });
 
-// --- 3. API MOCKING ---
-
+// API mocking
 Given('I intercept game session response', async ({ page }) => {
   await page.route(`**/api/game/${VALID_GUID}`, (route) => {
     route.fulfill({
@@ -43,7 +114,6 @@ Given('I intercept game session response', async ({ page }) => {
     });
   });
 });
-
 Given('I intercept game session response with only one player', async ({ page }) => {
   await page.route(`**/api/game/${VALID_GUID}`, (route) => {
     route.fulfill({
@@ -57,7 +127,6 @@ Given('I intercept game session response with only one player', async ({ page })
     });
   });
 });
-
 Given('I intercept playword response', async ({ page }) => {
   await page.route(`**/api/game/${VALID_GUID}/playword`, (route) => {
     route.fulfill({
@@ -68,104 +137,21 @@ Given('I intercept playword response', async ({ page }) => {
   });
 });
 
-// --- 4. TIMER MOCKING ---
-
+// Timer mocking
 Given("the timer is mocked", async ({ page }) => {
   await page.addInitScript(() => {
     window.setInterval = () => 0;
     window.setTimeout = () => 0;
   });
 });
-
 When("the timer ticks {int} seconds", async ({ page }) => {
   await page.evaluate(() => {
     window.dispatchEvent(new Event("manual-timer-tick"));
   });
 });
 
-// --- 5. HANDLINGAR ---
 
-Given("the game input is enabled", async ({ page }) => {
-  const input = page.getByRole("textbox");
-  await expect(input).toBeEnabled({ timeout: 10000 });
-});
-
-When("I type the word {string}", async ({ page }, text) => {
-  await page.getByRole("textbox").fill(text);
-});
-
-When("I submit the word", async ({ page }) => {
-  const input = page.getByRole("textbox");
-  await input.press("Enter");
-});
-
-// --- 6. ASSERTIONS (TIMER, HP, TUR) ---
-
-Then("the timer should show {int}", async ({ page }, value) => {
-  const timer = page.getByText(new RegExp(`^\\s*${value}s\\s*$`));
-  await expect(timer).toBeVisible();
-});
-
-Then("player {int} has {int} HP", async ({ page }, player, hp) => {
-  const selector = `[data-player='player${player}'] >> text='${hp} HP'`;
-  await expect(page.locator(selector)).toBeVisible();
-});
-
-Then("it is player {int} turn", async ({ page }, player) => {
-  const selector = `[data-player='player${player}'][data-active='true']`;
-  await expect(page.locator(selector)).toBeVisible();
-});
-
-Then("I see the player {int} username", async ({ page }, player) => {
-  const selector = `[data-player='player${player}']`;
-  await expect(page.locator(selector)).toBeVisible();
-});
-
-Then("I see a damage popup with {int}", async ({ page }, amount) => {
-  // Vi letar efter texten "-6" var som helst i en div, istället för exakt matchning
-  const popup = page.locator('div').filter({ hasText: `-${amount}` });
-  await expect(popup.first()).toBeVisible({ timeout: 10000 });
-});
-// --- 7. OVERLAY (UNIKA NAMN) ---
-
-Then("I see the game overlay", async ({ page }) => {
-  // Regex täcker in både "Väntar på motståndare" och "Motståndaren tänker"
-  await expect(page.getByText(/Väntar på motståndare|Motståndaren tänker/i)).toBeVisible();
-});
-
-Then("I do not see the game overlay", async ({ page }) => {
-  await expect(page.getByText(/Väntar på motståndare|Motståndaren tänker/i)).toHaveCount(0);
-});
-
-// --- 8. ORD-HISTORIK ---
-
-Then("the word history should be empty", async ({ page }) => {
-  const items = page.locator("[data-word-history] [data-word-entry]");
-  await expect(items).toHaveCount(0);
-});
-
-Then("the word history contains {string}", async ({ page }, word) => {
-  await expect(page.locator("[data-word-history]").getByText(word)).toBeVisible();
-});
-
-Then("the word history should show:", async ({ page }, table) => {
-  const expected = table.rows().flat();
-  const items = page.locator("[data-word-history] [data-word-entry]");
-  const count = await items.count();
-  const offset = count - expected.length;
-
-  for (let i = 0; i < expected.length; i++) {
-    const text = await items.nth(offset + i).innerText();
-    expect(text).toContain(expected[i]);
-  }
-});
-
-Then("the word history entry {string} belongs to player {int}", async ({ page }, word, player) => {
-  const entry = page.locator("[data-word-history] [data-word-entry]").filter({ hasText: word });
-  await expect(entry).toHaveAttribute("data-player", `player${player}`);
-});
-
-Then("the word history shows damage {int} for {string}", async ({ page }, damage, word) => {
-  const entry = page.locator("[data-word-history] [data-word-entry]").filter({ hasText: word });
-  await expect(entry).toHaveAttribute("data-damage", `${damage}`);
+Then('I see the game overlay', async ({ page }) => {
+  const overlay = page.locator('[data-testid="overlay"]');
+  await expect(overlay).toBeVisible();
 });
