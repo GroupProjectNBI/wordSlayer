@@ -7,9 +7,7 @@ on:
     branches: ["main"]
 
 jobs:
-  # =========================
-  # SECURITY
-  # =========================
+  # Job 0: Security
   security:
     runs-on: ubuntu-latest
     steps:
@@ -22,9 +20,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # =========================
-  # BUILD
-  # =========================
+  # Job 1: Build
   build:
     runs-on: ubuntu-latest
 
@@ -64,9 +60,11 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          # Uppdaterad cache-path som ignorerar roten av tests/
           cache-dependency-path: |
             frontend/package-lock.json
             tests/playwright/package-lock.json
+            tests/postman/package-lock.json
 
       - name: Install frontend dependencies
         working-directory: frontend
@@ -102,9 +100,7 @@ jobs:
             --exit-code 1 \
             wordslayer:ci
 
-  # =========================
-  # TESTS
-  # =========================
+  # Job 2: Tests
   tests:
     needs: [security, build]
     runs-on: ubuntu-latest
@@ -112,7 +108,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: [unit, ui]
+        suite: [unit, api, ui]
 
     steps:
       - uses: actions/checkout@v4
@@ -139,18 +135,24 @@ jobs:
       - name: Restore .NET dependencies
         run: dotnet restore
 
-      # =========================
-      # UI TEST DEPENDENCIES
-      # =========================
       - name: Setup Node.js
-        if: ${{ matrix.suite == 'ui' }}
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: tests/playwright/package-lock.json
+          # Uppdaterad cache-path även här
+          cache-dependency-path: |
+            tests/playwright/package-lock.json
+            tests/postman/package-lock.json
 
-      - name: Install UI dependencies
+      # Nytt: Installerar i Postman-mappen när api-testerna ska köras
+      - name: Install API test dependencies
+        if: ${{ matrix.suite == 'api' }}
+        working-directory: tests/postman
+        run: npm ci
+
+      # Nytt: Installerar i Playwright-mappen när ui-testerna ska köras
+      - name: Install UI test dependencies
         if: ${{ matrix.suite == 'ui' }}
         working-directory: tests/playwright
         run: npm ci
@@ -160,16 +162,18 @@ jobs:
         working-directory: tests/playwright
         run: npx playwright install
 
-      # =========================
-      # UNIT TESTS
-      # =========================
       - name: Run unit tests
         if: ${{ matrix.suite == 'unit' }}
         run: dotnet test tests/wordslayer.Tests --logger "trx:LogFileName=unit-tests.trx" --result-directory TestResults
 
-      # =========================
-      # UI TESTS
-      # =========================
+      - name: Run API tests
+        if: ${{ matrix.suite == 'api' }}
+        run: |
+          dotnet run --project backend/backend.csproj --urls http://localhost:5010 &
+          sleep 8
+          cd tests/postman
+          npm run test:api:ci
+
       - name: Run UI tests
         if: ${{ matrix.suite == 'ui' }}
         run: |
@@ -178,9 +182,6 @@ jobs:
           cd tests/playwright
           npm run test:ui
 
-      # =========================
-      # ARTIFACTS
-      # =========================
       - name: Upload test artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -192,9 +193,7 @@ jobs:
             tests/playwright-report/**
           if-no-files-found: ignore
 
-  # =========================
-  # REPORT
-  # =========================
+  # Job 3: Report
   report:
     needs: tests
     if: always()
@@ -212,6 +211,6 @@ jobs:
         run: |
           echo "## CI Rapport" >> "$GITHUB_STEP_SUMMARY"
           echo "- Build: klart" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Tester: unit + ui körda" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Tester: unit/api/ui körda" >> "$GITHUB_STEP_SUMMARY"
           echo "- Artefakter:" >> "$GITHUB_STEP_SUMMARY"
           find artifacts -type f | sed 's/^/- /' >> "$GITHUB_STEP_SUMMARY"
