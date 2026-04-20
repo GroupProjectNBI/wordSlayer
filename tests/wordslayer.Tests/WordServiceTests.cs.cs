@@ -13,10 +13,10 @@ public class WordServiceTests
         WordService wordService = new WordService(mockDictionary);
 
         // Act & Assert - Kolla att den hittar orden, oavsett stora/små bokstäver!
-        Assert.True(wordService.IsValidWord("apple"));
-        Assert.True(wordService.IsValidWord("APPLE")); // Testar case-insensitivity
-        Assert.True(wordService.IsValidWord("  banana  ")); // (Frivilligt) Om vi vill tillåta mellanslag
-        Assert.False(wordService.IsValidWord("  ojfaöojoöae  ")); // (Frivilligt) Om vi vill tillåta mellanslag
+        Assert.True(wordService.IsValidWord("apple", "eng"));
+        Assert.True(wordService.IsValidWord("APPLE", "eng")); // Testar case-insensitivity
+        Assert.True(wordService.IsValidWord("  banana  ", "eng")); // (Frivilligt) Om vi vill tillåta mellanslag
+        Assert.False(wordService.IsValidWord("  ojfaöojoöae  ", "eng")); // (Frivilligt) Om vi vill tillåta mellanslag
     }
 
     [Fact]
@@ -27,7 +27,7 @@ public class WordServiceTests
         WordService wordService = new WordService(mockDictionary);
 
         // Act & Assert
-        Assert.False(wordService.IsValidWord("car"));
-        Assert.False(wordService.IsValidWord("")); // Tomma strängar ska ge false
+        Assert.False(wordService.IsValidWord("car", "eng"));
+        Assert.False(wordService.IsValidWord("", "eng")); // Tomma strängar ska ge false
     }
 }

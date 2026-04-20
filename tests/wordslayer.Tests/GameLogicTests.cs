@@ -16,8 +16,8 @@ namespace WordSlayer.Tests
       game.Players.Add(new Player("Player Two"));
 
       // TDD-TÄNK: Vi låtsas att dessa variabler finns (vi skapar dem i nästa steg)
-      game.Players[0].HP = 100;
-      game.Players[1].HP = 10;
+      game.Players[0].Health = 100;
+      game.Players[1].Health = 10;
       game.Status = "InProgress";
 
       // 2. Act
@@ -25,7 +25,7 @@ namespace WordSlayer.Tests
       game.ApplyDamage(playerIndex: 1, amount: 10);
 
       // 3. Assert
-      Assert.Equal(0, game.Players[1].HP);
+      Assert.Equal(0, game.Players[1].Health);
       Assert.Equal("Finished", game.Status);
       Assert.Equal("Player One", game.Winner);
     }

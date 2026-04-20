@@ -13,7 +13,7 @@ public class PlayerTests
 
         // Assert
         Assert.Equal("Kalle", player.Name);
-        Assert.Equal(100, player.HP);
+        Assert.Equal(100, player.Health);
         Assert.NotNull(player.Guesses);
         Assert.Empty(player.Guesses);
     }
@@ -51,10 +51,10 @@ public class PlayerTests
         int damage = "banana".Length; // 6
 
         // Act
-        player.HP -= damage;
+        player.Health -= damage;
 
         // Assert
-        Assert.Equal(94, player.HP);
+        Assert.Equal(94, player.Health);
     }
 
     [Fact]
@@ -65,9 +65,9 @@ public class PlayerTests
         int massiveDamage = 150;
 
         // Act
-        player.HP = Math.Max(0, player.HP - massiveDamage);
+        player.Health = Math.Max(0, player.Health - massiveDamage);
 
         // Assert
-        Assert.Equal(0, player.HP);
+        Assert.Equal(0, player.Health);
     }
 }
