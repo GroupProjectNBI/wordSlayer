@@ -60,9 +60,9 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          # Uppdaterad cache-path som ignorerar roten av tests/
           cache-dependency-path: |
             frontend/package-lock.json
-            tests/package-lock.json
             tests/playwright/package-lock.json
             tests/postman/package-lock.json
 
@@ -140,14 +140,21 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          # Uppdaterad cache-path även här
           cache-dependency-path: |
-            tests/package-lock.json
             tests/playwright/package-lock.json
             tests/postman/package-lock.json
 
-      - name: Install system test dependencies
-        if: ${{ matrix.suite != 'unit' }}
-        working-directory: tests
+      # Nytt: Installerar i Postman-mappen när api-testerna ska köras
+      - name: Install API test dependencies
+        if: ${{ matrix.suite == 'api' }}
+        working-directory: tests/postman
+        run: npm ci
+
+      # Nytt: Installerar i Playwright-mappen när ui-testerna ska köras
+      - name: Install UI test dependencies
+        if: ${{ matrix.suite == 'ui' }}
+        working-directory: tests/playwright
         run: npm ci
 
       - name: Install Playwright browsers
