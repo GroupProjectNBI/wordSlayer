@@ -24,4 +24,4 @@ COPY --from=backend-builder /app/publish .
 
 # Render sets PORT dynamically at runtime; ASPNETCORE_UTLS picks it up.
 # SQLite DB is ephemeral - it restets on every restart/redeploy (intentional).
-CMD ["sh", "-c", "ASPNETCORE_URLS=hhtp://+:${PORT:-10000} dotnet backend.dll"]
+CMD ["sh", "-c", "ASPNETCORE_URLS=http://+:${PORT:-10000} dotnet backend.dll"]

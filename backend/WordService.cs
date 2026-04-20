@@ -32,7 +32,9 @@ public class WordService
     // --- HJÄLPMETOD FÖR ATT LADDA FILER ---
     private void LoadDictionary(string langCode, string fileName)
     {
-        string filePath = Path.Combine(Directory.GetCurrentDirectory(), "wordlists", fileName);
+        // ÄNDRING HÄR: Vi använder AppContext.BaseDirectory istället för Directory.GetCurrentDirectory()
+        string filePath = Path.Combine(AppContext.BaseDirectory, "wordlists", fileName);
+
         var wordSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         if (File.Exists(filePath))
