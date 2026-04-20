@@ -159,3 +159,27 @@ Then('I see the game overlay', async ({ page }) => {
   const overlay = page.locator('[data-testid="overlay"]');
   await expect(overlay).toBeVisible();
 });
+
+When('player {int} reaches 0 HP', async ({ page }, playerNum) => {
+  const p1Hp = playerNum === 1 ? 0 : 100;
+  const p2Hp = playerNum === 2 ? 0 : 100;
+
+  await page.evaluate(({ p1Hp, p2Hp }) => {
+    window.dispatchEvent(new CustomEvent('signalr-turn-changed', {
+      detail: {
+        nextTurn: 'player1',
+        p1Hp,
+        p2Hp,
+      },
+    }));
+  }, { p1Hp, p2Hp });
+
+  const defeatedPlayer = playerNum;
+  await expect(page.locator(`[data-testid="player${defeatedPlayer}-hp"]`)).toHaveText('0 HP');
+});
+
+Then('I should see winner message {string}', async ({ page }, winnerMessage) => {
+  const winnerElement = page.locator('[data-testid="winner-message"]');
+  await expect(winnerElement).toBeVisible();
+  await expect(winnerElement).toHaveText(winnerMessage);
+});
