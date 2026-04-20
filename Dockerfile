@@ -10,7 +10,7 @@ RUN cd frontend && npm run build
 # Stage 2: Build the .NET backend and bundle with the frontend output
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS backend-builder
 WORKDIR /src
-COPY backend/*.csproj ./Backend/
+COPY backend/*.csproj ./backend/
 RUN cd backend && dotnet restore 
 COPY backend/ ./backend/
 # Copy the frontend build output (from stage 1) into wwwroot
