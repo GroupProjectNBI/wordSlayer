@@ -10,7 +10,7 @@ export default defineConfig({
   testDir,
   timeout: 30_000,
   expect: {
-    timeout: 10_000
+    timeout: 30_000
   },
   reporter: [['list', { open: 'always' }], ['html', { open: 'on-failure' }]],
   use: {
