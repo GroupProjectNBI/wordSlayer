@@ -164,7 +164,10 @@ jobs:
 
       - name: Run unit tests
         if: ${{ matrix.suite == 'unit' }}
-        run: dotnet test tests/wordslayer.Tests --logger "trx:LogFileName=unit-tests.trx" --result-directory TestResults
+        run: |
+          dotnet test tests/wordslayer.Tests \
+            --logger "trx;LogFileName=unit-tests.trx" \
+            --results-directory TestResults
 
       - name: Run API tests
         if: ${{ matrix.suite == 'api' }}
