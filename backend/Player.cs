@@ -18,7 +18,7 @@ public class Player
     /// Spelarens livsmätare. 
     /// Sätts automatiskt till 100 när spelaren skapas och dras ner vid felaktiga gissningar.
     /// </summary>
-    public int HP { get; set; } = 100; // public int Health { get; set; } = 100;
+    public int Health { get; set; } = 100;
 
     /// <summary>
     /// En historik över exakt vilka ord just den här spelaren har gissat på.
