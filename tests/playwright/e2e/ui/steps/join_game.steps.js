@@ -2,6 +2,10 @@ import { createBdd } from 'playwright-bdd';
 const { Given, When } = createBdd();
 
 Given('I am on the join page', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('lang', 'en');
+  });
+
   await page.goto('/join');
   await page.waitForURL('/join');
 });
