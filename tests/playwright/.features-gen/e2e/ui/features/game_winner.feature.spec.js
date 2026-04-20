@@ -1,12 +1,28 @@
 // Generated from: e2e\ui\features\game_winner.feature
 import { test } from "playwright-bdd";
 
-test.describe('Game Winner', () => {
+test.describe('Game winner', () => {
 
-  test('Player 1 wins the game', async ({ Given, When, Then, page }) => { 
-    await Given('a game is in progress', null, { page }); 
-    await When('Player 2\'s HP reaches 0', null, { page }); 
-    await Then('I should see a message "Player 1 Wins!"', null, { page }); 
+  test.beforeEach('Background', async ({ Given, And, page }, testInfo) => { if (testInfo.error) return;
+    await Given('I am logged in as "Player 1"'); 
+    await And('the timer is mocked', null, { page }); 
+    await And('I intercept game session response', null, { page }); 
+    await And('I intercept playword response', null, { page }); 
+    await And('I am on the PlayGame page', null, { page }); 
+  });
+  
+  test('Player 1 wins the game', async ({ Given, When, Then, And, page }) => { 
+    await Given('the game input is enabled', null, { page }); 
+    await When('player 2 reaches 0 HP', null, { page }); 
+    await Then('I see the game overlay', null, { page }); 
+    await And('I should see winner message "🏆 Player 1 VINNER! 🏆"', null, { page }); 
+  });
+
+  test('Player 2 wins the game', async ({ Given, When, Then, And, page }) => { 
+    await Given('the game input is enabled', null, { page }); 
+    await When('player 1 reaches 0 HP', null, { page }); 
+    await Then('I see the game overlay', null, { page }); 
+    await And('I should see winner message "🏆 Player 2 VINNER! 🏆"', null, { page }); 
   });
 
 });
@@ -20,5 +36,6 @@ test.use({
 });
 
 const bddFileData = [ // bdd-data-start
-  {"pwTestLine":6,"pickleLine":3,"tags":[],"steps":[{"pwStepLine":7,"gherkinStepLine":4,"keywordType":"Context","textWithKeyword":"Given a game is in progress","stepMatchArguments":[]},{"pwStepLine":8,"gherkinStepLine":5,"keywordType":"Action","textWithKeyword":"When Player 2's HP reaches 0","stepMatchArguments":[]},{"pwStepLine":9,"gherkinStepLine":6,"keywordType":"Outcome","textWithKeyword":"Then I should see a message \"Player 1 Wins!\"","stepMatchArguments":[{"group":{"start":23,"value":"\"Player 1 Wins!\"","children":[{"start":24,"value":"Player 1 Wins!","children":[{"children":[]}]},{"children":[{"children":[]}]}]},"parameterTypeName":"string"}]}]},
+  {"pwTestLine":14,"pickleLine":10,"tags":[],"steps":[{"pwStepLine":7,"gherkinStepLine":4,"keywordType":"Context","textWithKeyword":"Given I am logged in as \"Player 1\"","isBg":true,"stepMatchArguments":[{"group":{"start":18,"value":"\"Player 1\"","children":[{"start":19,"value":"Player 1","children":[{"children":[]}]},{"children":[{"children":[]}]}]},"parameterTypeName":"string"}]},{"pwStepLine":8,"gherkinStepLine":5,"keywordType":"Context","textWithKeyword":"And the timer is mocked","isBg":true,"stepMatchArguments":[]},{"pwStepLine":9,"gherkinStepLine":6,"keywordType":"Context","textWithKeyword":"And I intercept game session response","isBg":true,"stepMatchArguments":[]},{"pwStepLine":10,"gherkinStepLine":7,"keywordType":"Context","textWithKeyword":"And I intercept playword response","isBg":true,"stepMatchArguments":[]},{"pwStepLine":11,"gherkinStepLine":8,"keywordType":"Context","textWithKeyword":"And I am on the PlayGame page","isBg":true,"stepMatchArguments":[]},{"pwStepLine":15,"gherkinStepLine":11,"keywordType":"Context","textWithKeyword":"Given the game input is enabled","stepMatchArguments":[]},{"pwStepLine":16,"gherkinStepLine":12,"keywordType":"Action","textWithKeyword":"When player 2 reaches 0 HP","stepMatchArguments":[{"group":{"start":7,"value":"2","children":[]},"parameterTypeName":"int"}]},{"pwStepLine":17,"gherkinStepLine":13,"keywordType":"Outcome","textWithKeyword":"Then I see the game overlay","stepMatchArguments":[]},{"pwStepLine":18,"gherkinStepLine":14,"keywordType":"Outcome","textWithKeyword":"And I should see winner message \"🏆 Player 1 VINNER! 🏆\"","stepMatchArguments":[{"group":{"start":28,"value":"\"🏆 Player 1 VINNER! 🏆\"","children":[{"start":29,"value":"🏆 Player 1 VINNER! 🏆","children":[{"children":[]}]},{"children":[{"children":[]}]}]},"parameterTypeName":"string"}]}]},
+  {"pwTestLine":21,"pickleLine":16,"tags":[],"steps":[{"pwStepLine":7,"gherkinStepLine":4,"keywordType":"Context","textWithKeyword":"Given I am logged in as \"Player 1\"","isBg":true,"stepMatchArguments":[{"group":{"start":18,"value":"\"Player 1\"","children":[{"start":19,"value":"Player 1","children":[{"children":[]}]},{"children":[{"children":[]}]}]},"parameterTypeName":"string"}]},{"pwStepLine":8,"gherkinStepLine":5,"keywordType":"Context","textWithKeyword":"And the timer is mocked","isBg":true,"stepMatchArguments":[]},{"pwStepLine":9,"gherkinStepLine":6,"keywordType":"Context","textWithKeyword":"And I intercept game session response","isBg":true,"stepMatchArguments":[]},{"pwStepLine":10,"gherkinStepLine":7,"keywordType":"Context","textWithKeyword":"And I intercept playword response","isBg":true,"stepMatchArguments":[]},{"pwStepLine":11,"gherkinStepLine":8,"keywordType":"Context","textWithKeyword":"And I am on the PlayGame page","isBg":true,"stepMatchArguments":[]},{"pwStepLine":22,"gherkinStepLine":17,"keywordType":"Context","textWithKeyword":"Given the game input is enabled","stepMatchArguments":[]},{"pwStepLine":23,"gherkinStepLine":18,"keywordType":"Action","textWithKeyword":"When player 1 reaches 0 HP","stepMatchArguments":[{"group":{"start":7,"value":"1","children":[]},"parameterTypeName":"int"}]},{"pwStepLine":24,"gherkinStepLine":19,"keywordType":"Outcome","textWithKeyword":"Then I see the game overlay","stepMatchArguments":[]},{"pwStepLine":25,"gherkinStepLine":20,"keywordType":"Outcome","textWithKeyword":"And I should see winner message \"🏆 Player 2 VINNER! 🏆\"","stepMatchArguments":[{"group":{"start":28,"value":"\"🏆 Player 2 VINNER! 🏆\"","children":[{"start":29,"value":"🏆 Player 2 VINNER! 🏆","children":[{"children":[]}]},{"children":[{"children":[]}]}]},"parameterTypeName":"string"}]}]},
 ]; // bdd-data-end
