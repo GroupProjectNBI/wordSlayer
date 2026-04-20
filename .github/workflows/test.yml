@@ -172,7 +172,7 @@ jobs:
       - name: Run API tests
         if: ${{ matrix.suite == 'api' }}
         run: |
-          dotnet run --project backend/backend.csproj --urls http://localhost:5010 > backend.log 2>&1 &
+          dotnet run --project backend/backend.csproj --urls http://localhost:5002 > backend.log 2>&1 &
 
           echo "Waiting for backend..."
 
@@ -191,7 +191,7 @@ jobs:
       - name: Run UI tests
         if: ${{ matrix.suite == 'ui' }}
         run: |
-          dotnet run --project backend/backend.csproj --urls http://localhost:5010 > backend.log 2>&1 &
+          dotnet run --project backend/backend.csproj --urls http://localhost:5002 > backend.log 2>&1 &
 
           echo "Waiting for backend..."
 
