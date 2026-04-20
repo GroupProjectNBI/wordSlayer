@@ -130,11 +130,11 @@ Then("I see a damage popup with {int}", async ({ page }, amount) => {
 
 Then("I see the game overlay", async ({ page }) => {
   // Regex täcker in både "Väntar på motståndare" och "Motståndaren tänker"
-  await expect(page.getByText(/Väntar på motståndare|Motståndaren tänker/i)).toBeVisible();
+  await expect(page.getByTestId("overlay")).toBeVisible();
 });
 
 Then("I do not see the game overlay", async ({ page }) => {
-  await expect(page.getByText(/Väntar på motståndare|Motståndaren tänker/i)).toHaveCount(0);
+  await expect(page.getByTestId("Overlay")).toHaveCount(0);
 });
 
 // --- 8. ORD-HISTORIK ---
