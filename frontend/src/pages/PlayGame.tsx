@@ -11,7 +11,7 @@ interface BackendGameSession {
 }
 
 export default function PlayGame() {
-  const { sessionId } = useParams<{ sessionId: string }>();
+  const { sessionId } = useParams<{ sessionId: string; }>();
   const myName = sessionStorage.getItem("playerName") || "Player 1";
   const isTest = useLocation().search.includes("test");
 
@@ -27,8 +27,8 @@ export default function PlayGame() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [popups, setPopups] = useState<{ id: number; amount: number; position: "left" | "right" }[]>([]);
-  const [history, setHistory] = useState<{ word: string; player: "player1" | "player2"; damage: number }[]>([]);
+  const [popups, setPopups] = useState<{ id: number; amount: number; position: "left" | "right"; }[]>([]);
+  const [history, setHistory] = useState<{ word: string; player: "player1" | "player2"; damage: number; }[]>([]);
 
   // Identifiera om användaren är vänster (p1) eller höger (p2)
   const localPlayer: "player1" | "player2" = myName === "Player 2" ? "player2" : "player1";
@@ -67,7 +67,7 @@ export default function PlayGame() {
       setLoading(true);
       try {
         const res = await fetch(`/api/game/${sessionId}`);
-        if (!res.ok) throw new Error("Kunde inte hämta speldata");
+        if (!res.ok) throw new Error("Could not fetch game data");
 
         const game = await res.json() as BackendGameSession;
         setConnectedPlayers(game.players.length);
@@ -79,7 +79,7 @@ export default function PlayGame() {
           setTurn(game.currentTurn.toLowerCase() as "player1" | "player2");
         }
       } catch (err) {
-        setError("Ett fel uppstod vid laddning.");
+        setError("An error occured while loading.");
       } finally {
         setLoading(false);
       }
@@ -137,23 +137,22 @@ export default function PlayGame() {
         applyWordDamage(cleanWord);
       } else {
         setWord(cleanWord); // Återställ vid fel
-        const data = await res.json();
-        setError(data.message || "Ogiltigt ord.");
+        setError ("Invalid word.");
       }
     } catch {
       setWord(cleanWord);
-      setError("Kunde inte nå servern.");
+      setError("Could not reach the server.");
     }
   }
 
   // --- 7. RENDER ---
-  if (loading) return <div className="h-screen flex items-center justify-center bg-black text-white uppercase">Laddar spel...</div>;
+  if (loading) return <div className="h-screen flex items-center justify-center bg-black text-white uppercase">Loading game...</div>;
 
   let overlayMessage = null;
   if (connectedPlayers < 2) {
-    overlayMessage = "Väntar på motståndare... ⏳";
+    overlayMessage = "Waiting for opponent... ⏳";
   } else if (turn !== localPlayer) {
-    overlayMessage = "Motståndaren tänker... 🧠";
+    overlayMessage = "Opponent is thinking... 🧠";
   } //
 
   return (
