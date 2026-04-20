@@ -14,7 +14,7 @@ COPY backend/*.csproj ./Backend/
 RUN cd backend && dotnet restore 
 COPY backend/ ./backend/
 # Copy the frontend build output (from stage 1) into wwwroot
-COPY --from=frontend-builder /src/Backend/wwwroot/ ./backend/wwwroot/
+COPY --from=frontend-builder /src/backend/wwwroot/ ./backend/wwwroot/
 RUN cd backend && dotnet publish -c Release -o /app/publish --no-restore
 
 # Stage 3: Minimal runtime image
