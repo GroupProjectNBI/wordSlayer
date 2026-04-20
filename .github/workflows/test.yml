@@ -172,16 +172,38 @@ jobs:
       - name: Run API tests
         if: ${{ matrix.suite == 'api' }}
         run: |
-          dotnet run --project backend/backend.csproj --urls http://localhost:5010 &
-          sleep 8
+          dotnet run --project backend/backend.csproj --urls http://localhost:5010 > backend.log 2>&1 &
+
+          echo "Waiting for backend..."
+
+          for i in {1..30}; do
+            if curl -s http://localhost:5002/health; then
+              echo "Backend is ready"
+              break
+            fi
+
+            echo "Not ready yet... ($i)"
+            sleep 2
+          done
           cd tests/postman
           npm run test:api:ci
 
       - name: Run UI tests
         if: ${{ matrix.suite == 'ui' }}
         run: |
-          dotnet run --project backend/backend.csproj --urls http://localhost:5010 &
-          sleep 8
+          dotnet run --project backend/backend.csproj --urls http://localhost:5010 > backend.log 2>&1 &
+
+          echo "Waiting for backend..."
+
+          for i in {1..30}; do
+            if curl -s http://localhost:5002/health; then
+              echo "Backend is ready"
+              break
+            fi
+
+            echo "Not ready yet... ($i)"
+            sleep 2
+          done
           cd tests/playwright
           npm run test:ui
 
