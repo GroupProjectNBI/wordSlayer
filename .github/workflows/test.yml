@@ -61,21 +61,21 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: |
-            Frontend/package-lock.json
+            frontend/package-lock.json
             tests/package-lock.json
             tests/playwright/package-lock.json
             tests/postman/package-lock.json
 
       - name: Install frontend dependencies
-        working-directory: Frontend
+        working-directory: frontend
         run: npm ci
 
       - name: Scan frontend npm dependencies
-        working-directory: Frontend
+        working-directory: frontend
         run: npm audit --audit-level=high
 
       - name: Build frontend
-        working-directory: Frontend
+        working-directory: frontend
         run: npm run build
 
       - name: Publish backend
