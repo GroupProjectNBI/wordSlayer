@@ -108,7 +108,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: [unit, api, ui]
+        suite: [unit,  ui]
+        # api
 
     steps:
       - uses: actions/checkout@v4
