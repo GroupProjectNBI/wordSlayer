@@ -6,40 +6,65 @@ using System.IO;
 
 public class WordService
 {
-    private readonly HashSet<string> _validWords = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    // En dictionary som håller reda på flera listor av ord, baserat på språkkod
+    private readonly Dictionary<string, HashSet<string>> _dictionaries = new(StringComparer.OrdinalIgnoreCase);
 
     // 1. STANDARD-KONSTRUKTORN
     public WordService()
     {
-        string filePath = Path.Combine(Directory.GetCurrentDirectory(), "wordlists", "english.txt");
+        // Ladda in båda språken när servicen startar
+        LoadDictionary("eng", "english.txt");
+        LoadDictionary("swe", "swedish.txt");
+    }
+
+    // 2. TEST-KONSTRUKTORN (Används av våra xUnit-tester!)
+    // Defaultar till "eng" så att du inte behöver skriva om alla dina gamla tester.
+    public WordService(string[] testWords, string langCode = "eng")
+    {
+        var testSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (string word in testWords)
+        {
+            testSet.Add(word.Trim());
+        }
+        _dictionaries[langCode] = testSet;
+    }
+
+    // --- HJÄLPMETOD FÖR ATT LADDA FILER ---
+    private void LoadDictionary(string langCode, string fileName)
+    {
+        string filePath = Path.Combine(Directory.GetCurrentDirectory(), "wordlists", fileName);
+        var wordSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         if (File.Exists(filePath))
         {
             string[] words = File.ReadAllLines(filePath);
             foreach (string word in words)
             {
-                _validWords.Add(word.Trim());
+                wordSet.Add(word.Trim());
             }
-            // LÄGG TILL DENNA RAD SÅ VI SER ATT DET FUNKAR!
-            Console.WriteLine($"\nSUCCESS: Laddade in {_validWords.Count} ord i ordboken!\n");
+            Console.WriteLine($"\nSUCCESS: Laddade in {wordSet.Count} ord för språket '{langCode}'!\n");
         }
         else
         {
-            // LÄGG TILL DENNA RAD SÅ VI SER OM FILEN SAKNAS!
-            Console.WriteLine($"\nERROR: Kunde INTE hitta filen på sökvägen: {filePath}\n");
+            Console.WriteLine($"\nERROR: Kunde INTE hitta filen '{fileName}' för språket '{langCode}' på sökvägen: {filePath}\n");
         }
+
+        // Spara listan i vår dictionary, även om den är tom (förhindrar kraschar senare)
+        _dictionaries[langCode] = wordSet;
     }
 
-    // 2. TEST-KONSTRUKTORN (Används av våra xUnit-tester!)
-    public WordService(string[] testWords)
+    // --- UPPDATERAD VALIDERING ---
+    // Kräver nu att man skickar med vilket språk man vill kolla mot
+    public bool IsValidWord(string word, string langCode)
     {
-        foreach (string word in testWords)
+        // Kolla först om språket finns inläst
+        if (_dictionaries.TryGetValue(langCode, out var validWordsForLanguage))
         {
-            _validWords.Add(word.Trim());
+            return validWordsForLanguage.Contains(word.Trim());
         }
-    }
 
-    public bool IsValidWord(string word)
-    {
-        return _validWords.Contains(word.Trim());
+        // Om någon försöker spela på ett språk vi inte har (t.ex. "ger")
+        Console.WriteLine($"WARNING: Försökte validera ord för okänt språk: {langCode}");
+        return false;
     }
 }
