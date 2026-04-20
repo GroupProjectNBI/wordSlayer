@@ -21,6 +21,8 @@ public class GameSession
     /// </summary>
     public List<Player> Players { get; set; } = new List<Player>();
 
+    public string Language { get; set; } = "eng";
+
     public GameSession()
     {
         // Vi skapar ett unikt ID för spelet när rummet byggs.
