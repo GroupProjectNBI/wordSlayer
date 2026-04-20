@@ -13,7 +13,7 @@ export default function JoinGame() {
         setError('');
 
         if (!gameCode.trim()) {
-            setError('Ange en spelkod.');
+            setError('Enter a game code.');
             return;
         }
 
@@ -34,14 +34,18 @@ export default function JoinGame() {
 
             if (!response.ok) {
                 const body = await response.json().catch(() => null);
-                setError(body?.message ?? 'Kunde inte ansluta till spelet.');
+                setError(body?.message ?? 'Could not join the game.');
                 return;
             }
+
+            // Om vi kommer hit har det gått bra! 
+            // Spara att jag är Player 2 i den här fliken
+            sessionStorage.setItem("playerName", "Player 2");
 
             navigate(`/game/${gameCode}`);
         } catch (err) {
             console.error(err);
-            setError('Kunde inte nå servern. Försök igen.');
+            setError('Could not reach the server. Please try again.');
         } finally {
             setLoading(false);
         }

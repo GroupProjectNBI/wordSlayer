@@ -99,49 +99,79 @@ app.MapGet("/api/game/{sessionId}", (Guid sessionId, GameManager manager) =>
 });
 
 
-app.MapPost("/api/game/{sessionId}/playword", (Guid sessionId, HandeWordRequest request, WordService wordService, GameManager gameManager) =>
+app.MapPost("/api/game/{sessionId}/playword", async (
+    Guid sessionId,
+    HandeWordRequest request,
+    WordService wordService,
+    GameManager gameManager,
+    IHubContext<backend.GameHub> hubContext) =>
 {
-    // 1. Hämta spelet
     var game = gameManager.GetGameById(sessionId);
+    var languageSwitch = request.Language?.ToLower() == "swe" ? "swe" : "eng";
+
     if (game == null) return Results.NotFound(new { message = "Spelet hittades inte!" });
 
-    // 2. Hitta vem som attackerar (den som skickade anropet)
     var attacker = game.Players.FirstOrDefault(p => p.Name == request.PlayerId);
     if (attacker == null) return Results.BadRequest(new { message = "Spelaren hittades inte!" });
-    // Fixa ordet direkt så vi jobbar med samma version hela tiden
-    string normalizedWord = request.wordGuess.Trim().ToLower();
-    // 3. Hitta motståndaren (den som INTE är attackeraren)
+
     var opponent = game.Players.FirstOrDefault(p => p.Name != request.PlayerId);
-    if (opponent == null) return Results.BadRequest(new { message = "Väntar på att motståndaren ska ansluta..." });
+    if (opponent == null) return Results.BadRequest(new { message = "Väntar på motståndare..." });
 
-    // 4. KONTROLL: Är ordet korrekt och inte använt tidigare?
-    // Kolla dubblett med det normaliserade ordet
+    string normalizedWord = request.wordGuess.Trim().ToLower();
+
+    // VALIDERDADE REGLER
     if (attacker.WordUsedAlready(normalizedWord))
-    {
         return Results.BadRequest(new { message = "Du har redan använt detta ordet!" });
-    }
 
-    if (!wordService.IsValidWord(request.wordGuess))
-    {
+    if (!wordService.IsValidWord(request.wordGuess, languageSwitch))
         return Results.BadRequest(new { message = "Ordet finns inte i ordlistan!" });
-    }
 
-    // 5. BERÄKNA SKADA: Hur långt är ordet?
+    // --- STEG 1: APPLICERA SKADA PÅ OBJEKTET ---
     int damage = request.wordGuess.Trim().Length;
+    opponent.Health = Math.Max(0, opponent.Health - damage);
+    attacker.Guesses.Add(normalizedWord);
 
-// 6. ANVÄND EN NY FUNKTION 
-// Vi hittar index för motståndaren (0 eller 1)
-int opponentIndex = game.Players.IndexOf(opponent);
-game.ApplyDamage(opponentIndex, damage);
+    // --- STEG 2: BERÄKNA NÄSTA TUR ---
+    string nextTurn = request.PlayerId == "Player 1" ? "player2" : "player1";
 
-    // 7. SPARA: Lägg till ordet i historiken
-    attacker.Guesses.Add(request.wordGuess.Trim().ToLower());
+    // --- STEG 3: HÄMTA DE UPPDATERADE VÄRDENA (Säkrare matchning) ---
+    // Vi letar upp spelarna specifikt för att veta vem som är vem på skärmen
+    var p1 = game.Players.FirstOrDefault(p => p.Name == "Player 1");
+    var p2 = game.Players.FirstOrDefault(p => p.Name == "Player 2");
 
-    // Skicka tillbaka det uppdaterade spelet
+    int p1Hp = p1?.Health ?? 100;
+    int p2Hp = p2?.Health ?? 100;
+
+    // --- STEG 4: SKICKA SIGNALEN TILL ALLA ---
+    // Nu innehåller p1Hp och p2Hp de nya värdena efter skadan
+    await hubContext.Clients.Group(sessionId.ToString()).SendAsync("TurnChanged", nextTurn, p1Hp, p2Hp);
+
     return Results.Ok(game);
 });
+app.MapPost("/api/game/{sessionId}/timeout", async (
+    Guid sessionId,
+    string playerId,
+    GameManager gameManager,
+    IHubContext<backend.GameHub> hubContext) =>
+{
+    var game = gameManager.GetGameById(sessionId);
+    if (game == null) return Results.NotFound();
 
+    // Beräkna nästa tur (om Player 1 fick timeout, blir det player2)
+    string nextTurn = playerId == "Player 1" ? "player2" : "player1";
 
+    // Hämta nuvarande HP (ingen skada sker vid timeout)
+    var p1 = game.Players.FirstOrDefault(p => p.Name == "Player 1");
+    var p2 = game.Players.FirstOrDefault(p => p.Name == "Player 2");
+
+    // Meddela alla via SignalR
+    await hubContext.Clients.Group(sessionId.ToString())
+        .SendAsync("TurnChanged", nextTurn, p1?.Health ?? 100, p2?.Health ?? 100);
+
+    return Results.Ok();
+});
+
+app.UseWebSockets();
 // 6. SignalR endpoint
 app.MapHub<backend.GameHub>("/gamehub");
 
@@ -164,5 +194,6 @@ public class HandeWordRequest
     public string wordGuess { get; set; } = string.Empty;
     // NYTT: Vem är det som skickar ordet?
     public string PlayerId { get; set; } = string.Empty;
+    public string Language { get; set; } = string.Empty;
 }
 
