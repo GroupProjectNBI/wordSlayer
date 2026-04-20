@@ -78,7 +78,7 @@ export default function GameBoard({
         <div style={{ width: 160 }}>
           <HPBar hp={player1.hp} color="green" width={160} />
         </div>
-        <div className="text-sm mt-1">{player1.hp} HP</div>
+        <div className="text-sm mt-1" data-testid="player1-hp">{player1.hp} HP</div>
       </div>
 
       {/* PLAYER 2 */}
@@ -96,12 +96,15 @@ export default function GameBoard({
           <div style={{ width: 160 }}>
             <HPBar hp={player2.hp} color="red" width={160} />
           </div>
-          <div className="text-sm mt-1">{player2.hp} HP</div>
+          <div className="text-sm mt-1" data-testid="player2-hp">{player2.hp} HP</div>
         </div>
       ) : null}
 
       {/* CENTER VS + TIMER */}
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+        <div data-testid="turn-indicator" className="mb-2 text-lg font-bold">
+          {turn === "player1" ? "Player 1" : "Player 2"}
+        </div>
         <h1 className="text-7xl font-extrabold tracking-widest opacity-80">
           VS
         </h1>
