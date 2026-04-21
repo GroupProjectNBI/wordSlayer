@@ -2,7 +2,7 @@ name: Test_Application
 
 on:
   push:
-    branches: [ "pipeline" ]
+    branches: [ "pipeline", "f/deply_script" ]
   pull_request:
     branches: [ "main" ]
 
