@@ -3,6 +3,8 @@ import { useWebsocket } from "../hooks/useWebsocket";
 import { useParams, useLocation } from "react-router-dom";
 import GameBoard from "../components/GameBoard";
 import DamagePopup from "../components/DamagePopup";
+import { useSound } from "../hooks/useSound";
+
 
 interface BackendGameSession {
   sessionId: string;
@@ -35,6 +37,26 @@ export default function PlayGame() {
 
   const localPlayer: "player1" | "player2" =
     myName === "Player 2" ? "player2" : "player1";
+
+  // GAME MUSIC
+  const gameMusic = useSound("/sounds/game-music.mp3", { loop: true });
+
+  // Auto-play when both players are connected
+  useEffect(() => {
+    if (isTest) return; //no music in test mode
+    if (connectedPlayers === 2 && !musicMuted) {
+      gameMusic.play();
+    } else {
+      gameMusic.stop();
+    }
+  }, [connectedPlayers, musicMuted, isTest]);
+
+  // Stop music on unmount
+  useEffect(() => {
+    return () => {
+      gameMusic.stop();
+    };
+  }, []);
 
   const handleTurnChanged = useCallback(
     (nextTurn: "player1" | "player2", p1Hp: number, p2Hp: number) => {
