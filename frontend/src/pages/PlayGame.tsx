@@ -174,6 +174,27 @@ export default function PlayGame() {
   }, [sessionId, uiLang]); // Notera att dependencyn nu är uiLang istället för lang
 
   useEffect(() => {
+    const gameOver = player1.hp <= 0 || player2.hp <= 0;
+    const myTurn = turn === localPlayer;
+
+    if (isTest) {
+      setTimerRunning(false);
+      return;
+    }
+
+    if (connectedPlayers < 2 || gameOver) {
+      setTimerRunning(false);
+      return;
+    }
+
+    if (myTurn) {
+      setTimerRunning(true);
+    } else {
+      setTimerRunning(false);
+    }
+  }, [turn, localPlayer, connectedPlayers, player1.hp, player2.hp, isTest]);
+
+  useEffect(() => {
     if (!timerRunning || isTest || turn !== localPlayer) return;
 
     const interval = setInterval(() => {
@@ -293,7 +314,6 @@ export default function PlayGame() {
         timerRunning={timerRunning}
         setWord={(v) => {
           setWord(v);
-          if (!isTest && v.trim()) setTimerRunning(true);
         }}
         onSubmitWord={onSubmitWord}
         languageIcon={languageIcon}
