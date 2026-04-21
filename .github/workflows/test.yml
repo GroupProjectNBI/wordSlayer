@@ -2,9 +2,9 @@ name: Test_Application
 
 on:
   push:
-    branches: ["pipeline"]
+    branches: [ "pipeline" ]
   pull_request:
-    branches: ["main"]
+    branches: [ "main" ]
 
 jobs:
   # Job 0: Security
@@ -102,13 +102,13 @@ jobs:
 
   # Job 2: Tests
   tests:
-    needs: [security, build]
+    needs: [ security, build ]
     runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
-        suite: [unit, api, ui]
+        suite: [ unit, api, ui ]
 
     steps:
       - uses: actions/checkout@v4
@@ -185,6 +185,14 @@ jobs:
             echo "Not ready yet... ($i)"
             sleep 2
           done
+
+          # NYTT: Skyddsnät som skriver ut loggen om backend dog
+          if ! curl -s http://localhost:5002/health > /dev/null; then
+            echo "--- BACKEND LOG ---"
+            cat backend.log
+            exit 1
+          fi
+
           cd tests/postman
           npm run test:api:ci
 
@@ -204,6 +212,14 @@ jobs:
             echo "Not ready yet... ($i)"
             sleep 2
           done
+
+          # NYTT: Skyddsnät som skriver ut loggen om backend dog
+          if ! curl -s http://localhost:5002/health > /dev/null; then
+            echo "--- BACKEND LOG ---"
+            cat backend.log
+            exit 1
+          fi
+
           cd tests/playwright
           npm run test:ui
 
@@ -215,7 +231,7 @@ jobs:
           path: |
             TestResults/**
             tests/test-results/**
-            tests/playwright-report/**
+            tests/playwright/playwright-report/**
           if-no-files-found: ignore
 
   # Job 3: Report
