@@ -3,11 +3,8 @@ import { expect } from "@playwright/test";
 const { Given, When, Then } = createBdd();
 const VALID_GUID = "00000000-0000-0000-0000-000000000000";
 
-// Username assertion
-Then('I see the player {int} username', async ({ page }, playerNum) => {
-  const selector = `[data-player="player${playerNum}"]`;
-  await expect(page.locator(selector)).toBeVisible();
-});
+// Username assertions for 'me' and 'opponent'
+
 
 // Damage popup assertion
 Then('I see a damage popup with {int}', async ({ page }, amount) => {
@@ -48,7 +45,7 @@ Then('the word history shows damage {int} for {string}', async ({ page }, damage
 
 Given('I am logged in as {string}', async ({ page }, playerName) => {
   await page.addInitScript((name) => {
-    window.sessionStorage.setItem('playerName', name);
+    sessionStorage.setItem('playerName', name);
   }, playerName);
 });
 
@@ -84,13 +81,8 @@ When('I submit the word', async ({ page }) => {
   await responsePromise;
 });
 
-// Custom assertions for legacy feature steps
-Then('player {int} has {int} HP', async ({ page }, playerNum, hp) => {
-  const selector = `[data-testid="player${playerNum}-hp"]`;
-  const hpText = await page.locator(selector).innerText();
-  const hpValue = parseInt(hpText, 10);
-  expect(hpValue).toBe(hp);
-});
+
+
 
 Then('it is player {int} turn', async ({ page }, playerNum) => {
   const turnText = await page.locator('[data-testid="turn-indicator"]').innerText();
@@ -166,23 +158,7 @@ Then('I see the game overlay', async ({ page }) => {
   await expect(overlay).toBeVisible();
 });
 
-When('player {int} reaches 0 HP', async ({ page }, playerNum) => {
-  const p1Hp = playerNum === 1 ? 0 : 100;
-  const p2Hp = playerNum === 2 ? 0 : 100;
 
-  await page.evaluate(({ p1Hp, p2Hp }) => {
-    window.dispatchEvent(new CustomEvent('signalr-turn-changed', {
-      detail: {
-        nextTurn: 'player1',
-        p1Hp,
-        p2Hp,
-      },
-    }));
-  }, { p1Hp, p2Hp });
-
-  const defeatedPlayer = playerNum;
-  await expect(page.locator(`[data-testid="player${defeatedPlayer}-hp"]`)).toHaveText('0 HP');
-});
 
 Then('I should see winner message {string}', async ({ page }, winnerMessage) => {
   const winnerElement = page.locator('[data-testid="winner-message"]');
@@ -190,6 +166,80 @@ Then('I should see winner message {string}', async ({ page }, winnerMessage) => 
   await expect(winnerElement).toHaveText(winnerMessage);
 });
 
+When('opponent reaches 0 HP', async ({ page }) => {
+  // Player 2 is the opponent for Player 1
+  await page.evaluate(() => {
+    window.dispatchEvent(new CustomEvent('signalr-turn-changed', {
+      detail: {
+        nextTurn: 'player1',
+        p1Hp: 100,
+        p2Hp: 0,
+      },
+    }));
+  });
+  await expect(page.locator('[data-testid="opponent-hp"]')).toHaveText('0 HP');
+});
+
+When('my HP reaches 0', async ({ page }) => {
+  // Player 1 is 'me' in the default test context
+  await page.evaluate(() => {
+    window.dispatchEvent(new CustomEvent('signalr-turn-changed', {
+      detail: {
+        nextTurn: 'player2',
+        p1Hp: 0,
+        p2Hp: 100,
+      },
+    }));
+  });
+  await expect(page.locator('[data-testid="me-hp"]')).toHaveText('0 HP');
+});
+
+// Layout position assertions
+Then('my info is bottom right', async ({ page }) => {
+  await page.locator('[data-player="me"]').waitFor({ state: 'visible', timeout: 10000 });
+  const me = await page.evaluate(() => {
+    const el = document.querySelector('[data-player="me"]');
+    if (!el) return null;
+    const rect = el.getBoundingClientRect();
+    return { bottom: rect.bottom, right: rect.right, width: window.innerWidth, height: window.innerHeight };
+  });
+  expect(me).not.toBeNull();
+  // Should be close to bottom right
+  expect(me.bottom).toBeGreaterThan(me.height - 200);
+  expect(me.right).toBeGreaterThan(me.width - 200);
+});
+
+Then('opponent info is top left', async ({ page }) => {
+  await page.locator('[data-player="opponent"]').waitFor({ state: 'visible', timeout: 10000 });
+  const opponent = await page.evaluate(() => {
+    const el = document.querySelector('[data-player="opponent"]');
+    if (!el) return null;
+    const rect = el.getBoundingClientRect();
+    return { top: rect.top, left: rect.left };
+  });
+  expect(opponent).not.toBeNull();
+  // Should be close to top left
+  expect(opponent.top).toBeLessThan(200);
+  expect(opponent.left).toBeLessThan(200);
+});
+
+Then('I see my username', async ({ page }) => {
+  await expect(page.locator('[data-player="me"]')).toBeVisible();
+});
+
+Then('I see opponent username', async ({ page }) => {
+  await expect(page.locator('[data-player="opponent"]')).toBeVisible();
+});
+
+Then('my HP is {int}', async ({ page }, hp) => {
+  const hpText = await page.locator('[data-testid="me-hp"]').innerText();
+  expect(hpText).toBe(`${hp} HP`);
+});
+
+Then('opponent HP is {int}', async ({ page }, hp) => {
+  const hpText = await page.locator('[data-testid="opponent-hp"]').innerText();
+  expect(hpText).toBe(`${hp} HP`);
+});
 
 // En kopia av din vanliga "game session response", men den tar emot språket.
 Given('I intercept game session response with language {string}', async ({ page }, language) => {
