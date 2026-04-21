@@ -26,6 +26,8 @@ export default function PlayGame() {
   const [turn, setTurn] = useState<"player1" | "player2">("player1");
   const [timerRunning, setTimerRunning] = useState(false);
 
+  const [musicMuted, setMusicMuted] = useState(false);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [popups, setPopups] = useState<
