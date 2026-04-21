@@ -7,6 +7,8 @@ import swedenFlag from "../assets/sweden.png";
 import ukFlag from "../assets/uk.png";
 
 type Language = "en" | "sv";
+import { useSound } from "../hooks/useSound";
+
 
 interface BackendGameSession {
   sessionId: string;
@@ -61,6 +63,8 @@ export default function PlayGame() {
   const [turn, setTurn] = useState<"player1" | "player2">("player1");
   const [timerRunning, setTimerRunning] = useState(false);
 
+  const [musicMuted, setMusicMuted] = useState(false);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [popups, setPopups] = useState<
@@ -72,6 +76,26 @@ export default function PlayGame() {
 
   const localPlayer: "player1" | "player2" =
     myName === "Player 2" ? "player2" : "player1";
+
+  // GAME MUSIC
+  const gameMusic = useSound("/sounds/game-music.mp3", { loop: true });
+
+  // Auto-play when both players are connected
+  useEffect(() => {
+    if (isTest) return; //no music in test mode
+    if (connectedPlayers === 2 && !musicMuted) {
+      gameMusic.play();
+    } else {
+      gameMusic.stop();
+    }
+  }, [connectedPlayers, musicMuted, isTest]);
+
+  // Stop music on unmount
+  useEffect(() => {
+    return () => {
+      gameMusic.stop();
+    };
+  }, []);
 
   const handleTurnChanged = useCallback(
     (nextTurn: "player1" | "player2", p1Hp: number, p2Hp: number) => {
@@ -242,6 +266,16 @@ export default function PlayGame() {
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-slate-900">
+
+      {/* MUTE MUSIC BUTTON */}
+      {!isTest && (
+        <button
+          onClick={() => setMusicMuted((m) => !m)}
+          className="absolute bottom-4 left-4 z-[300] bg-black/60 text-white px-4 py-2 rounded border border-white"
+        >
+          {musicMuted ? "Unmute Sound" : "mute Sound"}
+        </button>
+      )}
       {error && (
         <div className="absolute top-10 left-1/2 z-[110] -translate-x-1/2 rounded-full bg-red-600 px-6 py-2 font-bold text-white shadow-2xl">
           {error}
