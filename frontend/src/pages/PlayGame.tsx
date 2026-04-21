@@ -17,6 +17,12 @@ interface BackendGameSession {
   language: string;
 }
 
+interface TurnChangedDetail {
+  nextTurn: "player1" | "player2";
+  p1Hp: number;
+  p2Hp: number;
+}
+
 export default function PlayGame() {
   const { sessionId } = useParams<{ sessionId: string; }>();
   const myName = sessionStorage.getItem("playerName") || "Player 1";
@@ -71,7 +77,7 @@ export default function PlayGame() {
     { id: number; amount: number; position: "left" | "right"; }[]
   >([]);
   const [history, setHistory] = useState<
-    { word: string; player: "player1" | "player2"; damage: number; }[]
+    { id: number; word: string; player: "player1" | "player2"; damage: number; }[]
   >([]);
 
   const localPlayer: "player1" | "player2" =
@@ -109,7 +115,7 @@ export default function PlayGame() {
     []
   );
 
-  const handlePlayerJoined = useCallback((_playerName: string) => {
+  const handlePlayerJoined = useCallback(() => {
     setConnectedPlayers((prev) => Math.min(prev + 1, 2));
   }, []);
 
@@ -118,7 +124,8 @@ export default function PlayGame() {
   useEffect(() => {
     if (!isTest) return;
 
-    const handleTestSignal = (e: any) => {
+    const handleTestSignal = (event: Event) => {
+      const e = event as CustomEvent<TurnChangedDetail>;
       const { nextTurn, p1Hp, p2Hp } = e.detail;
       handleTurnChanged(nextTurn, p1Hp, p2Hp);
     };
@@ -194,8 +201,11 @@ export default function PlayGame() {
 
   function applyWordDamage(cleanWord: string) {
     const damage = cleanWord.length;
+    // Eget id behövs för stabil rendering och för att varje ord ska kunna få
+    // en separat, deterministisk rörelse i FloatingWordCloud.
+    const id = Date.now() + Math.floor(Math.random() * 10000);
 
-    setHistory((prev) => [...prev, { word: cleanWord, player: turn, damage }]);
+    setHistory((prev) => [...prev, { id, word: cleanWord, player: turn, damage }]);
 
     const target = turn === "player1" ? "right" : "left";
     setPopups((prev) => [
@@ -264,6 +274,10 @@ export default function PlayGame() {
     ? <img src={swedenFlag} alt="Svensk Ordbok" className="h-6 w-8 object-cover rounded-sm shadow-md" title="Dictionary: Svenska" />
     : <img src={ukFlag} alt="English Dictionary" className="h-6 w-8 object-cover rounded-sm shadow-md" title="Dictionary: English" />;
 
+  // UI:t visar bara lokal spelares ord. Historiken sparar allt som spelas,
+  // men visualiseringen filtreras här innan GameBoard renderar den.
+  const ownWordHistory = history.filter((entry) => entry.player === localPlayer);
+
   return (
     <div className="relative w-full h-screen overflow-hidden bg-slate-900">
 
@@ -289,7 +303,7 @@ export default function PlayGame() {
         turn={turn}
         localPlayer={localPlayer}
         word={word}
-        history={history}
+        history={ownWordHistory}
         timerRunning={timerRunning}
         setWord={(v) => {
           setWord(v);

@@ -1,7 +1,7 @@
 import HPBar from "./HPBar";
+import FloatingWordCloud from "./FloatingWordCloud";
 import Timer from "./Timer/Timer";
 import Username from "./Username";
-import WordHistory from "./WordHistory";
 import WordInput from "./WordInput";
 
 interface Player {
@@ -10,6 +10,7 @@ interface Player {
 }
 
 interface WordEntry {
+  id: number;
   word: string;
   player: "player1" | "player2";
   damage: number;
@@ -77,8 +78,8 @@ export default function GameBoard({
         </div>
       )}
 
-      {/* WORD HISTORY */}
-      <WordHistory words={history} />
+      {/* Flytande ord renderas som ett separat overlay-lager under modal-overlayn. */}
+      <FloatingWordCloud words={history} />
 
 
       {/* OPPONENT (always top left) */}
