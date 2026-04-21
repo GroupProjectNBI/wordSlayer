@@ -38,6 +38,8 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 // 5. API-Endpoints
+app.MapGet("/health", () => Results.Ok("ok"));
+
 app.MapGet("/api/newGame", (GameManager manager) =>
 {
     // Skapa spelet (Vi sätter in "Player 1" som start)
