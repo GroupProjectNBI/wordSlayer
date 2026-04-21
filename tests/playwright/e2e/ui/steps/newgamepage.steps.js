@@ -3,10 +3,13 @@ import { expect } from "@playwright/test";
 const { Given, When, Then } = createBdd();
 
 Given('I am on the newgame page', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('lang', 'en');
+  });
+
   await page.goto('/newgame/00000000-0000-0000-0000-000000000000');
   await page.waitForURL('/newgame/00000000-0000-0000-0000-000000000000');
 });
-
 When('I press the button {string}', async ({ page }, name) => {
   await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
   const button = page.getByRole('button', { name: name });
