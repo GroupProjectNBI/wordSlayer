@@ -1,5 +1,7 @@
 import { createBdd } from 'playwright-bdd';
-const { Given, When } = createBdd();
+import { expect } from '@playwright/test'; // Lade till denna för assertions
+
+const { Given, When, Then } = createBdd(); // Lade till Then i destructureringen
 
 Given('I am on the join page', async ({ page }) => {
   await page.goto('/join');
@@ -7,8 +9,8 @@ Given('I am on the join page', async ({ page }) => {
 });
 
 When('I enter game code {string}', async ({ page }, code) => {
-  const targetCode = "00000000-0000-0000-0000-000000000000";
-  await page.fill('#game-code-input', targetCode);
+  // ÄNDRING: Nu använder vi variabeln 'code' från feature-filen istället för en hårdkodad sträng
+  await page.fill('#game-code-input', code);
 });
 
 When('I intercept join response', async ({ page }) => {
@@ -19,4 +21,34 @@ When('I intercept join response', async ({ page }) => {
       body: JSON.stringify({}),
     });
   });
+});
+
+
+Given('I intercept game info response with language {string}', async ({ page }, language) => {
+  // Vi mockar GET-anropet som useEffect gör när koden är 36 tecken lång
+  await page.route('**/api/game/00000000-0000-0000-0000-000000000000', async (route) => {
+
+    // Säkerställ att vi bara fångar GET-requests
+    if (route.request().method() !== 'GET') {
+      return route.fallback();
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        sessionId: '00000000-0000-0000-0000-000000000000',
+        language: language, // Här matar vi in "swe" eller "eng" från scenariot!
+        players: [{ name: 'Player 1', health: 100 }],
+        currentTurn: 'player1'
+      }),
+    });
+  });
+});
+
+Then('I see the {string} flag image', async ({ page }, altText) => {
+  // I React-koden satte du alt="Svenska" eller alt="English" på bilderna. 
+  // Playwright kan hitta bilder (role='img') baserat på deras alt-text (name)!
+  const image = page.getByRole('img', { name: altText });
+  await expect(image).toBeVisible();
 });

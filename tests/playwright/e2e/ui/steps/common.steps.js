@@ -37,10 +37,7 @@ When('I click the {string} button', async ({ page }, text) => {
 // ASSERTIONS (for example i'm supposed to see a textfield)
 //
 Then('I see {string}', async ({ page }, text) => {
-  const visible = await page.getByText(text).isVisible();
-  if (!visible) {
-    throw new Error(`Expected to see "${text}"`);
-  }
+  await expect(page.getByText(text)).toBeVisible();
 });
 
 Then('I see button {string}', async ({ page }, text) => {
@@ -51,8 +48,18 @@ Then('I see button {string}', async ({ page }, text) => {
 });
 
 Then('I see input value {string}', async ({ page }, value) => {
-  await expect(page.locator('input')).toHaveValue(value);
+  // Letar upp det första input-fältet på sidan och verifierar dess inmatade värde
+  const input = page.locator('input').first();
+  await expect(input).toHaveValue(value);
 });
+
+Then('I see turn indicator {string}', async ({ page }, text) => {
+  // expect() väntar automatiskt tills React har hunnit uppdatera DOM:en!
+  const turnIndicator = page.getByTestId('turn-indicator').filter({ hasText: text });
+  await expect(turnIndicator).toBeVisible();
+});
+
+
 
 Given("the input is enabled", async ({ page }) => {
   await page.waitForSelector('input:not([disabled])');

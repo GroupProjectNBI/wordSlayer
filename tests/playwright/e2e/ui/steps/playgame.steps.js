@@ -46,13 +46,6 @@ Then('the word history shows damage {int} for {string}', async ({ page }, damage
   await expect(entry).toHaveAttribute('data-damage', `${damage}`);
 });
 
-Then('I see turn indicator {string}', async ({ page }, text) => {
-  const visible = await page.getByTestId('turn-indicator').filter({ hasText: text }).isVisible();
-  if (!visible) {
-    throw new Error(`Expected to see turn indicator with text "${text}"`);
-  }
-});
-
 
 Given('I am logged in as {string}', async ({ }, arg) => { });
 
@@ -71,7 +64,17 @@ When('I type the word {string}', async ({ page }, word) => {
 
 When('I submit the word', async ({ page }) => {
   const input = page.getByRole('textbox');
+
+  // 1. Vi ber Playwright vara beredd på att ett anrop till /playword kommer ske
+  const responsePromise = page.waitForResponse(response =>
+    response.url().includes('playword')
+  );
+
+  // 2. Vi trycker på Enter
   await input.press('Enter');
+
+  // 3. Vi tvingar Playwright att pausa här TILLS anropet har svarat "Success"
+  await responsePromise;
 });
 
 // Custom assertions for legacy feature steps
@@ -178,4 +181,31 @@ Then('I should see winner message {string}', async ({ page }, winnerMessage) => 
   const winnerElement = page.locator('[data-testid="winner-message"]');
   await expect(winnerElement).toBeVisible();
   await expect(winnerElement).toHaveText(winnerMessage);
+});
+
+
+// En kopia av din vanliga "game session response", men den tar emot språket.
+Given('I intercept game session response with language {string}', async ({ page }, language) => {
+  const VALID_GUID = "00000000-0000-0000-0000-000000000000";
+
+  await page.route(`**/api/game/${VALID_GUID}`, (route) => {
+    // För att undvika att krocka med POST-anrop etc.
+    if (route.request().method() !== 'GET') {
+      return route.fallback();
+    }
+
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        sessionId: VALID_GUID,
+        language: language, // <-- Här tvingar vi in "swe" eller "eng"
+        players: [
+          { name: 'Player 1', health: 100 },
+          { name: 'Player 2', health: 100 }
+        ],
+        currentTurn: 'player1'
+      }),
+    });
+  });
 });

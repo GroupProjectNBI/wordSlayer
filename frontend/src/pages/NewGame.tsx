@@ -5,13 +5,39 @@ export default function NewGame() {
     const navigate = useNavigate();
     const { sessionId } = useParams<{ sessionId: string }>();
     const [copied, setCopied] = useState(false);
-    const error = '';
+    const [error, setError] = useState('');
+    const [lang, setLang] = useState("eng"); // Standard till engelska
 
     const handleCopy = () => {
         if (sessionId) {
             navigator.clipboard.writeText(sessionId);
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
+        }
+    };
+
+    // Funktion för att byta språk och spara till backend
+    const handleLanguageChange = async (selectedLang: string) => {
+        setLang(selectedLang);
+
+        if (!sessionId) return;
+
+        try {
+            // Byt ut denna URL mot den endpoint du skapar i din C# backend
+            const response = await fetch(`/api/game/${sessionId}/language`, {
+                method: 'PUT', // eller POST beroende på hur du bygger ditt API
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ language: selectedLang }),
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to update language");
+            }
+        } catch (err) {
+            console.error("Kunde inte spara språket till servern:", err);
+            setError("Kunde inte spara språkvalet. Försök igen.");
         }
     };
 
@@ -29,7 +55,7 @@ export default function NewGame() {
                     Start new game
                 </h1>
 
-                <div className="flex flex-col gap-3 mb-10">
+                <div className="flex flex-col gap-3 mb-8">
                     {/* Det stora sessions-ID:t */}
                     <input
                         type="text"
@@ -51,6 +77,34 @@ export default function NewGame() {
                         {copied ? 'Copied Game Code!' : 'Copy Game Code'}
                     </button>
                 </div>
+
+                {/* --- NYTT: Språkval --- */}
+                <div className="mb-8">
+                    <p className="mb-3 text-slate-400 font-medium">Select Dictionary:</p>
+                    <div className="flex justify-center gap-4">
+                        <button
+                            onClick={() => handleLanguageChange("eng")}
+                            className={`text-5xl transition-all duration-200 ${lang === "eng"
+                                ? "scale-110 drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]"
+                                : "opacity-50 hover:opacity-80 hover:scale-105"
+                                }`}
+                            title="English"
+                        >
+                            ENG
+                        </button>
+                        <button
+                            onClick={() => handleLanguageChange("swe")}
+                            className={`text-5xl transition-all duration-200 ${lang === "swe"
+                                ? "scale-110 drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]"
+                                : "opacity-50 hover:opacity-80 hover:scale-105"
+                                }`}
+                            title="Svenska"
+                        >
+                            SE
+                        </button>
+                    </div>
+                </div>
+                {/* ---------------------- */}
 
                 {error && <div className="mb-4 text-lg text-red-400 font-semibold">{error}</div>}
 

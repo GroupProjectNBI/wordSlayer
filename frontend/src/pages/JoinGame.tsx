@@ -1,12 +1,49 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import swedenFlag from "../assets/sweden.png";
+import ukFlag from "../assets/uk.png";
 
 export default function JoinGame() {
     const navigate = useNavigate();
     const [gameCode, setGameCode] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [gameLanguage, setGameLanguage] = useState<string | null>(null);
+
+    // Denna useEffect lyssnar på ändringar i gameCode.
+    // När koden är exakt 36 tecken (längden av en GUID), gör vi ett anrop.
+    useEffect(() => {
+        const fetchGameInfo = async (code: string) => {
+            try {
+                // Vi använder samma GET-endpoint som PlayGame använder
+                const response = await fetch(`/api/game/${code}`);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.language) {
+                        setGameLanguage(data.language);
+                        setError(''); // Rensa eventuella gamla fel om vi hittar spelet
+                    }
+                } else {
+                    setGameLanguage(null);
+                    // Om vi vill kan vi sätta ett fel här, t.ex:
+                    // setError('Spelet hittades inte.');
+                }
+            } catch (err) {
+                console.error("Kunde inte hämta spelinfo:", err);
+                setGameLanguage(null);
+            }
+        };
+
+        const trimmedCode = gameCode.trim();
+        if (trimmedCode.length === 36) {
+            fetchGameInfo(trimmedCode);
+        } else {
+            // Nollställ språket om användaren raderar tecken
+            setGameLanguage(null);
+        }
+    }, [gameCode]);
 
     async function handleJoinGame() {
         // Clear any old error and validate the game code.
@@ -58,9 +95,9 @@ export default function JoinGame() {
     };
 
     return (
-        <main className="min-h-screen flex items-center justify-center">
-            <section className="w-full max-w-md px-4 text-center">
-                <h1 className="mb-10 text-5xl font-extrabold uppercase tracking-widest">
+        <main className="min-h-screen flex items-center justify-center bg-slate-900 text-white">
+            <section className="w-full max-w-md px-6 text-center">
+                <h1 className="mb-10 text-5xl font-extrabold uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">
                     Join Game
                 </h1>
 
@@ -68,18 +105,40 @@ export default function JoinGame() {
                     <input
                         id="game-code-input"
                         type="text"
-                        placeholder="Enter code"
+                        placeholder="Enter 36-character game code"
                         value={gameCode}
                         onChange={(e) => setGameCode(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        className="w-full rounded-xl bg-white/10 py-4 text-lg text-center text-white placeholder-gray-400 outline-none"
+                        className="w-full rounded-2xl border-2 border-slate-700 bg-slate-800 py-4 px-4 text-center font-mono text-lg font-medium text-purple-300 placeholder-slate-500 outline-none transition focus:border-purple-500"
                     />
-                    {error && <div className="text-sm text-red-400">{error}</div>}
+
+                    {/* Visar språket om vi har hittat det */}
+                    <div className="h-8 flex items-center justify-center">
+                        {gameLanguage && (
+                            <span className="flex items-center gap-2 text-slate-300 font-medium animate-pulse">
+                                Dictionary set to:
+                                {gameLanguage === 'swe' ? (
+                                    <>
+                                        <img src={swedenFlag} alt="Svenska" className="h-5 w-7 object-cover rounded-sm shadow-sm" />
+                                        Svenska
+                                    </>
+                                ) : (
+                                    <>
+                                        <img src={ukFlag} alt="English" className="h-5 w-7 object-cover rounded-sm shadow-sm" />
+                                        English
+                                    </>
+                                )}
+                            </span>
+                        )}
+                    </div>
+
+                    {error && <div className="text-sm text-red-400 font-semibold">{error}</div>}
+
                     <button
                         id="join-button"
                         onClick={handleJoinGame}
-                        disabled={loading}
-                        className="w-full rounded-xl bg-purple-600 py-4 text-lg font-semibold text-white transition hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
+                        disabled={loading || !gameCode.trim()}
+                        className="w-full rounded-2xl bg-purple-600 py-4 text-xl font-bold text-white transition hover:bg-purple-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 shadow-xl shadow-purple-900/40 mt-2"
                     >
                         Join
                     </button>

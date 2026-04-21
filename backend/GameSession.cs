@@ -24,6 +24,7 @@ public class GameSession
     // --- Logik för vinst och status ---
     public string Status { get; set; } = "InProgress"; // Håller koll på om spelet pågår eller är slut
     public string? Winner { get; set; } // Sparar namnet på vinnaren
+    public string Language { get; set; } = "eng";
 
     public GameSession()
     {

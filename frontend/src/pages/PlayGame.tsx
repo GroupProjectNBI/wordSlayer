@@ -3,17 +3,24 @@ import { useWebsocket } from "../hooks/useWebsocket";
 import { useParams, useLocation } from "react-router-dom";
 import GameBoard from "../components/GameBoard";
 import DamagePopup from "../components/DamagePopup";
+// Importera flaggorna!
+import swedenFlag from "../assets/sweden.png";
+import ukFlag from "../assets/uk.png";
 
 interface BackendGameSession {
   sessionId: string;
   players: { name: string; health: number; }[];
   currentTurn: string;
+  language: string;
 }
 
 export default function PlayGame() {
   const { sessionId } = useParams<{ sessionId: string; }>();
   const myName = sessionStorage.getItem("playerName") || "Player 1";
   const isTest = useLocation().search.includes("test");
+
+  // State för språket (vi sätter default till "eng" ifall det skulle dröja innan backend svarar)
+  const [lang, setLang] = useState("eng");
 
   const [player1, setPlayer1] = useState({ username: "Player 1", hp: 100 });
   const [player2, setPlayer2] = useState({ username: "Player 2", hp: 100 });
@@ -77,6 +84,11 @@ export default function PlayGame() {
         if (!res.ok) throw new Error("Could not fetch game data");
 
         const game = (await res.json()) as BackendGameSession;
+
+        // Sätt språket från backend!
+        if (game.language) {
+          setLang(game.language);
+        }
 
         setConnectedPlayers(game.players.length);
 
@@ -154,7 +166,7 @@ export default function PlayGame() {
       const res = await fetch(`/api/game/${sessionId}/playword`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wordGuess: cleanWord, playerId: myName }),
+        body: JSON.stringify({ wordGuess: cleanWord, playerId: myName, language: lang }),
       });
 
       if (res.ok) {
@@ -192,6 +204,12 @@ export default function PlayGame() {
     overlayMessage = "Motståndaren tänker... 🧠";
   }
 
+  // --- HÄR ÄR FLAGG-RENDERINGEN SOM SKICKAS IN I GAMEBOARD ---
+  // Genom att skicka detta som en prop, behöver GameBoard inte importera bilderna själv.
+  const languageIcon = lang === "swe"
+    ? <img src={swedenFlag} alt="Svensk Ordbok" className="h-6 w-8 object-cover rounded-sm shadow-md" title="Dictionary: Svenska" />
+    : <img src={ukFlag} alt="English Dictionary" className="h-6 w-8 object-cover rounded-sm shadow-md" title="Dictionary: English" />;
+
   return (
     <div className="relative w-full h-screen overflow-hidden bg-slate-900">
       {error && (
@@ -214,6 +232,8 @@ export default function PlayGame() {
           if (!isTest && v.trim()) setTimerRunning(true);
         }}
         onSubmitWord={onSubmitWord}
+        // NY PROP! Skicka in flaggan
+        languageIcon={languageIcon}
       >
         {popups.map((p) => (
           <DamagePopup
@@ -283,12 +303,10 @@ export default function PlayGame() {
                 <>
                   {connectedPlayers < 2 && (
                     <button onClick={() => setConnectedPlayers(2)}>
-                      Test: Motståndare anslöt
                     </button>
                   )}
                   {turn !== localPlayer && connectedPlayers === 2 && (
                     <button onClick={() => setTurn(localPlayer)}>
-                      Test: Min tur nu
                     </button>
                   )}
                 </>

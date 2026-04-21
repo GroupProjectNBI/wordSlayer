@@ -1,4 +1,3 @@
-
 Feature: PlayGame Page
 
   Background:
@@ -6,6 +5,7 @@ Feature: PlayGame Page
     And the timer is mocked
     And I intercept game session response
     And I intercept playword response
+    # Ta INTE bort navigationen från Background, den behövs för alla andra tester.
     And I am on the PlayGame page
 
   Scenario: Player username is visible
@@ -67,3 +67,19 @@ Feature: PlayGame Page
     And the server signals turn changed to "player2" with HP 100 and 100
     Then I see turn indicator "Player 2"
     And I see the game overlay
+
+
+  # --- UPPDATERADE SCENARIER FÖR FLAGGORNA ---
+  Scenario: GameBoard displays Swedish dictionary flag
+    # Eftersom Background redan navigerat till sidan med default-mocken,
+    # sätter vi vår nya språkmock...
+    Given I intercept game session response with language "swe"
+    # ...och sedan ber vi Playwright att LADDA OM SIDAN. Då fångas den nya mocken!
+    And I am on the PlayGame page
+    Then I see the "Svensk Ordbok" flag image
+
+  Scenario: GameBoard displays English dictionary flag
+    Given I intercept game session response with language "eng"
+    # Samma sak här, vi navigerar dit en gång till så att mocken hinner triggas
+    And I am on the PlayGame page
+    Then I see the "English Dictionary" flag image
