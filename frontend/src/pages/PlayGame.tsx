@@ -273,7 +273,7 @@ export default function PlayGame() {
           onClick={() => setMusicMuted((m) => !m)}
           className="absolute bottom-4 left-4 z-[300] bg-black/60 text-white px-4 py-2 rounded border border-white"
         >
-          {musicMuted ? "Unmute Mucis" : "mute Music"}
+          {musicMuted ? "Unmute Sound" : "mute Sound"}
         </button>
       )}
       {error && (
