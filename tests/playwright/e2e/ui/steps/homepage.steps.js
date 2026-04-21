@@ -1,5 +1,4 @@
 import { createBdd } from 'playwright-bdd';
-import { expect } from '@playwright/test';
 const { Given, When } = createBdd();
 
 Given('I am on the homepage', async ({ page }) => {

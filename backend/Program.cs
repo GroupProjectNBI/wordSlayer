@@ -107,6 +107,8 @@ app.MapPost("/api/game/{sessionId}/playword", async (
     IHubContext<backend.GameHub> hubContext) =>
 {
     var game = gameManager.GetGameById(sessionId);
+    var languageSwitch = request.Language?.ToLower() == "swe" ? "swe" : "eng";
+
     if (game == null) return Results.NotFound(new { message = "Spelet hittades inte!" });
 
     var attacker = game.Players.FirstOrDefault(p => p.Name == request.PlayerId);
@@ -121,7 +123,7 @@ app.MapPost("/api/game/{sessionId}/playword", async (
     if (attacker.WordUsedAlready(normalizedWord))
         return Results.BadRequest(new { message = "Du har redan använt detta ordet!" });
 
-    if (!wordService.IsValidWord(request.wordGuess))
+    if (!wordService.IsValidWord(request.wordGuess, languageSwitch))
         return Results.BadRequest(new { message = "Ordet finns inte i ordlistan!" });
 
     // --- STEG 1: APPLICERA SKADA PÅ OBJEKTET ---
@@ -178,7 +180,6 @@ app.MapFallbackToFile("index.html");
 
 app.Run();
 
-
 // ==========================================
 // DATA-KLASSER (DTOs)
 // ==========================================
@@ -193,5 +194,6 @@ public class HandeWordRequest
     public string wordGuess { get; set; } = string.Empty;
     // NYTT: Vem är det som skickar ordet?
     public string PlayerId { get; set; } = string.Empty;
+    public string Language { get; set; } = string.Empty;
 }
 

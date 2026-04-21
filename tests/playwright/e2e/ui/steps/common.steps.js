@@ -80,3 +80,8 @@ Then('I do not see the overlay', async ({ page }) => {
   const overlay = page.locator('[data-testid="overlay"]');
   await expect(overlay).toHaveCount(0);
 });
+
+Then('I see the button {string}', async ({ page }, name) => {
+  const button = page.getByRole('button', { name });
+  await expect(button).toBeVisible();
+});
