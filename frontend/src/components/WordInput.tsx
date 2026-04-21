@@ -7,6 +7,9 @@ interface WordInputProps {
   isTimerRunning: boolean;
 }
 
+
+type Language = "en" | "sv";
+
 export default function WordInput({
   value,
   onChange,
@@ -19,6 +22,20 @@ export default function WordInput({
   const isTest =
     typeof window !== "undefined" &&
     window.location.search.includes("test");
+  
+  const savedLang = localStorage.getItem("lang");
+  const lang: Language = savedLang === "sv" ? "sv" : "en";
+
+  const texts = {
+    en: {
+      activePlaceholder: "Type your word...",
+      waitingPlaceholder: "Waiting for opponent..."
+    },
+    sv: {
+      activePlaceholder: "Skriv ditt ord...",
+      waitingPlaceholder: "Väntar på motståndare..."
+    }
+  };
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key !== "Enter") return;
@@ -44,8 +61,8 @@ export default function WordInput({
       onChange={(e) => onChange(e.target.value)}
       placeholder={
         isActive
-          ? "Type your word..."
-          : "Waiting for opponent..."
+          ? texts[lang].activePlaceholder
+          : texts[lang].waitingPlaceholder
       }
       className={`
         w-full px-4 py-3 rounded-xl text-white text-lg

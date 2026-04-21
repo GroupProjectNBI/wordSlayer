@@ -71,6 +71,20 @@ public class GameManager
     }
 
     /// <summary>
+    /// Uppdaterar språket för ett specifikt spelrum.
+    /// </summary>
+    public bool UpdateGameLanguage(Guid sessionId, string langCode)
+    {
+        if (_activeGames.TryGetValue(sessionId, out var game))
+        {
+            game.Language = langCode;
+            return true; // Språket uppdaterades!
+        }
+
+        return false; // Hittade inte rummet
+    }
+
+    /// <summary>
     /// Hämtar all data om ett specifikt spel baserat på ID.
     /// Används tex. för att hämta spelet om användaren uppdaterar (F5) webbläsaren.
     /// </summary>
