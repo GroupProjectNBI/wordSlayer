@@ -69,7 +69,10 @@ export default function HomePage() {
   return (
     <main className="min-h-screen flex items-center justify-center">
       <section className="w-full max-w-md px-4 text-center">
-        <h1 className="mb-10 text-5xl font-extrabold uppercase tracking-widest">
+        <h1
+          data-testid="homepage-title"
+          className="mb-10 text-5xl font-extrabold uppercase tracking-widest"
+        >
           Word Slayer
         </h1>
         <div className="mb-6 flex justify-center gap-4">
@@ -98,6 +101,7 @@ export default function HomePage() {
 
         <div className="flex flex-col gap-4">
           <button
+            id="btn-new-game"
             onClick={handleCreateNewGame}
             disabled={loading}
             className="w-full rounded-xl bg-purple-600 py-4 text-lg font-semibold text-white transition hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
@@ -114,6 +118,7 @@ export default function HomePage() {
           </button>
 
           <button
+            id="btn-rules"           
             onClick={() => navigate('/rules')}
             className="w-full rounded-xl bg-purple-600 py-4 text-lg font-semibold text-white transition hover:bg-purple-500"
           >
