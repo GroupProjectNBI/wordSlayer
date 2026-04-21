@@ -85,7 +85,7 @@ app.MapPost("/api/game/{sessionId}/join", async (Guid sessionId, JoinGameRequest
     return Results.Ok(joinedGame);
 });
 
-// Denna endpoint används för att hämta spelets nuvarande status (F5 eller nyladdning)
+// Denna endpoint används för att hämta spelets nuvarande status (F5 eller nyladdning).
 app.MapGet("/api/game/{sessionId}", (Guid sessionId, GameManager manager) =>
 {
     var game = manager.GetGameById(sessionId);
