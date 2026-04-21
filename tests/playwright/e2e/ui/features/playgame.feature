@@ -19,14 +19,23 @@ Feature: PlayGame Page
     And the server signals turn changed to "player2" with HP 100 and 94
     Then I see a damage popup with 6
 
-  Scenario: Word history is updated
+  Scenario: My submitted word is rendered as a floating word
     Given the game input is enabled
+    Then no floating words are shown yet
+    And the old word history list is not rendered
     When I type the word "dragon"
     And I submit the word
     And the server signals turn changed to "player2" with HP 100 and 94
-    Then the word history contains "dragon"
-    And the word history entry "dragon" belongs to player 1
-    And the word history shows damage 6 for "dragon"
+    Then the floating word cloud is visible
+    And the floating words include "dragon"
+    And the floating word count is 1
+    And the floating words move over time
+
+  Scenario: Opponent turn updates alone do not render my floating words
+    Given the game input is enabled
+    And no floating words are shown yet
+    When the server signals turn changed to "player2" with HP 100 and 100
+    Then a server turn-change does not add floating words by itself
 
   Scenario: Timer displays and times out
     Then I see turn indicator "Player 1"
