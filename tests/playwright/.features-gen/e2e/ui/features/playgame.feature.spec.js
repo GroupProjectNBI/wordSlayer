@@ -4,7 +4,7 @@ import { test } from "playwright-bdd";
 test.describe('PlayGame Page', () => {
 
   test.beforeEach('Background', async ({ Given, And, page }, testInfo) => { if (testInfo.error) return;
-    await Given('I am logged in as "Player 1"'); 
+    await Given('I am logged in as "Player 1"', null, { page }); 
     await And('the timer is mocked', null, { page }); 
     await And('I intercept game session response', null, { page }); 
     await And('I intercept playword response', null, { page }); 

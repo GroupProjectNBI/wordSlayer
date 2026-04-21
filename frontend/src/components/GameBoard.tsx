@@ -1,5 +1,5 @@
 import HPBar from "./HPBar";
-import Timer from "./Timer";
+import Timer from "./Timer/Timer";
 import Username from "./Username";
 import WordHistory from "./WordHistory";
 import WordInput from "./WordInput";
