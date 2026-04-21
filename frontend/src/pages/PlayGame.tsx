@@ -59,7 +59,7 @@ export default function PlayGame() {
   const [connectedPlayers, setConnectedPlayers] = useState(0);
 
   const [word, setWord] = useState("");
-  const [timer, setTimer] = useState(30);
+  const [timer, setTimer] = useState(12);
   const [turn, setTurn] = useState<"player1" | "player2">("player1");
   const [timerRunning, setTimerRunning] = useState(false);
 
@@ -102,7 +102,7 @@ export default function PlayGame() {
       setTurn(nextTurn);
       setPlayer1((prev) => ({ ...prev, hp: p1Hp }));
       setPlayer2((prev) => ({ ...prev, hp: p2Hp }));
-      setTimer(30);
+      setTimer(timer);
       setTimerRunning(false);
       setError("");
     },

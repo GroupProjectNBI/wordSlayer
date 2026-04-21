@@ -30,7 +30,7 @@ Feature: PlayGame Page
 
   Scenario: Timer displays and times out
     Then I see turn indicator "Player 1"
-    When the timer ticks 30 seconds
+    When the timer ticks 12 seconds
     And the server signals turn changed to "player2" with HP 100 and 100
     Then I see turn indicator "Player 2"
 
@@ -63,7 +63,7 @@ Feature: PlayGame Page
 
   Scenario: Timer timeout switches turn
     Given the game input is enabled
-    When the timer ticks 30 seconds
+    When the timer ticks 12 seconds
     And the server signals turn changed to "player2" with HP 100 and 100
     Then I see turn indicator "Player 2"
     And I see the game overlay
