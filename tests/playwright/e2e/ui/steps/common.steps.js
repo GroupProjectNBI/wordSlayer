@@ -8,7 +8,6 @@ const { Given, When, Then } = createBdd();
 //Alltså är detta allt som behövs för att testa alla på homepage
 // Vilket innebär att Edvin och Zhantea behöver bara skriva sina scenarion i feature
 
-
 //
 // NAVIGATION (Going from one place to another)
 //
@@ -67,16 +66,16 @@ When('I click the {string} button', async ({ page }, text) => {
 // ASSERTIONS (for example i'm supposed to see a textfield)
 //
 Then('I see {string}', async ({ page }, text) => {
-  const heading = page.getByRole('heading', { name: new RegExp(text, 'i') });
+  // Regex 'i' gör sökningen oberoende av stora/små bokstäver (från dev-grenen)
+  const regex = new RegExp(text, 'i');
 
-  if (await heading.count()) {
-    await expect(heading.first()).toBeVisible();
-    return;
-  }
+  const heading = page.getByRole('heading', { name: regex });
+  const plainText = page.getByText(regex);
 
-  await expect(page.getByText(new RegExp(text, 'i'))).toBeVisible();
+  // Playwrights .or() låter oss söka efter båda varianterna samtidigt,
+  // och BEHÅLLER den livsviktiga auto-väntan (från din gren).
+  await expect(heading.or(plainText).first()).toBeVisible();
 });
- 
 
 Then('I see button {string}', async ({ page }, text) => {
   if (text === 'New game' || text === 'New Game' || text === 'Nytt spel') {
@@ -98,7 +97,15 @@ Then('I see button {string}', async ({ page }, text) => {
 });
 
 Then('I see input value {string}', async ({ page }, value) => {
-  await expect(page.locator('input')).toHaveValue(value);
+  // Letar upp det första input-fältet på sidan och verifierar dess inmatade värde
+  const input = page.locator('input').first();
+  await expect(input).toHaveValue(value);
+});
+
+Then('I see turn indicator {string}', async ({ page }, text) => {
+  // expect() väntar automatiskt tills React har hunnit uppdatera DOM:en!
+  const turnIndicator = page.getByTestId('turn-indicator').filter({ hasText: text });
+  await expect(turnIndicator).toBeVisible();
 });
 
 Given("the input is enabled", async ({ page }) => {
@@ -111,11 +118,9 @@ Then('I should be redirected to {string}', async ({ page }, url) => {
 });
 
 Then('I see input {string}', async ({ page }, placeholder) => {
+  // FIX: Bytte ut den manuella if(!visible)-satsen mot expect för att förhindra framtida race-conditions!
   const input = page.getByPlaceholder(placeholder);
-  const visible = await input.isVisible();
-  if (!visible) {
-    throw new Error(`Expected to see input with placeholder "${placeholder}"`);
-  }
+  await expect(input).toBeVisible();
 });
 
 Then('I see the overlay', async ({ page }) => {

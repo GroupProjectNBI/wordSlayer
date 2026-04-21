@@ -100,7 +100,23 @@ app.MapGet("/api/game/{sessionId}", (Guid sessionId, GameManager manager) =>
     return Results.Ok(game);
 });
 
+app.MapPut("/api/game/{sessionId}/language", (Guid sessionId, LanguageRequest request, GameManager manager) =>
+{
+    // 1. Tvätta datan från React (som vi pratade om tidigare)
+    string safeLangCode = request.Language?.ToLower() == "swe" ? "swe" : "eng";
 
+    // 2. Försök uppdatera språket i RUMMET via din GameManager
+    bool success = manager.UpdateGameLanguage(sessionId, safeLangCode);
+
+    // 3. Om rummet inte fanns (fel ID)
+    if (!success)
+    {
+        return Results.NotFound(new { message = "Spelet hittades inte!" });
+    }
+
+    // 4. Returnera OK!
+    return Results.Ok(new { message = "Språk uppdaterat!", language = safeLangCode });
+});
 app.MapPost("/api/game/{sessionId}/playword", async (
     Guid sessionId,
     HandeWordRequest request,
@@ -199,3 +215,4 @@ public class HandeWordRequest
     public string Language { get; set; } = string.Empty;
 }
 
+public record LanguageRequest(string Language);

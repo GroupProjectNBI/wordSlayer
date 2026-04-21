@@ -3,6 +3,8 @@ import { useWebsocket } from "../hooks/useWebsocket";
 import { useParams, useLocation } from "react-router-dom";
 import GameBoard from "../components/GameBoard";
 import DamagePopup from "../components/DamagePopup";
+import swedenFlag from "../assets/sweden.png";
+import ukFlag from "../assets/uk.png";
 
 type Language = "en" | "sv";
 
@@ -10,6 +12,7 @@ interface BackendGameSession {
   sessionId: string;
   players: { name: string; health: number; }[];
   currentTurn: string;
+  language: string;
 }
 
 export default function PlayGame() {
@@ -17,8 +20,12 @@ export default function PlayGame() {
   const myName = sessionStorage.getItem("playerName") || "Player 1";
   const isTest = useLocation().search.includes("test");
 
+  // 1. UI Språk (Hämtas från webläsaren för att översätta texter)
   const savedLang = localStorage.getItem("lang");
-  const lang: Language = savedLang === "sv" ? "sv" : "en";
+  const uiLang: Language = savedLang === "sv" ? "sv" : "en";
+
+  // 2. Ordboksspråk (Hämtas från backend, default är 'eng')
+  const [dictLang, setDictLang] = useState("eng");
 
   const texts = {
     en: {
@@ -104,9 +111,14 @@ export default function PlayGame() {
       setLoading(true);
       try {
         const res = await fetch(`/api/game/${sessionId}`);
-        if (!res.ok) throw new Error(texts[lang].fetchError);
+        if (!res.ok) throw new Error(texts[uiLang].fetchError);
 
         const game = (await res.json()) as BackendGameSession;
+
+        // Sätt ORDBOKENS språk från backend!
+        if (game.language) {
+          setDictLang(game.language);
+        }
 
         setConnectedPlayers(game.players.length);
 
@@ -128,14 +140,14 @@ export default function PlayGame() {
           setTurn(game.currentTurn.toLowerCase() as "player1" | "player2");
         }
       } catch {
-        setError(texts[lang].loadingError);
+        setError(texts[uiLang].loadingError);
       } finally {
         setLoading(false);
       }
     }
 
     loadInitialData();
-  }, [sessionId, lang]);
+  }, [sessionId, uiLang]); // Notera att dependencyn nu är uiLang istället för lang
 
   useEffect(() => {
     if (!timerRunning || isTest || turn !== localPlayer) return;
@@ -184,25 +196,26 @@ export default function PlayGame() {
       const res = await fetch(`/api/game/${sessionId}/playword`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wordGuess: cleanWord, playerId: myName }),
+        // Här skickar vi dictLang (ordboken) till backend, INTE uiLang
+        body: JSON.stringify({ wordGuess: cleanWord, playerId: myName, language: dictLang }),
       });
 
       if (res.ok) {
         applyWordDamage(cleanWord);
       } else {
         setWord(cleanWord);
-        setError(texts[lang].invalidWord);
+        setError(texts[uiLang].invalidWord);
       }
     } catch {
       setWord(cleanWord);
-      setError(texts[lang].serverError);
+      setError(texts[uiLang].serverError);
     }
   }
 
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center bg-black text-white uppercase">
-        {texts[lang].loadingGame}
+        {texts[uiLang].loadingGame}
       </div>
     );
   }
@@ -211,16 +224,21 @@ export default function PlayGame() {
   let isGameOver = false;
 
   if (player1.hp <= 0) {
-    overlayMessage = `🏆 ${player2.username} ${texts[lang].winner} 🏆`;
+    overlayMessage = `🏆 ${player2.username} ${texts[uiLang].winner} 🏆`;
     isGameOver = true;
   } else if (player2.hp <= 0) {
-    overlayMessage = `🏆 ${player1.username} ${texts[lang].winner} 🏆`;
+    overlayMessage = `🏆 ${player1.username} ${texts[uiLang].winner} 🏆`;
     isGameOver = true;
   } else if (connectedPlayers < 2) {
-    overlayMessage = texts[lang].waitingForOpponent;
+    overlayMessage = texts[uiLang].waitingForOpponent;
   } else if (turn !== localPlayer) {
-    overlayMessage = texts[lang].opponentThinking;
+    overlayMessage = texts[uiLang].opponentThinking;
   }
+
+  // Använder dictLang för att rita rätt flagga
+  const languageIcon = dictLang === "swe"
+    ? <img src={swedenFlag} alt="Svensk Ordbok" className="h-6 w-8 object-cover rounded-sm shadow-md" title="Dictionary: Svenska" />
+    : <img src={ukFlag} alt="English Dictionary" className="h-6 w-8 object-cover rounded-sm shadow-md" title="Dictionary: English" />;
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-slate-900">
@@ -244,6 +262,7 @@ export default function PlayGame() {
           if (!isTest && v.trim()) setTimerRunning(true);
         }}
         onSubmitWord={onSubmitWord}
+        languageIcon={languageIcon}
       >
         {popups.map((p) => (
           <DamagePopup
@@ -307,9 +326,21 @@ export default function PlayGame() {
                     borderRadius: "10px",
                   }}
                 >
-                  {texts[lang].replay}
+                  {texts[uiLang].replay}
                 </button>
-              ) : null}
+              ) : (
+                // Behåller de gömda utvecklarknapparna (från din HEAD) om du skulle behöva dem i test/debug
+                <>
+                  {connectedPlayers < 2 && (
+                    <button onClick={() => setConnectedPlayers(2)} className="opacity-0 cursor-default">
+                    </button>
+                  )}
+                  {turn !== localPlayer && connectedPlayers === 2 && (
+                    <button onClick={() => setTurn(localPlayer)} className="opacity-0 cursor-default">
+                    </button>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>
