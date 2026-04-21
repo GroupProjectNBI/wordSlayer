@@ -4,6 +4,8 @@ import { useParams, useLocation } from "react-router-dom";
 import GameBoard from "../components/GameBoard";
 import DamagePopup from "../components/DamagePopup";
 
+type Language = "en" | "sv";
+
 interface BackendGameSession {
   sessionId: string;
   players: { name: string; health: number; }[];
@@ -14,6 +16,34 @@ export default function PlayGame() {
   const { sessionId } = useParams<{ sessionId: string; }>();
   const myName = sessionStorage.getItem("playerName") || "Player 1";
   const isTest = useLocation().search.includes("test");
+
+  const savedLang = localStorage.getItem("lang");
+  const lang: Language = savedLang === "sv" ? "sv" : "en";
+
+  const texts = {
+    en: {
+      fetchError: "Could not fetch game data",
+      loadingError: "An error occurred while loading.",
+      invalidWord: "Invalid word.",
+      serverError: "Could not reach the server.",
+      loadingGame: "Loading game...",
+      waitingForOpponent: "Waiting for opponent... ⏳",
+      opponentThinking: "Opponent is thinking... 🧠",
+      winner: "WINS!",
+      replay: "Play again",
+    },
+    sv: {
+      fetchError: "Kunde inte hämta speldata",
+      loadingError: "Ett fel uppstod vid laddning.",
+      invalidWord: "Ogiltigt ord.",
+      serverError: "Kunde inte nå servern.",
+      loadingGame: "Laddar spel...",
+      waitingForOpponent: "Väntar på motståndare... ⏳",
+      opponentThinking: "Motståndaren tänker... 🧠",
+      winner: "VINNER!",
+      replay: "Spela igen",
+    }
+  };
 
   const [player1, setPlayer1] = useState({ username: "Player 1", hp: 100 });
   const [player2, setPlayer2] = useState({ username: "Player 2", hp: 100 });
@@ -74,7 +104,7 @@ export default function PlayGame() {
       setLoading(true);
       try {
         const res = await fetch(`/api/game/${sessionId}`);
-        if (!res.ok) throw new Error("Could not fetch game data");
+        if (!res.ok) throw new Error(texts[lang].fetchError);
 
         const game = (await res.json()) as BackendGameSession;
 
@@ -98,14 +128,14 @@ export default function PlayGame() {
           setTurn(game.currentTurn.toLowerCase() as "player1" | "player2");
         }
       } catch {
-        setError("An error occured while loading.");
+        setError(texts[lang].loadingError);
       } finally {
         setLoading(false);
       }
     }
 
     loadInitialData();
-  }, [sessionId]);
+  }, [sessionId, lang]);
 
   useEffect(() => {
     if (!timerRunning || isTest || turn !== localPlayer) return;
@@ -161,18 +191,18 @@ export default function PlayGame() {
         applyWordDamage(cleanWord);
       } else {
         setWord(cleanWord);
-        setError("Invalid word.");
+        setError(texts[lang].invalidWord);
       }
     } catch {
       setWord(cleanWord);
-      setError("Could not reach the server.");
+      setError(texts[lang].serverError);
     }
   }
 
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center bg-black text-white uppercase">
-        Loading game...
+        {texts[lang].loadingGame}
       </div>
     );
   }
@@ -181,15 +211,15 @@ export default function PlayGame() {
   let isGameOver = false;
 
   if (player1.hp <= 0) {
-    overlayMessage = `🏆 ${player2.username} VINNER! 🏆`;
+    overlayMessage = `🏆 ${player2.username} ${texts[lang].winner} 🏆`;
     isGameOver = true;
   } else if (player2.hp <= 0) {
-    overlayMessage = `🏆 ${player1.username} VINNER! 🏆`;
+    overlayMessage = `🏆 ${player1.username} ${texts[lang].winner} 🏆`;
     isGameOver = true;
   } else if (connectedPlayers < 2) {
-    overlayMessage = "Väntar på att en motståndare ska ansluta... ⏳";
+    overlayMessage = texts[lang].waitingForOpponent;
   } else if (turn !== localPlayer) {
-    overlayMessage = "Motståndaren tänker... 🧠";
+    overlayMessage = texts[lang].opponentThinking;
   }
 
   return (
@@ -277,22 +307,9 @@ export default function PlayGame() {
                     borderRadius: "10px",
                   }}
                 >
-                  Spela igen
+                  {texts[lang].replay}
                 </button>
-              ) : (
-                <>
-                  {connectedPlayers < 2 && (
-                    <button onClick={() => setConnectedPlayers(2)}>
-                      Test: Motståndare anslöt
-                    </button>
-                  )}
-                  {turn !== localPlayer && connectedPlayers === 2 && (
-                    <button onClick={() => setTurn(localPlayer)}>
-                      Test: Min tur nu
-                    </button>
-                  )}
-                </>
-              )}
+              ) : null}
             </div>
           </div>
         </div>

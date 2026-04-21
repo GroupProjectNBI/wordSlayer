@@ -2,18 +2,42 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+type Language = "en" | "sv";
+
 export default function JoinGame() {
     const navigate = useNavigate();
     const [gameCode, setGameCode] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
+    const savedLang = localStorage.getItem("lang");
+    const lang: Language = savedLang === "sv" ? "sv" : "en";
+
+    const texts = {
+        en: {
+            title: "Join Game",
+            placeholder: "Enter code",
+            join: "Join",
+            enterCode: "Enter a game code.",
+            joinError: "Could not join the game.",
+            serverError: "Could not reach the server. Please try again."
+        },
+        sv: {
+            title: "Gå med i spel",
+            placeholder: "Ange kod",
+            join: "Gå med",
+            enterCode: "Ange en spelkod.",
+            joinError: "Kunde inte gå med i spelet.",
+            serverError: "Kunde inte nå servern. Försök igen."
+        }
+    };
+
     async function handleJoinGame() {
         // Clear any old error and validate the game code.
         setError('');
 
         if (!gameCode.trim()) {
-            setError('Enter a game code.');
+            setError(texts[lang].enterCode);
             return;
         }
 
@@ -34,7 +58,7 @@ export default function JoinGame() {
 
             if (!response.ok) {
                 const body = await response.json().catch(() => null);
-                setError(body?.message ?? 'Could not join the game.');
+                setError(body?.message ?? texts[lang].joinError);
                 return;
             }
 
@@ -45,7 +69,7 @@ export default function JoinGame() {
             navigate(`/game/${gameCode}`);
         } catch (err) {
             console.error(err);
-            setError('Could not reach the server. Please try again.');
+            setError(texts[lang].serverError);;
         } finally {
             setLoading(false);
         }
@@ -61,14 +85,14 @@ export default function JoinGame() {
         <main className="min-h-screen flex items-center justify-center">
             <section className="w-full max-w-md px-4 text-center">
                 <h1 className="mb-10 text-5xl font-extrabold uppercase tracking-widest">
-                    Join Game
+                    <h1>{texts[lang].title}</h1>
                 </h1>
 
                 <div className="flex flex-col gap-4">
                     <input
                         id="game-code-input"
                         type="text"
-                        placeholder="Enter code"
+                        placeholder={texts[lang].placeholder}
                         value={gameCode}
                         onChange={(e) => setGameCode(e.target.value)}
                         onKeyDown={handleKeyDown}
@@ -81,7 +105,7 @@ export default function JoinGame() {
                         disabled={loading}
                         className="w-full rounded-xl bg-purple-600 py-4 text-lg font-semibold text-white transition hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                        Join
+                        {texts[lang].join}
                     </button>
                 </div>
             </section>
