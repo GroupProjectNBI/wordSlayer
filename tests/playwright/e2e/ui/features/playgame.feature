@@ -1,4 +1,3 @@
-
 Feature: PlayGame Page
 
   Background:
@@ -9,8 +8,8 @@ Feature: PlayGame Page
     And I am on the PlayGame page
 
   Scenario: Player username is visible
-    Then I see the player 1 username
-    And I see the player 2 username
+    Then I see my username
+    And I see opponent username
 
   Scenario: Damage popup appears after word submission
     Given the game input is enabled
@@ -39,8 +38,8 @@ Feature: PlayGame Page
     When I type the word "dragon"
     And I submit the word
     And the server signals turn changed to "player2" with HP 100 and 94
-    Then player 1 has 100 HP
-    And player 2 has 94 HP
+    Then my HP is 100
+    And opponent HP is 94
 
   Scenario: Overlay appears after Player 1 submits and disappears after Player 2 submits
     Given the game input is enabled
@@ -67,3 +66,29 @@ Feature: PlayGame Page
     And the server signals turn changed to "player2" with HP 100 and 100
     Then I see turn indicator "Player 2"
     And I see the game overlay
+
+  Scenario: Player 1 sees their info bottom right and opponent top left
+    Given I am logged in as "Player 1"
+    And the timer is mocked
+    And I intercept game session response
+    And I intercept playword response
+    And I am on the PlayGame page
+    Then my info is bottom right
+    And opponent info is top left
+    And I see my username
+    And I see opponent username
+    And my HP is 100
+    And opponent HP is 100
+
+  Scenario: Player 2 sees their info bottom right and opponent top left
+    Given I am logged in as "Player 2"
+    And the timer is mocked
+    And I intercept game session response
+    And I intercept playword response
+    And I am on the PlayGame page
+    Then my info is bottom right
+    And opponent info is top left
+    And I see my username
+    And I see opponent username
+    And my HP is 100
+    And opponent HP is 100
