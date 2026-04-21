@@ -45,13 +45,6 @@ Then('the word history shows damage {int} for {string}', async ({ page }, damage
 
 Given('I am logged in as {string}', async ({ page }, playerName) => {
   await page.addInitScript((name) => {
-    window.sessionStorage.setItem('playerName', name);
-  }, playerName);
-});
-
-
-Given('I am logged in as {string}', async ({ page }, playerName) => {
-  await page.addInitScript((name) => {
     sessionStorage.setItem('playerName', name);
   }, playerName);
 });
