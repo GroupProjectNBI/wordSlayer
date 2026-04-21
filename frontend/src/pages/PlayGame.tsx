@@ -31,8 +31,6 @@ export default function PlayGame() {
       opponentThinking: "Opponent is thinking... 🧠",
       winner: "WINS!",
       replay: "Play again",
-      opponentJoinedTest: "Test: Opponent joined",
-      myTurnNowTest: "Test: My turn now",
     },
     sv: {
       fetchError: "Kunde inte hämta speldata",
@@ -44,8 +42,6 @@ export default function PlayGame() {
       opponentThinking: "Motståndaren tänker... 🧠",
       winner: "VINNER!",
       replay: "Spela igen",
-      opponentJoinedTest: "Test: Motståndare anslöt",
-      myTurnNowTest: "Test: Min tur nu",
     }
   };
 
@@ -313,20 +309,7 @@ export default function PlayGame() {
                 >
                   {texts[lang].replay}
                 </button>
-              ) : (
-                <>
-                  {connectedPlayers < 2 && (
-                    <button onClick={() => setConnectedPlayers(2)}>
-                      {texts[lang].opponentJoinedTest}
-                    </button>
-                  )}
-                  {turn !== localPlayer && connectedPlayers === 2 && (
-                    <button onClick={() => setTurn(localPlayer)}>
-                      {texts[lang].myTurnNowTest}
-                    </button>
-                  )}
-                </>
-              )}
+              ) : null}
             </div>
           </div>
         </div>
