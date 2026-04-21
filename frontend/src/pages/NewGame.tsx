@@ -1,12 +1,47 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
+// Två olika typer för att hålla isär UI och Ordbok
+type UiLanguage = "en" | "sv";
+type DictLanguage = "eng" | "swe";
+
 export default function NewGame() {
     const navigate = useNavigate();
-    const { sessionId } = useParams<{ sessionId: string }>();
+    const { sessionId } = useParams<{ sessionId: string; }>();
     const [copied, setCopied] = useState(false);
     const [error, setError] = useState('');
-    const [lang, setLang] = useState("eng"); // Standard till engelska
+
+    // 1. SPRÅK PÅ SKÄRMEN (UI)
+    // Läser endast av vad som finns sparat i webläsaren sedan tidigare.
+    const savedLang = localStorage.getItem("lang");
+    const uiLang: UiLanguage = savedLang === "sv" ? "sv" : "en";
+
+    // 2. SPRÅK FÖR ORDBOKEN (Backend)
+    // Detta är spelets regler. Standard är engelska, men kan klickas på av spelaren.
+    const [dictLang, setDictLang] = useState<DictLanguage>("eng");
+
+    const texts = {
+        en: {
+            title: "Start new game",
+            noSession: "No session found",
+            copyGameCode: "Copy Game Code",
+            copiedGameCode: "Copied Game Code!",
+            selectDictionary: "Select Dictionary:",
+            startGame: "Start Game",
+            startHint: 'Click "Start Game" when you\'ve shared the code with your opponent.',
+            dictError: "Could not save dictionary choice. Please try again."
+        },
+        sv: {
+            title: "Starta nytt spel",
+            noSession: "Ingen session hittades",
+            copyGameCode: "Kopiera spelkod",
+            copiedGameCode: "Spelkoden kopierad!",
+            selectDictionary: "Välj ordbok för matchen:",
+            startGame: "Starta spel",
+            startHint: 'Klicka på "Starta spel" när du har delat koden med din motståndare.',
+            dictError: "Kunde inte spara valet av ordbok. Försök igen."
+        }
+    };
 
     const handleCopy = () => {
         if (sessionId) {
@@ -16,28 +51,27 @@ export default function NewGame() {
         }
     };
 
-    // Funktion för att byta språk och spara till backend
-    const handleLanguageChange = async (selectedLang: string) => {
-        setLang(selectedLang);
+    // Uppdaterar ENDAST ordboken, inte UI-språket
+    const handleDictionaryChange = async (selectedDict: DictLanguage) => {
+        setDictLang(selectedDict);
 
         if (!sessionId) return;
 
         try {
-            // Byt ut denna URL mot den endpoint du skapar i din C# backend
             const response = await fetch(`/api/game/${sessionId}/language`, {
-                method: 'PUT', // eller POST beroende på hur du bygger ditt API
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ language: selectedLang }),
+                body: JSON.stringify({ language: selectedDict }),
             });
 
             if (!response.ok) {
-                throw new Error("Failed to update language");
+                throw new Error("Failed to update dictionary language");
             }
         } catch (err) {
-            console.error("Kunde inte spara språket till servern:", err);
-            setError("Kunde inte spara språkvalet. Försök igen.");
+            console.error("Kunde inte spara ordboksspråket till servern:", err);
+            setError(texts[uiLang].dictError);
         }
     };
 
@@ -52,19 +86,17 @@ export default function NewGame() {
         <main className="min-h-screen flex items-center justify-center bg-slate-900 text-white">
             <section className="w-full max-w-lg px-6 text-center">
                 <h1 className="mb-12 text-5xl font-extrabold uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">
-                    Start new game
+                    {texts[uiLang].title}
                 </h1>
 
                 <div className="flex flex-col gap-3 mb-8">
-                    {/* Det stora sessions-ID:t */}
                     <input
                         type="text"
-                        value={sessionId || 'No session found'}
+                        value={sessionId || texts[uiLang].noSession}
                         readOnly
                         className="w-full rounded-2xl border-2 border-slate-700 bg-slate-800 px-6 py-5 text-center font-mono text-3xl font-bold text-purple-300 outline-none shadow-inner"
                     />
 
-                    {/* Den nya kopieringsknappen */}
                     <button
                         onClick={handleCopy}
                         disabled={!sessionId}
@@ -74,37 +106,36 @@ export default function NewGame() {
                             }`}
                     >
                         <span>{copied ? '✅' : '📋'}</span>
-                        {copied ? 'Copied Game Code!' : 'Copy Game Code'}
+                        {copied ? texts[uiLang].copiedGameCode : texts[uiLang].copyGameCode}
                     </button>
                 </div>
 
-                {/* --- NYTT: Språkval --- */}
+                {/* --- Val av ordbok --- */}
                 <div className="mb-8">
-                    <p className="mb-3 text-slate-400 font-medium">Select Dictionary:</p>
+                    <p className="mb-3 text-slate-400 font-medium">{texts[uiLang].selectDictionary}</p>
                     <div className="flex justify-center gap-4">
                         <button
-                            onClick={() => handleLanguageChange("eng")}
-                            className={`text-5xl transition-all duration-200 ${lang === "eng"
+                            onClick={() => handleDictionaryChange("eng")}
+                            className={`text-5xl transition-all duration-200 ${dictLang === "eng"
                                 ? "scale-110 drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]"
                                 : "opacity-50 hover:opacity-80 hover:scale-105"
                                 }`}
-                            title="English"
+                            title="English Dictionary"
                         >
                             ENG
                         </button>
                         <button
-                            onClick={() => handleLanguageChange("swe")}
-                            className={`text-5xl transition-all duration-200 ${lang === "swe"
+                            onClick={() => handleDictionaryChange("swe")}
+                            className={`text-5xl transition-all duration-200 ${dictLang === "swe"
                                 ? "scale-110 drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]"
                                 : "opacity-50 hover:opacity-80 hover:scale-105"
                                 }`}
-                            title="Svenska"
+                            title="Svensk Ordbok"
                         >
                             SE
                         </button>
                     </div>
                 </div>
-                {/* ---------------------- */}
 
                 {error && <div className="mb-4 text-lg text-red-400 font-semibold">{error}</div>}
 
@@ -114,10 +145,10 @@ export default function NewGame() {
                         disabled={!sessionId}
                         className="w-full rounded-2xl bg-purple-600 py-5 text-2xl font-bold text-white transition-all hover:bg-purple-500 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 shadow-xl shadow-purple-900/40"
                     >
-                        Start Game
+                        {texts[uiLang].startGame}
                     </button>
                     <p className="mt-4 text-slate-500 text-sm italic">
-                        Click "Start Game" when you've shared the code with your opponent.
+                        {texts[uiLang].startHint}
                     </p>
                 </div>
             </section>

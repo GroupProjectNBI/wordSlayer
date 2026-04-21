@@ -1,8 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import swedenFlag from "../assets/sweden.png";
 import ukFlag from "../assets/uk.png";
+
+type Language = "en" | "sv";
 
 export default function JoinGame() {
     const navigate = useNavigate();
@@ -27,8 +28,6 @@ export default function JoinGame() {
                     }
                 } else {
                     setGameLanguage(null);
-                    // Om vi vill kan vi sätta ett fel här, t.ex:
-                    // setError('Spelet hittades inte.');
                 }
             } catch (err) {
                 console.error("Kunde inte hämta spelinfo:", err);
@@ -45,12 +44,34 @@ export default function JoinGame() {
         }
     }, [gameCode]);
 
+    const savedLang = localStorage.getItem("lang");
+    const lang: Language = savedLang === "sv" ? "sv" : "en";
+
+    const texts = {
+        en: {
+            title: "Join Game",
+            placeholder: "Enter 36-character game code",
+            join: "Join",
+            enterCode: "Enter a game code.",
+            joinError: "Could not join the game.",
+            serverError: "Could not reach the server. Please try again."
+        },
+        sv: {
+            title: "Gå med i spel",
+            placeholder: "Ange 36-teckens spelkod",
+            join: "Gå med",
+            enterCode: "Ange en spelkod.",
+            joinError: "Kunde inte gå med i spelet.",
+            serverError: "Kunde inte nå servern. Försök igen."
+        }
+    };
+
     async function handleJoinGame() {
         // Clear any old error and validate the game code.
         setError('');
 
         if (!gameCode.trim()) {
-            setError('Enter a game code.');
+            setError(texts[lang].enterCode);
             return;
         }
 
@@ -58,7 +79,7 @@ export default function JoinGame() {
 
         try {
             // Tell the backend to join the room as Player 2.
-            const response = await fetch(`/api/game/${gameCode}/join`, {
+            const response = await fetch(`/api/game/${gameCode.trim()}/join`, {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
@@ -71,7 +92,7 @@ export default function JoinGame() {
 
             if (!response.ok) {
                 const body = await response.json().catch(() => null);
-                setError(body?.message ?? 'Could not join the game.');
+                setError(body?.message ?? texts[lang].joinError);
                 return;
             }
 
@@ -79,10 +100,10 @@ export default function JoinGame() {
             // Spara att jag är Player 2 i den här fliken
             sessionStorage.setItem("playerName", "Player 2");
 
-            navigate(`/game/${gameCode}`);
+            navigate(`/game/${gameCode.trim()}`);
         } catch (err) {
             console.error(err);
-            setError('Could not reach the server. Please try again.');
+            setError(texts[lang].serverError);
         } finally {
             setLoading(false);
         }
@@ -98,14 +119,14 @@ export default function JoinGame() {
         <main className="min-h-screen flex items-center justify-center bg-slate-900 text-white">
             <section className="w-full max-w-md px-6 text-center">
                 <h1 className="mb-10 text-5xl font-extrabold uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">
-                    Join Game
+                    {texts[lang].title}
                 </h1>
 
                 <div className="flex flex-col gap-4">
                     <input
                         id="game-code-input"
                         type="text"
-                        placeholder="Enter 36-character game code"
+                        placeholder={texts[lang].placeholder}
                         value={gameCode}
                         onChange={(e) => setGameCode(e.target.value)}
                         onKeyDown={handleKeyDown}
@@ -140,7 +161,7 @@ export default function JoinGame() {
                         disabled={loading || !gameCode.trim()}
                         className="w-full rounded-2xl bg-purple-600 py-4 text-xl font-bold text-white transition hover:bg-purple-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 shadow-xl shadow-purple-900/40 mt-2"
                     >
-                        Join
+                        {texts[lang].join}
                     </button>
                 </div>
             </section>

@@ -2,7 +2,6 @@ Feature: HomePage
 
     Scenario: User sees homepage
         Given I am on the homepage
-        Then I see "Word Slayer"
         And I see button "New game"
         And I see button "Join Game"
         And I see button "Rules"
@@ -21,4 +20,19 @@ Feature: HomePage
         When I press button "Rules"
         Then I am on "/rules"
         And I see "Rules"
+
+    Scenario: User changes language on homepage
+        Given I am on the homepage
+        When I click the Swedish flag
+        Then I see button "Nytt spel"
+        And I see button "Gå med i spel"
+        And I see button "Regler"
+
+        Scenario: User changes language to English on homepage
+            Given I am on the homepage
+            When I click the Swedish flag
+            And I click the English flag
+            Then I see button "New Game"
+            And I see button "Join Game"
+            And I see button "Rules"
 

@@ -46,10 +46,17 @@ Then('the word history shows damage {int} for {string}', async ({ page }, damage
   await expect(entry).toHaveAttribute('data-damage', `${damage}`);
 });
 
-
-Given('I am logged in as {string}', async ({ }, arg) => { });
+Given('I am logged in as {string}', async ({ page }, playerName) => {
+  await page.addInitScript((name) => {
+    window.sessionStorage.setItem('playerName', name);
+  }, playerName);
+});
 
 Given('I am on the PlayGame page', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('lang', 'en');
+  });
+
   await page.goto('/game/00000000-0000-0000-0000-000000000000?test');
 });
 
