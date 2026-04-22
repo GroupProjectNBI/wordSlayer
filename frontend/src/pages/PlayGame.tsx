@@ -284,7 +284,6 @@ export default function PlayGame() {
     );
   }
 
-
   // --- 7. OVERLAY & WINNER LOGIC ---
   let overlayMessage: string | null = null;
   let isGameOver = false;
@@ -327,16 +326,6 @@ export default function PlayGame() {
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-slate-900">
-
-      {/* MUTE MUSIC BUTTON – always visible so tests can find it */}
-      <button
-        data-testid="music-button"
-        onClick={() => setMusicMuted((m) => !m)}
-        className="absolute bottom-4 left-4 z-300 bg-black/60 text-white px-4 py-2 rounded border border-white"
-      >
-        {musicMuted ? "Unmute Sound" : "Mute Sound"}
-      </button>
-
       {error && (
         <div className="absolute top-10 left-1/2 z-110 -translate-x-1/2 rounded-full bg-red-600 px-6 py-2 font-bold text-white shadow-2xl">
           {error}
@@ -359,6 +348,18 @@ export default function PlayGame() {
         }}
         onSubmitWord={onSubmitWord}
         languageIcon={languageIcon}
+        headerControls={
+          <button
+            type="button"
+            data-testid="music-button"
+            onClick={() => setMusicMuted((m) => !m)}
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/30 bg-black/60 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-black/75 focus:outline-none focus:ring-2 focus:ring-yellow-300 focus:ring-offset-2 focus:ring-offset-slate-900"
+            aria-pressed={musicMuted}
+            aria-label={musicMuted ? "Unmute sound" : "Mute sound"}
+          >
+            {musicMuted ? "Unmute Sound" : "Mute Sound"}
+          </button>
+        }
         onLeaveGame={handleLeaveGame}
       >
         {popups.map((p) => (

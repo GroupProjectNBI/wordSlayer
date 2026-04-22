@@ -30,7 +30,8 @@ interface GameBoardProps {
   history: WordEntry[];
   timerRunning: boolean;
   children?: React.ReactNode;
-  languageIcon?: React.ReactNode;
+  languageIcon?: React.ReactNode; // NY: Tar emot flaggan från PlayGame
+  headerControls?: React.ReactNode;
   onLeaveGame: () => void;
   lang: Language; // Tillagd prop för UI-språk
 }
@@ -48,6 +49,7 @@ export default function GameBoard({
   timerRunning,
   children,
   languageIcon,
+  headerControls,
   onLeaveGame,
   lang,
 }: GameBoardProps) {
@@ -90,50 +92,57 @@ export default function GameBoard({
 
   return (
     <main className="min-h-screen bg-[#1a1a2e] text-white relative overflow-hidden">
-      {/* TITLE */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 text-center">
-        <h1 className="text-4xl font-extrabold tracking-widest uppercase text-slate-200">
-          Word Slayer
-        </h1>
-      </div>
+      <div className="absolute inset-x-0 top-0 z-[120] px-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6">
+        <div className="grid grid-cols-[1fr_auto] items-start gap-3 sm:grid-cols-[1fr_auto_1fr]">
+          <div className="min-w-0 self-center text-left sm:col-start-2 sm:text-center">
+            <h1 className="text-3xl font-extrabold tracking-widest uppercase sm:text-4xl">
+              Word Slayer
+            </h1>
+          </div>
 
-      {/* SURRENDER BUTTON */}
-      <div className="absolute top-4 left-4 z-50">
-        <button
-          data-testid="surrender-button"
-          onClick={() => {
-            if (window.confirm(texts[lang].surrenderConfirm)) {
-              onLeaveGame();
-            }
-          }}
-          className="flex items-center gap-2 bg-red-900/40 hover:bg-red-800/60 text-red-200 px-4 py-2 rounded-xl border border-red-700/50 transition-all backdrop-blur-sm group"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 group-hover:-translate-x-1 transition-transform"
-            fill="none" viewBox="0 0 24 24" stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-          <span className="font-semibold text-sm uppercase tracking-wider">
-            {texts[lang].surrenderBtn}
-          </span>
-        </button>
-      </div>
+          {/* SURRENDER BUTTON */}
+          <div className="col-start-2 row-start-1 self-start justify-self-end sm:col-start-1 sm:justify-self-start">
+            <button
+              data-testid="surrender-button"
+              onClick={() => {
+                if (window.confirm(texts[lang].surrenderConfirm)) {
+                  onLeaveGame();
+                }
+              }}
+              className="flex min-h-11 items-center gap-2 rounded-xl border border-red-700/50 bg-red-900/40 px-4 py-2 text-red-200 transition-all backdrop-blur-sm group hover:bg-red-800/60"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 group-hover:-translate-x-1 transition-transform"
+                fill="none" viewBox="0 0 24 24" stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span className="font-semibold text-sm uppercase tracking-wider">
+                {texts[lang].surrenderBtn}
+              </span>
+            </button>
+          </div>
 
-      {/* LANGUAGE INDICATOR */}
-      {languageIcon && (
-        <div className="absolute top-4 right-4 flex items-center justify-center bg-slate-800/80 px-3 py-2 rounded-xl border border-slate-700 shadow-lg backdrop-blur-sm z-50 transition-all hover:bg-slate-700">
-          {languageIcon}
+          {(languageIcon || headerControls) && (
+            <div className="col-span-2 row-start-2 flex flex-wrap items-center justify-end gap-2 sm:col-span-1 sm:col-start-3 sm:row-start-1 sm:self-start">
+              {languageIcon && (
+                <div className="flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-slate-700 bg-slate-800/80 px-3 py-2 shadow-lg backdrop-blur-sm transition-all hover:bg-slate-700">
+                  {languageIcon}
+                </div>
+              )}
+              {headerControls}
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       <FloatingWordCloud words={history} />
 
       {/* OPPONENT */}
       <div
         data-player="opponent"
-        className="absolute top-20 left-4 text-left"
+        className="absolute top-28 left-4 text-left sm:top-20"
       >
         <Username
           name={opponent?.username || texts[lang].opponent}
@@ -176,7 +185,7 @@ export default function GameBoard({
       </div>
 
       {/* WORD INPUT */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-full max-w-md px-4">
+      <div className="absolute bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 w-full max-w-md -translate-x-1/2 px-4 sm:bottom-10">
         <WordInput
           value={word}
           onChange={setWord}
