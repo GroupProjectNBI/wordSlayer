@@ -18,3 +18,4 @@ Feature: Game winner
     When player 1 reaches 0 HP
     Then I see the game overlay
     And I should see winner message "YOU LOSE"
+    
