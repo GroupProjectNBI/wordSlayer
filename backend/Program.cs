@@ -117,6 +117,7 @@ app.MapPut("/api/game/{sessionId}/language", (Guid sessionId, LanguageRequest re
     // 4. Returnera OK!
     return Results.Ok(new { message = "Språk uppdaterat!", language = safeLangCode });
 });
+// --- PLAY WORD ---
 app.MapPost("/api/game/{sessionId}/playword", async (
     Guid sessionId,
     HandeWordRequest request,
@@ -149,11 +150,17 @@ app.MapPost("/api/game/{sessionId}/playword", async (
     opponent.Health = Math.Max(0, opponent.Health - damage);
     attacker.Guesses.Add(normalizedWord);
 
-    // --- STEG 2: BERÄKNA NÄSTA TUR ---
-    string nextTurn = request.PlayerId == "Player 1" ? "player2" : "player1";
+    // --- NYTT STEG: UPPDATERA STATUS ---
+    // Vi kollar om skadan gjorde att någon vann
+    game.UpdateStatus();
 
-    // --- STEG 3: HÄMTA DE UPPDATERADE VÄRDENA (Säkrare matchning) ---
-    // Vi letar upp spelarna specifikt för att veta vem som är vem på skärmen
+    // --- STEG 2: BERÄKNA NÄSTA TUR ---
+    // Om spelet är "Finished", skickar vi "gameover" som turn-signal
+    string nextTurn = game.Status == "Finished"
+        ? "gameover"
+        : (request.PlayerId == "Player 1" ? "player2" : "player1");
+
+    // --- STEG 3: HÄMTA DE UPPDATERADE VÄRDENA ---
     var p1 = game.Players.FirstOrDefault(p => p.Name == "Player 1");
     var p2 = game.Players.FirstOrDefault(p => p.Name == "Player 2");
 
@@ -161,11 +168,42 @@ app.MapPost("/api/game/{sessionId}/playword", async (
     int p2Hp = p2?.Health ?? 100;
 
     // --- STEG 4: SKICKA SIGNALEN TILL ALLA ---
-    // Nu innehåller p1Hp och p2Hp de nya värdena efter skadan
     await hubContext.Clients.Group(sessionId.ToString()).SendAsync("TurnChanged", nextTurn, p1Hp, p2Hp);
 
     return Results.Ok(game);
 });
+
+// --- SURRENDER (GE UPP) ---
+app.MapPost("/api/game/{sessionId}/surrender", async (
+    Guid sessionId,
+    string playerId, // Vem som ger upp
+    GameManager gameManager,
+    IHubContext<backend.GameHub> hubContext) =>
+{
+    var game = gameManager.GetGameById(sessionId);
+    if (game == null) return Results.NotFound();
+
+    var loser = game.Players.FirstOrDefault(p => p.Name == playerId);
+    if (loser != null)
+    {
+        // Vi sätter -1 som en "Surrender-flagga"
+        loser.Health = -1;
+        // Kör logiken för att sätta Status = Finished och utse vinnare
+        game.UpdateStatus();
+    }
+
+    var p1 = game.Players.FirstOrDefault(p => p.Name == "Player 1");
+    var p2 = game.Players.FirstOrDefault(p => p.Name == "Player 2");
+
+    // Skicka ut TurnChanged med "gameover". 
+    // Frontend ser att någons HP är <= 0 och visar vinstskärmen!
+    await hubContext.Clients.Group(sessionId.ToString())
+        .SendAsync("TurnChanged", "gameover", p1?.Health ?? 0, p2?.Health ?? 0);
+
+    return Results.Ok();
+});
+
+// --- TIMEOUT ---
 app.MapPost("/api/game/{sessionId}/timeout", async (
     Guid sessionId,
     string playerId,
@@ -175,10 +213,15 @@ app.MapPost("/api/game/{sessionId}/timeout", async (
     var game = gameManager.GetGameById(sessionId);
     if (game == null) return Results.NotFound();
 
-    // Beräkna nästa tur (om Player 1 fick timeout, blir det player2)
-    string nextTurn = playerId == "Player 1" ? "player2" : "player1";
+    // Vi kör UpdateStatus även här ifall vi i framtiden lägger till död vid timeout
+    game.UpdateStatus();
 
-    // Hämta nuvarande HP (ingen skada sker vid timeout)
+    // Beräkna nästa tur (om Player 1 fick timeout, blir det player2)
+    // Men om spelet mot förmodan tog slut, skicka gameover
+    string nextTurn = game.Status == "Finished"
+        ? "gameover"
+        : (playerId == "Player 1" ? "player2" : "player1");
+
     var p1 = game.Players.FirstOrDefault(p => p.Name == "Player 1");
     var p2 = game.Players.FirstOrDefault(p => p.Name == "Player 2");
 

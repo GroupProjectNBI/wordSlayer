@@ -33,6 +33,22 @@ public class GameSession
         SessionId = new GameId().getGuid();
     }
     // --- NY FUNKTION: HÄR LÄGGER DU LOGIKEN ---
+    public void UpdateStatus()
+    {
+        // Leta efter någon spelare som har 0 eller mindre (täcker både 0 skada och -1 surrender)
+        if (Players.Any(p => p.Health <= 0))
+        {
+            // Sätt spelet till avslutat
+            Status = "Finished";
+
+            // Utse vinnaren (den som fortfarande lever/har mest liv)
+            var winnerPlayer = Players.OrderByDescending(p => p.Health).FirstOrDefault();
+            if (winnerPlayer != null)
+            {
+                Winner = winnerPlayer.Name;
+            }
+        }
+    }
     public void ApplyDamage(int playerIndex, int amount)
     {
         // 1. Kontrollera att spelaren finns

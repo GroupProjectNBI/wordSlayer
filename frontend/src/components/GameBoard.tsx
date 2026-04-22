@@ -4,6 +4,8 @@ import Timer from "./Timer/Timer";
 import Username from "./Username";
 import WordInput from "./WordInput";
 
+type Language = "en" | "sv";
+
 interface Player {
   username: string;
   hp: number;
@@ -28,7 +30,9 @@ interface GameBoardProps {
   history: WordEntry[];
   timerRunning: boolean;
   children?: React.ReactNode;
-  languageIcon?: React.ReactNode; // NY: Tar emot flaggan från PlayGame
+  languageIcon?: React.ReactNode;
+  onLeaveGame: () => void;
+  lang: Language; // Tillagd prop för UI-språk
 }
 
 export default function GameBoard({
@@ -43,17 +47,39 @@ export default function GameBoard({
   history,
   timerRunning,
   children,
-  languageIcon
+  languageIcon,
+  onLeaveGame,
+  lang,
 }: GameBoardProps) {
 
   const isTest =
     typeof window !== "undefined" &&
     window.location.search.includes("test");
 
-  const inputDisabled = isTest ? false : turn !== localPlayer;
-  const inputActive = isTest ? true : turn === localPlayer;
-  const timerIsRunning = isTest ? true : timerRunning;
+  // Ordbok för GameBoard-specifika texter
+  const texts = {
+    en: {
+      surrenderBtn: "Surrender",
+      surrenderConfirm: "Are you sure you want to surrender?",
+      opponent: "Opponent",
+      me: "Me"
+    },
+    sv: {
+      surrenderBtn: "Ge upp",
+      surrenderConfirm: "Är du säker på att du vill ge upp?",
+      opponent: "Motståndare",
+      me: "Jag"
+    }
+  };
 
+  // --- LOGIK FÖR ATT LÅSA INPUT VID GAME OVER (Viktigt för Playwright) ---
+  // Vi kollar om någon spelare har 0 eller mindre HP
+  const isGameOver = (player1.hp <= 0) || (player2 ? player2.hp <= 0 : false);
+  // Om det är test-läge (Playwright), låt isGameOver styra helt. 
+  // Annars (Live) lås om det inte är din tur ELLER om spelet är slut.
+  const inputDisabled = isTest ? isGameOver : (turn !== localPlayer || isGameOver);
+  const inputActive = isTest ? !isGameOver : (turn === localPlayer && !isGameOver);
+  const timerIsRunning = isTest ? true : timerRunning;
   // Determine which player is "me" and which is "opponent" for layout
   const isPlayer1 = localPlayer === "player1";
   // Always assign 'me' and 'opponent' for perspective
@@ -66,30 +92,51 @@ export default function GameBoard({
     <main className="min-h-screen bg-[#1a1a2e] text-white relative overflow-hidden">
       {/* TITLE */}
       <div className="absolute top-4 left-1/2 -translate-x-1/2 text-center">
-        <h1 className="text-4xl font-extrabold tracking-widest uppercase">
+        <h1 className="text-4xl font-extrabold tracking-widest uppercase text-slate-200">
           Word Slayer
         </h1>
       </div>
 
-      {/* NY: SPRÅK-INDIKATOR (FLAGGAN) */}
+      {/* SURRENDER BUTTON */}
+      <div className="absolute top-4 left-4 z-50">
+        <button
+          data-testid="surrender-button"
+          onClick={() => {
+            if (window.confirm(texts[lang].surrenderConfirm)) {
+              onLeaveGame();
+            }
+          }}
+          className="flex items-center gap-2 bg-red-900/40 hover:bg-red-800/60 text-red-200 px-4 py-2 rounded-xl border border-red-700/50 transition-all backdrop-blur-sm group"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5 group-hover:-translate-x-1 transition-transform"
+            fill="none" viewBox="0 0 24 24" stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          <span className="font-semibold text-sm uppercase tracking-wider">
+            {texts[lang].surrenderBtn}
+          </span>
+        </button>
+      </div>
+
+      {/* LANGUAGE INDICATOR */}
       {languageIcon && (
         <div className="absolute top-4 right-4 flex items-center justify-center bg-slate-800/80 px-3 py-2 rounded-xl border border-slate-700 shadow-lg backdrop-blur-sm z-50 transition-all hover:bg-slate-700">
           {languageIcon}
         </div>
       )}
 
-      {/* Flytande ord renderas som ett separat overlay-lager under modal-overlayn. */}
       <FloatingWordCloud words={history} />
 
-
-      {/* OPPONENT (always top left) */}
+      {/* OPPONENT */}
       <div
         data-player="opponent"
-        data-active={opponent ? turn === (isPlayer1 ? "player2" : "player1") : false}
         className="absolute top-20 left-4 text-left"
       >
         <Username
-          name={opponent?.username || "Opponent"}
+          name={opponent?.username || texts[lang].opponent}
           isActive={opponent ? turn === (isPlayer1 ? "player2" : "player1") : false}
           align="left"
         />
@@ -99,14 +146,13 @@ export default function GameBoard({
         <div className="text-sm mt-1" data-testid="opponent-hp">{`${opponent?.hp ?? 0} HP`}</div>
       </div>
 
-      {/* ME (always bottom right) */}
+      {/* ME */}
       <div
         data-player="me"
-        data-active={me ? turn === localPlayer : false}
         className="absolute bottom-20 right-4 text-right"
       >
         <Username
-          name={me?.username || "Me"}
+          name={me?.username || texts[lang].me}
           isActive={me ? turn === localPlayer : false}
           align="right"
         />
