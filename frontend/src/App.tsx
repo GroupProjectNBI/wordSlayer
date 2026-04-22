@@ -1,10 +1,11 @@
-import { Routes, Route } from 'react-router-dom';;
-import HomePage from './pages/HomePage';;
+import { Routes, Route } from 'react-router-dom';
+import './App.css';
+import HomePage from './pages/HomePage';
 import NewGame from './pages/NewGame';
 import Rules from './pages/RulesPage';
 import PlayGame from './pages/PlayGame';
 
-import JoinGame from './pages/JoinGame'
+import JoinGame from './pages/JoinGame';
 function App() {
   return (
     <Routes>
