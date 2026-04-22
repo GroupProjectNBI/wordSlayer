@@ -12,7 +12,7 @@ namespace backend
       // 2. Meddela de andra i rummet
       await Clients.OthersInGroup(sessionId).SendAsync("PlayerJoined", playerName);
 
-      System.Console.WriteLine($"SignalR: {playerName} anslöt till rum {sessionId}");
+      // System.Console.WriteLine($"SignalR: {playerName} anslöt till rum {sessionId}");
     }
 
     public async Task PlayerLeft(string sessionId, string playerName)
