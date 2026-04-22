@@ -1,0 +1,23 @@
+/* Flerstegsbanan gör att orden inte bara pendlar fram och tillbaka,
+   utan känns mer organiska och levande utan JavaScript-animation per frame. */
+@keyframes word-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  20% {
+    transform: translate3d(var(--drift-x), calc(var(--drift-y) * -0.35), 0) scale(1.03);
+  }
+
+  45% {
+    transform: translate3d(calc(var(--drift-x-alt) * 0.7), var(--drift-y-alt), 0) scale(0.99);
+  }
+
+  70% {
+    transform: translate3d(calc(var(--drift-x) * -0.45), calc(var(--drift-y-alt) * 0.55), 0) scale(1.02);
+  }
+
+  100% {
+    transform: translate3d(var(--drift-x-alt), calc(var(--drift-y) * -1), 0) scale(1);
+  }
+}

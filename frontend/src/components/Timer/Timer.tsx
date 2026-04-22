@@ -19,7 +19,7 @@ export default function Timer({ value, max = 30 }: TimerProps) {
     <div className={`timer-container timer-${state}`}>
       <TimerRing ratio={ratio} state={state} />
       <TimerBar ratio={ratio} state={state} />
-      <div className="timer-text">{value}s</div>
+      <div className="timer-text" data-testid="timer">{value}s</div>
     </div>
   );
 }

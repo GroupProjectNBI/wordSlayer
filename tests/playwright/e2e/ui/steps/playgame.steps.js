@@ -12,35 +12,62 @@ Then('I see a damage popup with {int}', async ({ page }, amount) => {
   await expect(popup.first()).toBeVisible({ timeout: 10000 });
 });
 
-// Word history assertions
-Then('the word history should be empty', async ({ page }) => {
-  const items = page.locator('[data-word-history] [data-word-entry]');
-  await expect(items).toHaveCount(0);
+// Floating word cloud assertions
+Then('the floating word cloud is visible', async ({ page }) => {
+  await expect(page.locator('[data-testid="floating-word-cloud"]')).toBeVisible();
 });
 
-Then('the word history contains {string}', async ({ page }, word) => {
-  await expect(page.locator('[data-word-history]').getByText(word)).toBeVisible();
+Then('the old word history list is not rendered', async ({ page }) => {
+  // Skyddar mot regression där gamla list-UI:t råkar komma tillbaka.
+  await expect(page.locator('[data-word-history]')).toHaveCount(0);
 });
 
-Then('the word history should show:', async ({ page }, table) => {
-  const expected = table.rows().flat();
-  const items = page.locator('[data-word-history] [data-word-entry]');
-  const count = await items.count();
-  const offset = count - expected.length;
-  for (let i = 0; i < expected.length; i++) {
-    const text = await items.nth(offset + i).innerText();
-    expect(text).toContain(expected[i]);
-  }
+Then('no floating words are shown yet', async ({ page }) => {
+  await expect(page.locator('[data-testid="floating-word"]')).toHaveCount(0);
 });
 
-Then('the word history entry {string} belongs to player {int}', async ({ page }, word, playerNum) => {
-  const entry = page.locator('[data-word-history] [data-word-entry]').filter({ hasText: word });
-  await expect(entry).toHaveAttribute('data-player', `player${playerNum}`);
+Then('the floating words include {string}', async ({ page }, word) => {
+  const floatingWord = page
+    .locator('[data-testid="floating-word-cloud"] [data-testid="floating-word"]')
+    .filter({ hasText: word });
+
+  // Vi testar synlighet och innehåll, inte exakta koordinater, eftersom orden
+  // ska vara dynamiska och animerade.
+  await expect(floatingWord).toHaveCount(1);
+  await expect(floatingWord.first()).toBeVisible();
 });
 
-Then('the word history shows damage {int} for {string}', async ({ page }, damage, word) => {
-  const entry = page.locator('[data-word-history] [data-word-entry]').filter({ hasText: word });
-  await expect(entry).toHaveAttribute('data-damage', `${damage}`);
+Then('the floating word count is {int}', async ({ page }, expectedCount) => {
+  await expect(page.locator('[data-testid="floating-word"]')).toHaveCount(expectedCount);
+});
+
+Then('the floating words move over time', async ({ page }) => {
+  const floatingWord = page.locator('[data-testid="floating-word-cloud"] [data-testid="floating-word"]').first();
+  await expect(floatingWord).toBeVisible();
+
+  // Flera samplingar gör testet mindre känsligt för exakt timing i animationen.
+  const samplePosition = async () => floatingWord.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return { x: rect.left, y: rect.top };
+  });
+
+  const first = await samplePosition();
+  await page.waitForTimeout(900);
+  const second = await samplePosition();
+  await page.waitForTimeout(900);
+  const third = await samplePosition();
+
+  const movedBetween = (start, end) =>
+    Math.abs(start.x - end.x) > 1.5 || Math.abs(start.y - end.y) > 1.5;
+
+  expect(
+    movedBetween(first, second) || movedBetween(second, third) || movedBetween(first, third)
+  ).toBeTruthy();
+});
+
+Then('a server turn-change does not add floating words by itself', async ({ page }) => {
+  // Verifierar att bara lokal submit skapar ord i molnet, inte rena state-pushar.
+  await expect(page.locator('[data-testid="floating-word"]')).toHaveCount(0);
 });
 
 Given('I am logged in as {string}', async ({ page }, playerName) => {
@@ -283,4 +310,29 @@ Given('I intercept game session response with language {string}', async ({ page 
       }),
     });
   });
+});
+
+Given('I am on the PlayGame page without test mode', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('lang', 'en');
+  });
+
+  await page.goto('/game/00000000-0000-0000-0000-000000000000');
+});
+
+When('I wait without typing', async () => {
+});
+
+Then('the timer should count down', async ({ page }) => {
+  const timer = page.locator('[data-testid="timer"]');
+
+  const beforeText = (await timer.innerText()).trim();
+  const before = Number(beforeText.replace('s', ''));
+
+  await page.waitForTimeout(2000);
+
+  const afterText = (await timer.innerText()).trim();
+  const after = Number(afterText.replace('s', ''));
+
+  expect(after).toBeLessThan(before);
 });
