@@ -1,3 +1,4 @@
+
 Feature: Game winner
 
   Background:
@@ -8,14 +9,14 @@ Feature: Game winner
     And I am on the PlayGame page
 
   Scenario: Player 1 wins the game
-    Given the game input is enabled
-    When player 2 reaches 0 HP
-    Then I see the game overlay
-    And I should see winner message "YOU WIN"
+  Given the game input is enabled
+  When opponent reaches 0 HP
+  Then I see the game overlay
+  And I should see winner message "YOU WIN"
 
   Scenario: Player 2 wins the game
-    Given the game input is enabled
-    When player 1 reaches 0 HP
-    Then I see the game overlay
-    And I should see winner message "YOU LOSE"
+  Given the game input is enabled
+  When my HP reaches 0 
+  Then I see the game overlay
+  And I should see winner message "YOU LOSE"
     
