@@ -317,20 +317,21 @@ console.log("OVERLAY:", overlayMessage);
   return (
     <div className="relative w-full h-screen overflow-hidden bg-slate-900">
 
-      {/* MUTE MUSIC BUTTON */}
-      {!isTest && (
-        <button
-          onClick={() => setMusicMuted((m) => !m)}
-          className="absolute bottom-4 left-4 z-[300] bg-black/60 text-white px-4 py-2 rounded border border-white"
-        >
-          {musicMuted ? "Unmute Sound" : "mute Sound"}
-        </button>
-      )}
+      {/* MUTE MUSIC BUTTON – always visible so tests can find it */}
+      <button
+        data-testid="music-button"
+        onClick={() => setMusicMuted((m) => !m)}
+        className="absolute bottom-4 left-4 z-[300] bg-black/60 text-white px-4 py-2 rounded border border-white"
+      >
+        {musicMuted ? "Unmute Sound" : "Mute Sound"}
+      </button>
+
       {error && (
         <div className="absolute top-10 left-1/2 z-[110] -translate-x-1/2 rounded-full bg-red-600 px-6 py-2 font-bold text-white shadow-2xl">
           {error}
         </div>
       )}
+
 
       <GameBoard
         player1={player1}

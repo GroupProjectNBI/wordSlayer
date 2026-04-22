@@ -296,6 +296,24 @@ Then('opponent HP is {int}', async ({ page }, hp) => {
   const hpText = await page.locator('[data-testid="opponent-hp"]').innerText();
   expect(hpText).toBe(`${hp} HP`);
 });
+Then("I see the music button", async ({ page }) => {
+  await expect(page.getByTestId("music-button")).toBeVisible();
+});
+
+When("I click the music button", async ({ page }) => {
+  await page.getByTestId("music-button").click();
+});
+
+Then("the music is muted", async ({ page }) => {
+  const btn = page.getByTestId("music-button");
+  await expect(btn).toHaveText(/unmute/i);
+});
+
+Then("the music is unmuted", async ({ page }) => {
+  const btn = page.getByTestId("music-button");
+  await expect(btn).toHaveText(/mute/i);
+});
+
 
 // En kopia av din vanliga "game session response", men den tar emot språket.
 Given('I intercept game session response with language {string}', async ({ page }, language) => {
