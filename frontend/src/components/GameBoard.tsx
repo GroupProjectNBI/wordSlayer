@@ -93,15 +93,15 @@ export default function GameBoard({
   return (
     <main className="min-h-screen bg-[#1a1a2e] text-white relative overflow-hidden">
       <div className="absolute inset-x-0 top-0 z-[120] px-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6">
-        <div className="flex flex-col gap-3 sm:grid sm:grid-cols-[1fr_auto_1fr] sm:items-start">
-          <div className="text-center sm:col-start-2">
+        <div className="grid grid-cols-[1fr_auto] items-start gap-3 sm:grid-cols-[1fr_auto_1fr]">
+          <div className="min-w-0 self-center text-left sm:col-start-2 sm:text-center">
             <h1 className="text-3xl font-extrabold tracking-widest uppercase sm:text-4xl">
               Word Slayer
             </h1>
           </div>
 
           {/* SURRENDER BUTTON */}
-          <div className="absolute top-4 left-4 z-50">
+          <div className="col-start-2 row-start-1 self-start justify-self-end sm:col-start-1 sm:justify-self-start">
             <button
               data-testid="surrender-button"
               onClick={() => {
@@ -109,7 +109,7 @@ export default function GameBoard({
                   onLeaveGame();
                 }
               }}
-              className="flex items-center gap-2 bg-red-900/40 hover:bg-red-800/60 text-red-200 px-4 py-2 rounded-xl border border-red-700/50 transition-all backdrop-blur-sm group"
+              className="flex min-h-11 items-center gap-2 rounded-xl border border-red-700/50 bg-red-900/40 px-4 py-2 text-red-200 transition-all backdrop-blur-sm group hover:bg-red-800/60"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -125,7 +125,7 @@ export default function GameBoard({
           </div>
 
           {(languageIcon || headerControls) && (
-            <div className="flex flex-wrap items-center justify-end gap-2 self-end sm:col-start-3 sm:row-start-1 sm:self-start">
+            <div className="col-span-2 row-start-2 flex flex-wrap items-center justify-end gap-2 sm:col-span-1 sm:col-start-3 sm:row-start-1 sm:self-start">
               {languageIcon && (
                 <div className="flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-slate-700 bg-slate-800/80 px-3 py-2 shadow-lg backdrop-blur-sm transition-all hover:bg-slate-700">
                   {languageIcon}
@@ -134,67 +134,68 @@ export default function GameBoard({
               {headerControls}
             </div>
           )}
-
-          <FloatingWordCloud words={history} />
-
-          {/* OPPONENT */}
-          <div
-            data-player="opponent"
-            className="absolute top-20 left-4 text-left"
-          >
-            <Username
-              name={opponent?.username || texts[lang].opponent}
-              isActive={opponent ? turn === (isPlayer1 ? "player2" : "player1") : false}
-              align="left"
-            />
-            <div style={{ width: 160 }}>
-              <HPBar hp={opponent?.hp ?? 0} color={opponentColor} width={160} />
-            </div>
-            <div className="text-sm mt-1" data-testid="opponent-hp">{`${opponent?.hp ?? 0} HP`}</div>
-          </div>
-
-          {/* ME */}
-          <div
-            data-player="me"
-            className="absolute bottom-20 right-4 text-right"
-          >
-            <Username
-              name={me?.username || texts[lang].me}
-              isActive={me ? turn === localPlayer : false}
-              align="right"
-            />
-            <div style={{ width: 160 }}>
-              <HPBar hp={me?.hp ?? 0} color={meColor} width={160} />
-            </div>
-            <div className="text-sm mt-1" data-testid="me-hp">{`${me?.hp ?? 0} HP`}</div>
-          </div>
-
-          {/* CENTER VS + TIMER */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <div data-testid="turn-indicator" className="mb-2 text-lg font-bold">
-              {turn === "player1" ? "Player 1" : "Player 2"}
-            </div>
-            <h1 className="text-7xl font-extrabold tracking-widest opacity-80">
-              VS
-            </h1>
-            <div className="mt-4">
-              <Timer value={timer} />
-            </div>
-          </div>
-
-          {/* WORD INPUT */}
-          <div className="absolute bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 w-full max-w-md -translate-x-1/2 px-4 sm:bottom-10">
-            <WordInput
-              value={word}
-              onChange={setWord}
-              onSubmit={onSubmitWord}
-              disabled={inputDisabled}
-              isActive={inputActive}
-              isTimerRunning={timerIsRunning}
-            />
-          </div>
         </div>
       </div>
+
+      <FloatingWordCloud words={history} />
+
+      {/* OPPONENT */}
+      <div
+        data-player="opponent"
+        className="absolute top-28 left-4 text-left sm:top-20"
+      >
+        <Username
+          name={opponent?.username || texts[lang].opponent}
+          isActive={opponent ? turn === (isPlayer1 ? "player2" : "player1") : false}
+          align="left"
+        />
+        <div style={{ width: 160 }}>
+          <HPBar hp={opponent?.hp ?? 0} color={opponentColor} width={160} />
+        </div>
+        <div className="text-sm mt-1" data-testid="opponent-hp">{`${opponent?.hp ?? 0} HP`}</div>
+      </div>
+
+      {/* ME */}
+      <div
+        data-player="me"
+        className="absolute bottom-20 right-4 text-right"
+      >
+        <Username
+          name={me?.username || texts[lang].me}
+          isActive={me ? turn === localPlayer : false}
+          align="right"
+        />
+        <div style={{ width: 160 }}>
+          <HPBar hp={me?.hp ?? 0} color={meColor} width={160} />
+        </div>
+        <div className="text-sm mt-1" data-testid="me-hp">{`${me?.hp ?? 0} HP`}</div>
+      </div>
+
+      {/* CENTER VS + TIMER */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+        <div data-testid="turn-indicator" className="mb-2 text-lg font-bold">
+          {turn === "player1" ? "Player 1" : "Player 2"}
+        </div>
+        <h1 className="text-7xl font-extrabold tracking-widest opacity-80">
+          VS
+        </h1>
+        <div className="mt-4">
+          <Timer value={timer} />
+        </div>
+      </div>
+
+      {/* WORD INPUT */}
+      <div className="absolute bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 w-full max-w-md -translate-x-1/2 px-4 sm:bottom-10">
+        <WordInput
+          value={word}
+          onChange={setWord}
+          onSubmit={onSubmitWord}
+          disabled={inputDisabled}
+          isActive={inputActive}
+          isTimerRunning={timerIsRunning}
+        />
+      </div>
+
       {/* DAMAGE POPUPS */}
       {children}
     </main>
