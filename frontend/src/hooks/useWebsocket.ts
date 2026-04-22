@@ -31,7 +31,6 @@ export function useWebsocket(
 
         // Lyssna på när servern växlar tur
         connection.on("TurnChanged", (nextTurn: "player1" | "player2", p1Hp: number, p2Hp: number) => {
-            console.log("SignalR Update:", { nextTurn, p1Hp, p2Hp });
             onTurnChanged(nextTurn, p1Hp, p2Hp); // Skicka vidare alla tre värden
         });
 
