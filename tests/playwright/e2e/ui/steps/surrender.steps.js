@@ -48,7 +48,7 @@ Then('the overlay contains {string}', async ({ page }, message) => {
   // Vi väntar på att texten dyker upp (viktigt om det är nätverkslatens)
   await expect(winnerMessage).toBeVisible({ timeout: 10000 });
 
-  // Vi kollar att texten matchar (t.ex. "YOU WIN (OPPONENT LEFT) 🏆")
+  // Vi kollar att texten matchar (t.ex. "YOU WIN (OPPONENT LEFT)")
   await expect(winnerMessage).toContainText(message);
 });
 

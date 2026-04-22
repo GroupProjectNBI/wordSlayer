@@ -300,7 +300,7 @@ export default function PlayGame() {
       // Om vi har hamnat här, betyder det att NÅGON gav upp.
       // Eftersom den som gav upp redan har navigerat bort, 
       // är det bara vinnaren som ser detta:
-      overlayMessage = "YOU WIN (OPPONENT LEFT) 🏆";
+      overlayMessage = "YOU WIN (OPPONENT LEFT)";
     } else {
       // Vanlig vinst/förlust genom att HP nådde 0 via ordskada
       if (player1.hp <= 0) {
