@@ -33,16 +33,16 @@ Received string:    "🏆 player 1 wins! 🏆"
       - generic [ref=e18]: 100 HP
     - generic [ref=e19]:
       - generic [ref=e20]: Player 2
-      - generic [ref=e23]: 0 HP
+      - generic [ref=e24]: 0 HP
     - generic:
       - generic: Player 1
       - heading "VS" [level=1]
       - generic:
         - generic: 30s
-    - textbox "Type your word..." [ref=e25]
-  - generic [ref=e27]:
-    - paragraph [ref=e28]: 🏆 Player 1 WINS! 🏆
-    - button "Play again" [ref=e30] [cursor=pointer]
+    - textbox "Type your word..." [ref=e26]
+  - generic [ref=e28]:
+    - paragraph [ref=e29]: 🏆 Player 1 WINS! 🏆
+    - button "Play again" [ref=e31] [cursor=pointer]
 ```
 
 # Test source
