@@ -275,35 +275,35 @@ export default function PlayGame() {
     );
   }
 
-// --- 7. OVERLAY & WINNER LOGIC ---
+  // --- 7. OVERLAY & WINNER LOGIC ---
   let overlayMessage: string | null = null;
   let isGameOver = false;
 
-if (player1.hp <= 0) {
-  isGameOver = true;
+  if (player1.hp <= 0) {
+    isGameOver = true;
 
-  //  alltid YOU WIN / YOU LOSE
-  overlayMessage =
-    localPlayer === "player1"
-      ? "YOU LOSE"
-      : "YOU WIN";
+    //  alltid YOU WIN / YOU LOSE
+    overlayMessage =
+      localPlayer === "player1"
+        ? "YOU LOSE"
+        : "YOU WIN";
 
-} else if (player2.hp <= 0) {
-  isGameOver = true;
+  } else if (player2.hp <= 0) {
+    isGameOver = true;
 
-  // alltid YOU WIN / YOU LOSE
-  overlayMessage =
-    localPlayer === "player2"
-      ? "YOU LOSE"
-      : "YOU WIN";
-console.log("OVERLAY:", overlayMessage);
+    // alltid YOU WIN / YOU LOSE
+    overlayMessage =
+      localPlayer === "player2"
+        ? "YOU LOSE"
+        : "YOU WIN";
+    console.log("OVERLAY:", overlayMessage);
 
-} else if (connectedPlayers < 2) {
-  overlayMessage = texts[uiLang].waitingForOpponent;
-} else if (turn !== localPlayer) {
-  overlayMessage = texts[uiLang].opponentThinking;
-}
-  
+  } else if (connectedPlayers < 2) {
+    overlayMessage = texts[uiLang].waitingForOpponent;
+  } else if (turn !== localPlayer) {
+    overlayMessage = texts[uiLang].opponentThinking;
+  }
+
 
   // Använder dictLang för att rita rätt flagga
   const languageIcon = dictLang === "swe"
@@ -316,16 +316,6 @@ console.log("OVERLAY:", overlayMessage);
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-slate-900">
-
-      {/* MUTE MUSIC BUTTON – always visible so tests can find it */}
-      <button
-        data-testid="music-button"
-        onClick={() => setMusicMuted((m) => !m)}
-        className="absolute bottom-4 left-4 z-[300] bg-black/60 text-white px-4 py-2 rounded border border-white"
-      >
-        {musicMuted ? "Unmute Sound" : "Mute Sound"}
-      </button>
-
       {error && (
         <div className="absolute top-10 left-1/2 z-[110] -translate-x-1/2 rounded-full bg-red-600 px-6 py-2 font-bold text-white shadow-2xl">
           {error}
@@ -347,6 +337,18 @@ console.log("OVERLAY:", overlayMessage);
         }}
         onSubmitWord={onSubmitWord}
         languageIcon={languageIcon}
+        headerControls={
+          <button
+            type="button"
+            data-testid="music-button"
+            onClick={() => setMusicMuted((m) => !m)}
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/30 bg-black/60 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-black/75 focus:outline-none focus:ring-2 focus:ring-yellow-300 focus:ring-offset-2 focus:ring-offset-slate-900"
+            aria-pressed={musicMuted}
+            aria-label={musicMuted ? "Unmute sound" : "Mute sound"}
+          >
+            {musicMuted ? "Unmute Sound" : "Mute Sound"}
+          </button>
+        }
       >
         {popups.map((p) => (
           <DamagePopup

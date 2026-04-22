@@ -29,6 +29,7 @@ interface GameBoardProps {
   timerRunning: boolean;
   children?: React.ReactNode;
   languageIcon?: React.ReactNode; // NY: Tar emot flaggan från PlayGame
+  headerControls?: React.ReactNode;
 }
 
 export default function GameBoard({
@@ -43,7 +44,8 @@ export default function GameBoard({
   history,
   timerRunning,
   children,
-  languageIcon
+  languageIcon,
+  headerControls
 }: GameBoardProps) {
 
   const isTest =
@@ -64,19 +66,26 @@ export default function GameBoard({
 
   return (
     <main className="min-h-screen bg-[#1a1a2e] text-white relative overflow-hidden">
-      {/* TITLE */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 text-center">
-        <h1 className="text-4xl font-extrabold tracking-widest uppercase">
-          Word Slayer
-        </h1>
-      </div>
+      <div className="absolute inset-x-0 top-0 z-[120] px-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6">
+        <div className="flex flex-col gap-3 sm:grid sm:grid-cols-[1fr_auto_1fr] sm:items-start">
+          <div className="text-center sm:col-start-2">
+            <h1 className="text-3xl font-extrabold tracking-widest uppercase sm:text-4xl">
+              Word Slayer
+            </h1>
+          </div>
 
-      {/* NY: SPRÅK-INDIKATOR (FLAGGAN) */}
-      {languageIcon && (
-        <div className="absolute top-4 right-4 flex items-center justify-center bg-slate-800/80 px-3 py-2 rounded-xl border border-slate-700 shadow-lg backdrop-blur-sm z-50 transition-all hover:bg-slate-700">
-          {languageIcon}
+          {(languageIcon || headerControls) && (
+            <div className="flex flex-wrap items-center justify-end gap-2 self-end sm:col-start-3 sm:row-start-1 sm:self-start">
+              {languageIcon && (
+                <div className="flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-slate-700 bg-slate-800/80 px-3 py-2 shadow-lg backdrop-blur-sm transition-all hover:bg-slate-700">
+                  {languageIcon}
+                </div>
+              )}
+              {headerControls}
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Flytande ord renderas som ett separat overlay-lager under modal-overlayn. */}
       <FloatingWordCloud words={history} />
@@ -86,7 +95,7 @@ export default function GameBoard({
       <div
         data-player="opponent"
         data-active={opponent ? turn === (isPlayer1 ? "player2" : "player1") : false}
-        className="absolute top-20 left-4 text-left"
+        className="absolute top-28 left-4 text-left sm:top-20"
       >
         <Username
           name={opponent?.username || "Opponent"}
@@ -103,7 +112,7 @@ export default function GameBoard({
       <div
         data-player="me"
         data-active={me ? turn === localPlayer : false}
-        className="absolute bottom-20 right-4 text-right"
+        className="absolute right-4 bottom-[calc(6rem+env(safe-area-inset-bottom))] text-right sm:bottom-20"
       >
         <Username
           name={me?.username || "Me"}
@@ -130,7 +139,7 @@ export default function GameBoard({
       </div>
 
       {/* WORD INPUT */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-full max-w-md px-4">
+      <div className="absolute bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 w-full max-w-md -translate-x-1/2 px-4 sm:bottom-10">
         <WordInput
           value={word}
           onChange={setWord}
