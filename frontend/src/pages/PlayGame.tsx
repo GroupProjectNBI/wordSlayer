@@ -7,12 +7,20 @@ import swedenFlag from "../assets/sweden.png";
 import ukFlag from "../assets/uk.png";
 
 type Language = "en" | "sv";
+import { useSound } from "../hooks/useSound";
+
 
 interface BackendGameSession {
   sessionId: string;
   players: { name: string; health: number; }[];
   currentTurn: string;
   language: string;
+}
+
+interface TurnChangedDetail {
+  nextTurn: "player1" | "player2";
+  p1Hp: number;
+  p2Hp: number;
 }
 
 export default function PlayGame() {
@@ -57,9 +65,11 @@ export default function PlayGame() {
   const [connectedPlayers, setConnectedPlayers] = useState(0);
 
   const [word, setWord] = useState("");
-  const [timer, setTimer] = useState(30);
+  const [timer, setTimer] = useState(12);
   const [turn, setTurn] = useState<"player1" | "player2">("player1");
   const [timerRunning, setTimerRunning] = useState(false);
+
+  const [musicMuted, setMusicMuted] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -67,25 +77,45 @@ export default function PlayGame() {
     { id: number; amount: number; position: "left" | "right"; }[]
   >([]);
   const [history, setHistory] = useState<
-    { word: string; player: "player1" | "player2"; damage: number; }[]
+    { id: number; word: string; player: "player1" | "player2"; damage: number; }[]
   >([]);
 
   const localPlayer: "player1" | "player2" =
     myName === "Player 2" ? "player2" : "player1";
+
+  // GAME MUSIC
+  const gameMusic = useSound("/sounds/game-music.mp3", { loop: true });
+
+  // Auto-play when both players are connected
+  useEffect(() => {
+    if (isTest) return; //no music in test mode
+    if (connectedPlayers === 2 && !musicMuted) {
+      gameMusic.play();
+    } else {
+      gameMusic.stop();
+    }
+  }, [connectedPlayers, musicMuted, isTest]);
+
+  // Stop music on unmount
+  useEffect(() => {
+    return () => {
+      gameMusic.stop();
+    };
+  }, []);
 
   const handleTurnChanged = useCallback(
     (nextTurn: "player1" | "player2", p1Hp: number, p2Hp: number) => {
       setTurn(nextTurn);
       setPlayer1((prev) => ({ ...prev, hp: p1Hp }));
       setPlayer2((prev) => ({ ...prev, hp: p2Hp }));
-      setTimer(30);
+      setTimer(timer);
       setTimerRunning(false);
       setError("");
     },
     []
   );
 
-  const handlePlayerJoined = useCallback((_playerName: string) => {
+  const handlePlayerJoined = useCallback(() => {
     setConnectedPlayers((prev) => Math.min(prev + 1, 2));
   }, []);
 
@@ -94,7 +124,8 @@ export default function PlayGame() {
   useEffect(() => {
     if (!isTest) return;
 
-    const handleTestSignal = (e: any) => {
+    const handleTestSignal = (event: Event) => {
+      const e = event as CustomEvent<TurnChangedDetail>;
       const { nextTurn, p1Hp, p2Hp } = e.detail;
       handleTurnChanged(nextTurn, p1Hp, p2Hp);
     };
@@ -150,6 +181,27 @@ export default function PlayGame() {
   }, [sessionId, uiLang]); // Notera att dependencyn nu är uiLang istället för lang
 
   useEffect(() => {
+    const gameOver = player1.hp <= 0 || player2.hp <= 0;
+    const myTurn = turn === localPlayer;
+
+    if (isTest) {
+      setTimerRunning(false);
+      return;
+    }
+
+    if (connectedPlayers < 2 || gameOver) {
+      setTimerRunning(false);
+      return;
+    }
+
+    if (myTurn) {
+      setTimerRunning(true);
+    } else {
+      setTimerRunning(false);
+    }
+  }, [turn, localPlayer, connectedPlayers, player1.hp, player2.hp, isTest]);
+
+  useEffect(() => {
     if (!timerRunning || isTest || turn !== localPlayer) return;
 
     const interval = setInterval(() => {
@@ -170,8 +222,11 @@ export default function PlayGame() {
 
   function applyWordDamage(cleanWord: string) {
     const damage = cleanWord.length;
+    // Eget id behövs för stabil rendering och för att varje ord ska kunna få
+    // en separat, deterministisk rörelse i FloatingWordCloud.
+    const id = Date.now() + Math.floor(Math.random() * 10000);
 
-    setHistory((prev) => [...prev, { word: cleanWord, player: turn, damage }]);
+    setHistory((prev) => [...prev, { id, word: cleanWord, player: turn, damage }]);
 
     const target = turn === "player1" ? "right" : "left";
     setPopups((prev) => [
@@ -255,8 +310,22 @@ console.log("OVERLAY:", overlayMessage);
     ? <img src={swedenFlag} alt="Svensk Ordbok" className="h-6 w-8 object-cover rounded-sm shadow-md" title="Dictionary: Svenska" />
     : <img src={ukFlag} alt="English Dictionary" className="h-6 w-8 object-cover rounded-sm shadow-md" title="Dictionary: English" />;
 
+  // UI:t visar bara lokal spelares ord. Historiken sparar allt som spelas,
+  // men visualiseringen filtreras här innan GameBoard renderar den.
+  const ownWordHistory = history.filter((entry) => entry.player === localPlayer);
+
   return (
     <div className="relative w-full h-screen overflow-hidden bg-slate-900">
+
+      {/* MUTE MUSIC BUTTON */}
+      {!isTest && (
+        <button
+          onClick={() => setMusicMuted((m) => !m)}
+          className="absolute bottom-4 left-4 z-[300] bg-black/60 text-white px-4 py-2 rounded border border-white"
+        >
+          {musicMuted ? "Unmute Sound" : "mute Sound"}
+        </button>
+      )}
       {error && (
         <div className="absolute top-10 left-1/2 z-[110] -translate-x-1/2 rounded-full bg-red-600 px-6 py-2 font-bold text-white shadow-2xl">
           {error}
@@ -270,11 +339,10 @@ console.log("OVERLAY:", overlayMessage);
         turn={turn}
         localPlayer={localPlayer}
         word={word}
-        history={history}
+        history={ownWordHistory}
         timerRunning={timerRunning}
         setWord={(v) => {
           setWord(v);
-          if (!isTest && v.trim()) setTimerRunning(true);
         }}
         onSubmitWord={onSubmitWord}
         languageIcon={languageIcon}

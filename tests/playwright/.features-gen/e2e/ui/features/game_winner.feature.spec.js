@@ -13,14 +13,14 @@ test.describe('Game winner', () => {
   
   test('Player 1 wins the game', async ({ Given, When, Then, And, page }) => { 
     await Given('the game input is enabled', null, { page }); 
-    await When('player 2 reaches 0 HP', null, { page }); 
+    await When('opponent reaches 0 HP', null, { page }); 
     await Then('I see the game overlay', null, { page }); 
     await And('I should see winner message "YOU WIN"', null, { page }); 
   });
 
   test('Player 2 wins the game', async ({ Given, When, Then, And, page }) => { 
     await Given('the game input is enabled', null, { page }); 
-    await When('player 1 reaches 0 HP', null, { page }); 
+    await When('my HP reaches 0', null, { page }); 
     await Then('I see the game overlay', null, { page }); 
     await And('I should see winner message "YOU LOSE"', null, { page }); 
   });

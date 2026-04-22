@@ -1,7 +1,7 @@
 import HPBar from "./HPBar";
-import Timer from "./Timer";
+import FloatingWordCloud from "./FloatingWordCloud";
+import Timer from "./Timer/Timer";
 import Username from "./Username";
-import WordHistory from "./WordHistory";
 import WordInput from "./WordInput";
 
 interface Player {
@@ -10,6 +10,7 @@ interface Player {
 }
 
 interface WordEntry {
+  id: number;
   word: string;
   player: "player1" | "player2";
   damage: number;
@@ -53,6 +54,14 @@ export default function GameBoard({
   const inputActive = isTest ? true : turn === localPlayer;
   const timerIsRunning = isTest ? true : timerRunning;
 
+  // Determine which player is "me" and which is "opponent" for layout
+  const isPlayer1 = localPlayer === "player1";
+  // Always assign 'me' and 'opponent' for perspective
+  const me = isPlayer1 ? player1 : player2;
+  const opponent = isPlayer1 ? player2 : player1;
+  const meColor = isPlayer1 ? "green" : "red";
+  const opponentColor = isPlayer1 ? "red" : "green";
+
   return (
     <main className="min-h-screen bg-[#1a1a2e] text-white relative overflow-hidden">
       {/* TITLE */}
@@ -69,44 +78,43 @@ export default function GameBoard({
         </div>
       )}
 
-      {/* WORD HISTORY */}
-      <WordHistory words={history} />
+      {/* Flytande ord renderas som ett separat overlay-lager under modal-overlayn. */}
+      <FloatingWordCloud words={history} />
 
-      {/* PLAYER 1 */}
+
+      {/* OPPONENT (always top left) */}
       <div
-        data-player="player1"
-        data-active={turn === "player1"}
+        data-player="opponent"
+        data-active={opponent ? turn === (isPlayer1 ? "player2" : "player1") : false}
         className="absolute top-20 left-4 text-left"
       >
         <Username
-          name={player1.username}
-          isActive={turn === "player1"}
+          name={opponent?.username || "Opponent"}
+          isActive={opponent ? turn === (isPlayer1 ? "player2" : "player1") : false}
           align="left"
         />
         <div style={{ width: 160 }}>
-          <HPBar hp={player1.hp} color="green" width={160} />
+          <HPBar hp={opponent?.hp ?? 0} color={opponentColor} width={160} />
         </div>
-        <div className="text-sm mt-1" data-testid="player1-hp">{player1.hp} HP</div>
+        <div className="text-sm mt-1" data-testid="opponent-hp">{`${opponent?.hp ?? 0} HP`}</div>
       </div>
 
-      {/* PLAYER 2 */}
-      {player2 ? (
-        <div
-          data-player="player2"
-          data-active={turn === "player2"}
-          className="absolute bottom-20 right-4 text-right"
-        >
-          <Username
-            name={player2.username}
-            isActive={turn === "player2"}
-            align="right"
-          />
-          <div style={{ width: 160 }}>
-            <HPBar hp={player2.hp} color="red" width={160} />
-          </div>
-          <div className="text-sm mt-1" data-testid="player2-hp">{player2.hp} HP</div>
+      {/* ME (always bottom right) */}
+      <div
+        data-player="me"
+        data-active={me ? turn === localPlayer : false}
+        className="absolute bottom-20 right-4 text-right"
+      >
+        <Username
+          name={me?.username || "Me"}
+          isActive={me ? turn === localPlayer : false}
+          align="right"
+        />
+        <div style={{ width: 160 }}>
+          <HPBar hp={me?.hp ?? 0} color={meColor} width={160} />
         </div>
-      ) : null}
+        <div className="text-sm mt-1" data-testid="me-hp">{`${me?.hp ?? 0} HP`}</div>
+      </div>
 
       {/* CENTER VS + TIMER */}
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
