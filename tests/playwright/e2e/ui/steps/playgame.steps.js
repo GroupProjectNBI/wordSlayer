@@ -266,3 +266,28 @@ Given('I intercept game session response with language {string}', async ({ page 
     });
   });
 });
+
+Given('I am on the PlayGame page without test mode', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('lang', 'en');
+  });
+
+  await page.goto('/game/00000000-0000-0000-0000-000000000000');
+});
+
+When('I wait without typing', async () => {
+});
+
+Then('the timer should count down', async ({ page }) => {
+  const timer = page.locator('[data-testid="timer"]');
+
+  const beforeText = (await timer.innerText()).trim();
+  const before = Number(beforeText.replace('s', ''));
+
+  await page.waitForTimeout(2000);
+
+  const afterText = (await timer.innerText()).trim();
+  const after = Number(afterText.replace('s', ''));
+
+  expect(after).toBeLessThan(before);
+});
