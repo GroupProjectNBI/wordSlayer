@@ -17,9 +17,8 @@ export default function Rules() {
         "Only one player writes at a time. After submitting a word, the turn switches.",
         "You cannot reuse words that have already been played in the same round.",
         "There is no spell-checking. Misspelled words do not count.",
-        "The player who writes the longest valid word wins the battle. The number of characters becomes the damage dealt to the opponent.",
+        "Each valid word deals damage to the opponent based on the number of characters in the word.",
         "A player who reaches 0 HP loses the round.",
-        "The winner earns points equal to their remaining HP, which are added to the leaderboard.",
         "All words must be in English.",
         "Each turn has a 12-second timer. If you fail to submit a word in time, you automatically lose the turn."
       ],
@@ -33,11 +32,10 @@ export default function Rules() {
         "Endast en spelare skriver åt gången. Efter att ett ord skickats växlar turen.",
         "Du kan inte återanvända ord som redan spelats i samma runda.",
         "Det finns ingen stavningskontroll. Felstavade ord räknas inte.",
-        "Spelaren som skriver det längsta giltiga ordet vinner. Antalet bokstäver blir skadan som delas ut.",
+        "Varje giltigt ord ger skada till motståndaren baserat på hur många bokstäver ordet har.",
         "En spelare som når 0 HP förlorar rundan.",
-        "Vinnaren får poäng motsvarande sin kvarvarande HP som läggs till på leaderboarden.",
         "Alla ord måste vara på svenska.",
-        "Varje tur har en timer på 12 sekunder. Missar du att skriva ett ord i tid förlorar du rundan."
+        "Varje tur har en timer på 12 sekunder. Missar du att skriva ett ord i tid förlorar du turen."
       ],
       home: "Hem"
     }

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useWebsocket } from "../hooks/useWebsocket";
-import { useParams, useLocation } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import GameBoard from "../components/GameBoard";
 import DamagePopup from "../components/DamagePopup";
 import swedenFlag from "../assets/sweden.png";
@@ -27,7 +27,7 @@ export default function PlayGame() {
   const { sessionId } = useParams<{ sessionId: string; }>();
   const myName = sessionStorage.getItem("playerName") || "Player 1";
   const isTest = useLocation().search.includes("test");
-
+  const navigate = useNavigate();
   // 1. UI Språk (Hämtas från webläsaren för att översätta texter)
   const savedLang = localStorage.getItem("lang");
   const uiLang: Language = savedLang === "sv" ? "sv" : "en";
@@ -220,6 +220,15 @@ export default function PlayGame() {
     return () => clearInterval(interval);
   }, [timerRunning, turn, localPlayer, sessionId, myName, isTest]);
 
+  const handleLeaveGame = async () => {
+    // 1. Berätta för servern att jag ger upp (HP blir 0)
+    fetch(`/api/game/${sessionId}/surrender?playerId=${myName}`, { method: "POST" });
+
+    // 2. För den som ger upp: Skicka hem direkt
+    navigate("/");
+  };
+
+
   function applyWordDamage(cleanWord: string) {
     const damage = cleanWord.length;
     // Eget id behövs för stabil rendering och för att varje ord ska kunna få
@@ -279,25 +288,26 @@ export default function PlayGame() {
   let overlayMessage: string | null = null;
   let isGameOver = false;
 
-  if (player1.hp <= 0) {
+  if (player1.hp <= 0 || player2.hp <= 0) {
     isGameOver = true;
 
-    //  alltid YOU WIN / YOU LOSE
-    overlayMessage =
-      localPlayer === "player1"
-        ? "YOU LOSE"
-        : "YOU WIN";
+    // Kolla om någon har exakt -1 (Surrender-flaggan från backend)
+    const p1Surrendered = player1.hp === -1;
+    const p2Surrendered = player2.hp === -1;
 
-  } else if (player2.hp <= 0) {
-    isGameOver = true;
-
-    // alltid YOU WIN / YOU LOSE
-    overlayMessage =
-      localPlayer === "player2"
-        ? "YOU LOSE"
-        : "YOU WIN";
-    console.log("OVERLAY:", overlayMessage);
-
+    if (p1Surrendered || p2Surrendered) {
+      // Om vi har hamnat här, betyder det att NÅGON gav upp.
+      // Eftersom den som gav upp redan har navigerat bort, 
+      // är det bara vinnaren som ser detta:
+      overlayMessage = "YOU WIN (OPPONENT LEFT)";
+    } else {
+      // Vanlig vinst/förlust genom att HP nådde 0 via ordskada
+      if (player1.hp <= 0) {
+        overlayMessage = localPlayer === "player1" ? "YOU LOSE" : "YOU WIN";
+      } else {
+        overlayMessage = localPlayer === "player2" ? "YOU LOSE" : "YOU WIN";
+      }
+    }
   } else if (connectedPlayers < 2) {
     overlayMessage = texts[uiLang].waitingForOpponent;
   } else if (turn !== localPlayer) {
@@ -317,7 +327,7 @@ export default function PlayGame() {
   return (
     <div className="relative w-full h-screen overflow-hidden bg-slate-900">
       {error && (
-        <div className="absolute top-10 left-1/2 z-[110] -translate-x-1/2 rounded-full bg-red-600 px-6 py-2 font-bold text-white shadow-2xl">
+        <div className="absolute top-10 left-1/2 z-110 -translate-x-1/2 rounded-full bg-red-600 px-6 py-2 font-bold text-white shadow-2xl">
           {error}
         </div>
       )}
@@ -332,6 +342,7 @@ export default function PlayGame() {
         word={word}
         history={ownWordHistory}
         timerRunning={timerRunning}
+        lang={uiLang}
         setWord={(v) => {
           setWord(v);
         }}
@@ -349,6 +360,7 @@ export default function PlayGame() {
             {musicMuted ? "Unmute Sound" : "Mute Sound"}
           </button>
         }
+        onLeaveGame={handleLeaveGame}
       >
         {popups.map((p) => (
           <DamagePopup
