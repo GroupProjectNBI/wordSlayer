@@ -117,3 +117,11 @@ Feature: PlayGame Page
     # Samma sak här, vi navigerar dit en gång till så att mocken hinner triggas
     And I am on the PlayGame page
     Then I see the "English Dictionary" flag image
+
+    Scenario: Music can be muted and unmuted
+  Given I see the music button
+  When I click the music button
+  Then the music is muted
+  When I click the music button
+  Then the music is unmuted
+
