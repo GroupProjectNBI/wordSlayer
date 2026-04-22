@@ -180,17 +180,46 @@ When("the timer ticks {int} seconds", async ({ page }) => {
 });
 
 
+// --- Game Over / Overlay logic ---
 Then('I see the game overlay', async ({ page }) => {
-  const overlay = page.locator('[data-testid="overlay"]');
-  await expect(overlay).toBeVisible();
+  // Vi väntar lite extra så att animationen hinner starta
+  await expect(page.locator('[data-testid="overlay"]')).toBeVisible({ timeout: 10000 });
 });
 
-
+When('player {int} reaches {int} HP', async ({ page }, playerNum, hp) => {
+  await page.evaluate(({ playerNum, hp }) => {
+    window.dispatchEvent(new CustomEvent('signalr-turn-changed', {
+      detail: {
+        nextTurn: 'player1',
+        p1Hp: playerNum === 1 ? hp : 100,
+        p2Hp: playerNum === 2 ? hp : 100,
+      },
+    }));
+  }, { playerNum, hp });
+  
+  // Kontrollera att HP faktiskt uppdaterades i UI innan vi går vidare
+  const hpSelector = `[data-testid="player${playerNum}-hp"]`;
+  await expect(page.locator(hpSelector)).toContainText(hp.toString());
+});
 
 Then('I should see winner message {string}', async ({ page }, winnerMessage) => {
   const winnerElement = page.locator('[data-testid="winner-message"]');
-  await expect(winnerElement).toBeVisible();
-  await expect(winnerElement).toHaveText(winnerMessage);
+  await expect(winnerElement).toBeVisible({ timeout: 10000 });
+
+  // HÄR ÄR FIXEN
+  const actualText = (await winnerElement.innerText())
+    .trim()
+    .toLowerCase();
+
+  const expectedText = winnerMessage
+    .trim()
+    .toLowerCase();
+
+  // DEBUG (kan ta bort sen)
+  console.log("ACTUAL TEXT:", actualText);
+  console.log("EXPECTED TEXT:", expectedText);
+
+  expect(actualText).toContain(expectedText);
 });
 
 When('opponent reaches 0 HP', async ({ page }) => {

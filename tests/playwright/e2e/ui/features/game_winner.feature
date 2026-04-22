@@ -1,3 +1,4 @@
+
 Feature: Game winner
 
   Background:
@@ -11,10 +12,11 @@ Feature: Game winner
   Given the game input is enabled
   When opponent reaches 0 HP
   Then I see the game overlay
-  And I should see winner message "🏆 Player 1 WINS! 🏆"
+  And I should see winner message "YOU WIN"
 
   Scenario: Player 2 wins the game
   Given the game input is enabled
   When my HP reaches 0 
   Then I see the game overlay
-  And I should see winner message "🏆 Player 2 WINS! 🏆"
+  And I should see winner message "YOU LOSE"
+    

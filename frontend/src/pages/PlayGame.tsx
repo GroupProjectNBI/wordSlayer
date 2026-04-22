@@ -275,20 +275,35 @@ export default function PlayGame() {
     );
   }
 
+// --- 7. OVERLAY & WINNER LOGIC ---
   let overlayMessage: string | null = null;
   let isGameOver = false;
 
-  if (player1.hp <= 0) {
-    overlayMessage = `🏆 ${player2.username} ${texts[uiLang].winner} 🏆`;
-    isGameOver = true;
-  } else if (player2.hp <= 0) {
-    overlayMessage = `🏆 ${player1.username} ${texts[uiLang].winner} 🏆`;
-    isGameOver = true;
-  } else if (connectedPlayers < 2) {
-    overlayMessage = texts[uiLang].waitingForOpponent;
-  } else if (turn !== localPlayer) {
-    overlayMessage = texts[uiLang].opponentThinking;
-  }
+if (player1.hp <= 0) {
+  isGameOver = true;
+
+  //  alltid YOU WIN / YOU LOSE
+  overlayMessage =
+    localPlayer === "player1"
+      ? "YOU LOSE"
+      : "YOU WIN";
+
+} else if (player2.hp <= 0) {
+  isGameOver = true;
+
+  // alltid YOU WIN / YOU LOSE
+  overlayMessage =
+    localPlayer === "player2"
+      ? "YOU LOSE"
+      : "YOU WIN";
+console.log("OVERLAY:", overlayMessage);
+
+} else if (connectedPlayers < 2) {
+  overlayMessage = texts[uiLang].waitingForOpponent;
+} else if (turn !== localPlayer) {
+  overlayMessage = texts[uiLang].opponentThinking;
+}
+  
 
   // Använder dictLang för att rita rätt flagga
   const languageIcon = dictLang === "swe"
