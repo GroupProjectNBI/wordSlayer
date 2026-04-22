@@ -1,0 +1,520 @@
+{
+  "info": {
+    "_postman_id": "c7879375-bd49-44d6-b383-6635d09b87c0",
+    "name": "My Collection",
+    "description": "### Welcome to Postman! This is your first collection. \n\nCollections are your starting point for building and testing APIs. You can use this one to:\n\n• Group related requests\n• Test your API in real-world scenarios\n• Document and share your requests\n\nUpdate the name and overview whenever you’re ready to make it yours.\n\n[Learn more about Postman Collections.](https://learning.postman.com/docs/collections/collections-overview/)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "50574776",
+    "_collection_link": "https://go.postman.co/collection/50574776-c7879375-bd49-44d6-b383-6635d09b87c0?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "en get request för att kolla så att man",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// 1. Fånga upp JSON-svaret från C#\r",
+              "const jsonData = pm.response.json();\r",
+              "\r",
+              "// TEST 1: Kollar att servern mår bra\r",
+              "pm.test(\"Statuskoden ska vara 200 OK\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "// TEST 2: Kollar att ID:t finns och är rätt format\r",
+              "pm.test(\"Ska innehålla ett giltigt sessionId (GUID)\", function () {\r",
+              "    pm.expect(jsonData).to.have.property('sessionId');\r",
+              "    pm.expect(jsonData.sessionId).to.be.a('string');\r",
+              "    \r",
+              "    // Använder ett mönster (Regex) för att garantera att det är en äkta GUID\r",
+              "    pm.expect(jsonData.sessionId).to.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);\r",
+              "});\r",
+              "\r",
+              "// TEST 3: Kollar att spelar-listan existerar och har 1 spelare\r",
+              "pm.test(\"Det ska finnas exakt en spelare när spelet skapas\", function () {\r",
+              "    pm.expect(jsonData).to.have.property('players');\r",
+              "    pm.expect(jsonData.players).to.be.an('array');\r",
+              "    pm.expect(jsonData.players.length).to.eql(1);\r",
+              "});\r",
+              "\r",
+              "// TEST 4: Kollar startvärdena för Player 1\r",
+              "pm.test(\"Spelaren ska ha rätt startvärden (100 HP, inga gissningar)\", function () {\r",
+              "    const firstPlayer = jsonData.players[0]; // Plocka ut första spelaren\r",
+              "    \r",
+              "    pm.expect(firstPlayer.name).to.eql(\"Player 1\");\r",
+              "    pm.expect(firstPlayer.health).to.eql(100);\r",
+              "    pm.expect(firstPlayer.guesses).to.be.an('array').that.is.empty;\r",
+              "});\r",
+              "\r",
+              "pm.environment.set(\"sessionId\", jsonData.sessionId);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url_api}}/newGame",
+          "host": [
+            "{{base_url_api}}"
+          ],
+          "path": [
+            "newGame"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Join till spel som är skapat",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const jsonData = pm.response.json();\r",
+              "\r",
+              "pm.test(\"Statuskoden ska vara 200 OK\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Spelar-listan ska nu innehålla 2 personer\", function () {\r",
+              "    pm.expect(jsonData.players).to.be.an('array');\r",
+              "    pm.expect(jsonData.players.length).to.eql(2);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Spelare 2 ska ha lagts till korrekt\", function () {\r",
+              "    const secondPlayer = jsonData.players[1]; \r",
+              "    pm.expect(secondPlayer.name).to.eql(\"Player 2\");\r",
+              "    pm.expect(secondPlayer.health).to.eql(100);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"playerName\": \"{{player2}}\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url_api}}/game/{{sessionId}}/join",
+          "host": [
+            "{{base_url_api}}"
+          ],
+          "path": [
+            "game",
+            "{{sessionId}}",
+            "join"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Join till spel. Spelare finns redan",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const jsonData = pm.response.json();\r",
+              "\r",
+              "pm.test(\"Statuskoden ska vara 409 Conflict\", function () {\r",
+              "    pm.response.to.have.status(409);\r",
+              "});\r",
+              "\r",
+              "// 2. Kontrollera felmeddelandet\r",
+              "pm.test(\"Felmeddelandet ska vara korrekt\", function () {\r",
+              "    // Vi kollar att objektet har en property \"message\" med rätt text\r",
+              "    pm.expect(jsonData.message).to.eql(\"Spelare finns redan!\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"playerName\": \"{{player2}}\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url_api}}/game/{{sessionId}}/join",
+          "host": [
+            "{{base_url_api}}"
+          ],
+          "path": [
+            "game",
+            "{{sessionId}}",
+            "join"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "skicka in och verifiera ord",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// TEST 1: The Happy Path - Gick anropet igenom?\r",
+              "pm.test(\"Statuskoden ska vara 200 OK\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "// TEST 2: Fick vi tillbaka ordet vi gissade på?\r",
+              "pm.test(\"Ska returnera ordet som vi spelade\", function () {\r",
+              "    // Eftersom din C#-kod just nu returnerar Results.Ok(request.wordGuess) \r",
+              "    // som en ren sträng (inte ett JSON-objekt), kollar vi svaret så här:\r",
+              "    const responseBody = pm.response.text();\r",
+              "    pm.expect(responseBody).to.include(\"hello\");\r",
+              "});\r",
+              "\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"wordGuess\": \"hello\" ,\r\n  \"playerId\": \"{{player1}}\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url_api}}/game/{{sessionId}}/playword",
+          "host": [
+            "{{base_url_api}}"
+          ],
+          "path": [
+            "game",
+            "{{sessionId}}",
+            "playword"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "skicka in och verifiera ord - motståndaren",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// TEST 1: The Happy Path - Gick anropet igenom?\r",
+              "pm.test(\"Statuskoden ska vara 200 OK\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "// TEST 2: Fick vi tillbaka ordet vi gissade på?\r",
+              "pm.test(\"Ska returnera ordet som vi spelade\", function () {\r",
+              "    // Eftersom din C#-kod just nu returnerar Results.Ok(request.wordGuess) \r",
+              "    // som en ren sträng (inte ett JSON-objekt), kollar vi svaret så här:\r",
+              "    const responseBody = pm.response.text();\r",
+              "    pm.expect(responseBody).to.include(\"hello\");\r",
+              "});\r",
+              "\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"wordGuess\": \"Goodbye\" ,\r\n  \"playerId\": \"{{player2}}\", \r\n    \"language\": {{lang}}\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url_api}}/game/{{sessionId}}/playword",
+          "host": [
+            "{{base_url_api}}"
+          ],
+          "path": [
+            "game",
+            "{{sessionId}}",
+            "playword"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "skicka in och verifiera ord - felkatigt ord",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Ska ge 400 Bad Request för ogiltiga ord\", function () {\r",
+              "    pm.response.to.have.status(400);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "\r\n{\r\n   \"wordGuess\": \"falflapå\" ,\r\n    \"playerId\": \"{{player1}}\", \r\n    \"language\": {{lang}}\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url_api}}/game/{{sessionId}}/playword",
+          "host": [
+            "{{base_url_api}}"
+          ],
+          "path": [
+            "game",
+            "{{sessionId}}",
+            "playword"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "verifiera att man inte kan skicka in samma ord igen - P1",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Vi förväntar oss att det SKA skita sig andra gången\r",
+              "pm.test(\"Ska returnera 400 när ordet är en dubblett\", function () {\r",
+              "    pm.response.to.have.status(400);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Ska ge rätt felmeddelande\", function () {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.message).to.eql(\"Du har redan använt detta ordet!\");\r",
+              "});\r",
+              "\r",
+              "\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"wordGuess\": \"hello\" ,\r\n  \"playerId\": \"{{player1}}\",\r\n  \"language\": {{lang}}   \r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url_api}}/game/{{sessionId}}/playword",
+          "host": [
+            "{{base_url_api}}"
+          ],
+          "path": [
+            "game",
+            "{{sessionId}}",
+            "playword"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "verifiera att man inte kan skicka in samma ord igen P2",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Vi förväntar oss att det SKA skita sig andra gången\r",
+              "pm.test(\"Ska returnera 400 när ordet är en dubblett\", function () {\r",
+              "    pm.response.to.have.status(400);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Ska ge rätt felmeddelande\", function () {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.message).to.eql(\"Du har redan använt detta ordet!\");\r",
+              "});\r",
+              "\r",
+              "\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"wordGuess\": \"goodbye\" ,\r\n  \"playerId\": \"{{player2}}\", \r\n   \"language\": {{lang}}\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url_api}}/game/{{sessionId}}/playword",
+          "host": [
+            "{{base_url_api}}"
+          ],
+          "path": [
+            "game",
+            "{{sessionId}}",
+            "playword"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Skada motståndaren genom att skicka in ett ord",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// 1. Kolla att anropet gick igenom\r",
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Motståndarens hälsa har minskat korrekt\", function () {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    \r",
+              "    // Vi hämtar \"Player 1\" från din miljövariabel 'player1'\r",
+              "    const currentPlayerName = pm.environment.get(\"player1\").trim().toLowerCase(); \r",
+              "    \r",
+              "    // Hitta motståndaren genom att jämföra namnen i små bokstäver\r",
+              "    const opponent = jsonData.players.find(p => p.name.trim().toLowerCase() !== currentPlayerName);\r",
+              "    \r",
+              "    // Logga ut för att se i konsolen (Ctrl+Alt+C) vem den hittade\r",
+              "    console.log(\"Attackerare: \" + currentPlayerName);\r",
+              "    console.log(\"Hittad motståndare: \" + opponent.name + \" med HP: \" + opponent.health);\r",
+              "\r",
+              "    // Verifiera att hälsan är under 100\r",
+              "    pm.expect(opponent.health).to.be.below(100);\r",
+              "    \r",
+              "    // Bonus: Kolla att skadan stämmer exakt (valfritt)\r",
+              "    // 85 är vad vi förväntar oss efter \"hello\" och \"structural\"\r",
+              "    pm.expect(opponent.health).to.equal(85);\r",
+              "});\r",
+              "\r",
+              "// 2. Kolla att motståndarens hälsa faktiskt har minskat\r",
+              "pm.test(\"Opponent health was reduced\", function () {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    \r",
+              "    // Vi hämtar player1-namnet från din miljö\r",
+              "    const currentPlayer = pm.environment.get(\"Player 1\"); \r",
+              "    \r",
+              "    // Hitta spelaren som INTE är den som nyss körde\r",
+              "    const opponent = jsonData.players.find(p => p.name !== currentPlayer);\r",
+              "    \r",
+              "    // Vi förväntar oss att hälsan är mindre än 100\r",
+              "    pm.expect(opponent.health).to.be.below(100);\r",
+              "    console.log(\"Motståndarens hälsa är nu: \" + opponent.health);\r",
+              "});\r",
+              "\r",
+              "// DONT FORGET TO MOVE THIS WHEN NEW REQUEST  IS COMMING\r",
+              "pm.environment.set(\"sessionId\", null);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"wordGuess\": \"structural\" ,\r\n    \"playerId\": \"{{player1}}\", \"language\": {{lang}}\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url_api}}/game/{{sessionId}}/playword",
+          "host": [
+            "{{base_url_api}}"
+          ],
+          "path": [
+            "game",
+            "{{sessionId}}",
+            "playword"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

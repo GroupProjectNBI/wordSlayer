@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  color: oklch(97.1% 0.013 17.38);
+  background-color: oklch(28.2% 0.091 267.935);
+}

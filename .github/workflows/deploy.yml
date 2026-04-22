@@ -1,0 +1,21 @@
+name: Deploy to Render
+
+on:
+    workflow_run:
+        # VIKTIGT: Detta måste matcha namnet högst upp i din CI-fil!
+        workflows: [ "Test_Application" ]
+        types: [ completed ]
+        # Här väljer ni vilken branch som ska trigga live-miljön
+        branches: [ "main", "f/deply_script" ]
+
+jobs:
+    deploy:
+        # Kör bara om testerna och bygget i Test_Application faktiskt gick grönt
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Trigger Render deployment
+              run: |
+                  echo "CI lyckades! Signalera till Render att hämta ny kod..."
+                  curl --fail-with-body -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"

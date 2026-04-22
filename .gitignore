@@ -28,6 +28,11 @@ project.lock.json
 project.fragment.lock.json
 artifacts/
 
+wwwroot/
+wwwroot/static/
+wwwroot/assets/
+wwwroot/index.html
+
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
 
@@ -40,7 +45,7 @@ ScaffoldingReadMe.txt
 ~$*
 *~
 CodeCoverage/
-
+node_modules
 # MSBuild Binary and Structured Log
 *.binlog
 

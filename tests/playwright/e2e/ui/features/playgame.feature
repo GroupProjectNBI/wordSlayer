@@ -1,0 +1,127 @@
+Feature: PlayGame Page
+
+  Background:
+    Given I am logged in as "Player 1"
+    And the timer is mocked
+    And I intercept game session response
+    And I intercept playword response
+    # Ta INTE bort navigationen från Background, den behövs för alla andra tester.
+    And I am on the PlayGame page
+
+  Scenario: Player username is visible
+    Then I see my username
+    And I see opponent username
+
+  Scenario: Damage popup appears after word submission
+    Given the game input is enabled
+    When I type the word "dragon"
+    And I submit the word
+    And the server signals turn changed to "player2" with HP 100 and 94
+    Then I see a damage popup with 6
+
+  Scenario: My submitted word is rendered as a floating word
+    Given the game input is enabled
+    Then no floating words are shown yet
+    And the old word history list is not rendered
+    When I type the word "dragon"
+    And I submit the word
+    And the server signals turn changed to "player2" with HP 100 and 94
+    Then the floating word cloud is visible
+    And the floating words include "dragon"
+    And the floating word count is 1
+    And the floating words move over time
+
+  Scenario: Opponent turn updates alone do not render my floating words
+    Given the game input is enabled
+    And no floating words are shown yet
+    When the server signals turn changed to "player2" with HP 100 and 100
+    Then a server turn-change does not add floating words by itself
+
+  Scenario: Timer displays and times out
+    Then I see turn indicator "Player 1"
+    When the timer ticks 12 seconds
+    And the server signals turn changed to "player2" with HP 100 and 100
+    Then I see turn indicator "Player 2"
+
+  Scenario: Player HP is updated after word submission
+    Given the game input is enabled
+    When I type the word "dragon"
+    And I submit the word
+    And the server signals turn changed to "player2" with HP 100 and 94
+    Then my HP is 100
+    And opponent HP is 94
+
+  Scenario: Overlay appears after Player 1 submits and disappears after Player 2 submits
+    Given the game input is enabled
+    When I type the word "dragon"
+    And I submit the word
+    And the server signals turn changed to "player2" with HP 100 and 94
+    Then I see the game overlay
+    # Simulate Player 2's turn and submission
+    When the server signals turn changed to "player1" with HP 94 and 94
+    Then I do not see the overlay
+
+  Scenario: Player 1 submits a word and triggers turn switch
+    Given the game input is enabled
+    When I type the word "dragon"
+    And I submit the word
+    And the server signals turn changed to "player2" with HP 100 and 94
+    Then I see "94 HP"
+    And I see turn indicator "Player 2"
+    And I see the game overlay
+
+  Scenario: Timer timeout switches turn
+    Given the game input is enabled
+    When the timer ticks 12 seconds
+    And the server signals turn changed to "player2" with HP 100 and 100
+    Then I see turn indicator "Player 2"
+    And I see the game overlay
+
+  Scenario: Player 1 sees their info bottom right and opponent top left
+    Given I am logged in as "Player 1"
+    And the timer is mocked
+    And I intercept game session response
+    And I intercept playword response
+    And I am on the PlayGame page
+    Then my info is bottom right
+    And opponent info is top left
+    And I see my username
+    And I see opponent username
+    And my HP is 100
+    And opponent HP is 100
+
+  Scenario: Player 2 sees their info bottom right and opponent top left
+    Given I am logged in as "Player 2"
+    And the timer is mocked
+    And I intercept game session response
+    And I intercept playword response
+    And I am on the PlayGame page
+    Then my info is bottom right
+    And opponent info is top left
+    And I see my username
+    And I see opponent username
+    And my HP is 100
+    And opponent HP is 100
+
+  # --- UPPDATERADE SCENARIER FÖR FLAGGORNA ---
+  Scenario: GameBoard displays Swedish dictionary flag
+    # Eftersom Background redan navigerat till sidan med default-mocken,
+    # sätter vi vår nya språkmock...
+    Given I intercept game session response with language "swe"
+    # ...och sedan ber vi Playwright att LADDA OM SIDAN. Då fångas den nya mocken!
+    And I am on the PlayGame page
+    Then I see the "Svensk Ordbok" flag image
+
+  Scenario: GameBoard displays English dictionary flag
+    Given I intercept game session response with language "eng"
+    # Samma sak här, vi navigerar dit en gång till så att mocken hinner triggas
+    And I am on the PlayGame page
+    Then I see the "English Dictionary" flag image
+
+    Scenario: Music can be muted and unmuted
+  Given I see the music button
+  When I click the music button
+  Then the music is muted
+  When I click the music button
+  Then the music is unmuted
+
