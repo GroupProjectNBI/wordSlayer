@@ -51,8 +51,6 @@ Given('I intercept game info response with language {string}', async ({ page }, 
 });
 
 Then('I see the {string} flag image', async ({ page }, altText) => {
-  // I React-koden satte du alt="Svenska" eller alt="English" på bilderna. 
-  // Playwright kan hitta bilder (role='img') baserat på deras alt-text (name)!
   const image = page.getByRole('img', { name: altText });
   await expect(image).toBeVisible();
 });
