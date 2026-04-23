@@ -3,11 +3,6 @@ import { expect } from '@playwright/test';
 
 const { Given, When, Then } = createBdd();
 
-//Jag har delat upp testerna i kategorier,
-//eftersom scenariot beskriver vad den gör så använder den bara det den behöver från steps
-//Alltså är detta allt som behövs för att testa alla på homepage
-// Vilket innebär att Edvin och Zhantea behöver bara skriva sina scenarion i feature
-
 //
 // NAVIGATION (Going from one place to another)
 //
@@ -73,7 +68,6 @@ Then('I see {string}', async ({ page }, text) => {
   const plainText = page.getByText(regex);
 
   // Playwrights .or() låter oss söka efter båda varianterna samtidigt,
-  // och BEHÅLLER den livsviktiga auto-väntan (från din gren).
   await expect(heading.or(plainText).first()).toBeVisible();
 });
 

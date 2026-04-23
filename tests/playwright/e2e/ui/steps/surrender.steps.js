@@ -5,7 +5,6 @@ const { Given, When, Then } = createBdd();
 
 // --- INTERCEPTS ---
 
-// Denna behövs för att testerna ska fungera utan en riktig backend-server igång
 Given('I intercept surrender response', async ({ page }) => {
   // Vi fångar anropet till surrender-endpointen
   await page.route('**/api/game/*/surrender*', async (route) => {
